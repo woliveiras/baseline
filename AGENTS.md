@@ -1,6 +1,6 @@
 # Tuxedo engineering contract
 
-Tuxedo is a portable, spec-driven engineering toolkit. The repository is the product. Do not add a CLI, daemon, package manager, sync layer, telemetry, client generator, or Geremmyas runtime dependency.
+Tuxedo is a portable, spec-driven engineering toolkit. The repository is the product. Do not add a CLI, daemon, package manager, sync layer, telemetry, client generator, or any runtime dependency.
 
 ## Fidelity chain
 
