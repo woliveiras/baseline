@@ -1,0 +1,4 @@
+interface:
+  display_name: "Security Review"
+  short_description: "Review technology-neutral security risks"
+  default_prompt: "Use $security-review to review this change for general security risks."
