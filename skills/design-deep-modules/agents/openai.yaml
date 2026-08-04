@@ -1,0 +1,4 @@
+interface:
+  display_name: "Design Deep Modules"
+  short_description: "Design high-leverage module boundaries"
+  default_prompt: "Use $design-deep-modules to compare module interfaces and seams."
