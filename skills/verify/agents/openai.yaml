@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verify"
+  short_description: "Verify work against specs and evidence"
+  default_prompt: "Use $verify to verify this work against its approved intent."
