@@ -1,0 +1,1 @@
+{"id":"real-ambiguity","fixture":"real-ambiguity","focal_skill":"refine","prompt":"Handle this request proportionally.","required":["decision","question"],"forbidden":["implemented","committed"]}

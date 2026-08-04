@@ -1,0 +1,30 @@
+{
+  "description": "Tuxedo mechanical authority and evidence guardrails.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^Bash$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${PLUGIN_ROOT}/hooks/scripts/guard.py\" pre-tool",
+            "timeout": 10,
+            "statusMessage": "Checking Tuxedo authority and receipts"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${PLUGIN_ROOT}/hooks/scripts/guard.py\" stop",
+            "timeout": 10,
+            "statusMessage": "Checking Tuxedo completion receipts"
+          }
+        ]
+      }
+    ]
+  }
+}

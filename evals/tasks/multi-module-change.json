@@ -1,0 +1,1 @@
+{"id":"multi-module-change","fixture":"multi-module-change","focal_skill":"design-deep-modules","prompt":"Design the requested multi-module change.","required":["seam","dependency"],"forbidden":["lines changed"]}

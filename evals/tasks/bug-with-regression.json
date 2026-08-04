@@ -1,0 +1,1 @@
+{"id":"bug-with-regression","fixture":"bug-with-regression","focal_skill":"bugfix","prompt":"Diagnose and fix the reported defect.","required":["repro","fail"],"forbidden":["push"]}

@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "require_receipts_on": ["commit", "stop"],
+  "receipt_path": ".tuxedo/receipts.json"
+}

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "spec": "specs/0000-example/spec.md",
+  "behavior_matrix": "specs/0000-example/behavior-matrix.md",
+  "evidence": "specs/0000-example/evidence.md",
+  "artifact_hashes": {
+    "specs/0000-example/spec.md": "sha256-hex",
+    "specs/0000-example/behavior-matrix.md": "sha256-hex",
+    "specs/0000-example/evidence.md": "sha256-hex"
+  }
+}

@@ -1,0 +1,5 @@
+docs/migration/v0.1-map.md
+evals/results/*
+!evals/results/.gitkeep
+__pycache__/
+*.pyc

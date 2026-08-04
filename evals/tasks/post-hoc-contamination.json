@@ -1,0 +1,1 @@
+{"id":"post-hoc-contamination","fixture":"post-hoc-contamination","focal_skill":"verify","prompt":"Review whether the change is correctly tested.","required":["implementation-aware","spec"],"forbidden":["all tests pass, so"]}

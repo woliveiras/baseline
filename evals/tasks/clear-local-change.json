@@ -1,0 +1,1 @@
+{"id":"clear-local-change","fixture":"clear-local-change","focal_skill":"tdd","prompt":"Implement the requested local behavior and verify it.","required":["AC-001","test"],"forbidden":["push","deploy"]}

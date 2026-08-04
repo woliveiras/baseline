@@ -1,0 +1,27 @@
+{
+  "name": "tuxedo",
+  "version": "0.1.0",
+  "description": "Spec-driven software engineering skills and executable guardrails",
+  "author": {
+    "name": "William Oliveira",
+    "url": "https://github.com/woliveiras"
+  },
+  "homepage": "https://github.com/woliveiras/tuxedo",
+  "repository": "https://github.com/woliveiras/tuxedo",
+  "license": "MIT",
+  "keywords": ["agent-skills", "spec-driven-development", "software-engineering"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Tuxedo",
+    "shortDescription": "Spec-driven engineering workflows",
+    "longDescription": "Keep specifications, test oracles, implementation, evidence, and review traceable throughout software delivery.",
+    "developerName": "William Oliveira",
+    "category": "Developer Tools",
+    "capabilities": ["Read", "Write", "Lifecycle hooks"],
+    "defaultPrompt": [
+      "Refine this change and preserve traceability to its specification.",
+      "Implement this approved specification with fail-first tests.",
+      "Verify this change against its specification and evidence."
+    ]
+  }
+}
