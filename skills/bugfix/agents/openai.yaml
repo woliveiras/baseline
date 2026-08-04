@@ -1,0 +1,4 @@
+interface:
+  display_name: "Bugfix"
+  short_description: "Reproduce and repair defects fail-first"
+  default_prompt: "Use $bugfix to reproduce this defect and prove the repair."
