@@ -42,7 +42,9 @@ def deny(reason: str, event: str = "PreToolUse") -> int:
                 "permissionDecisionReason": reason,
             }
         }, separators=(",", ":")))
-    return 2
+    # JSON decisions use the normal-success hook protocol. Exit code 2 is the
+    # alternative stderr-only blocking protocol and must not be mixed with it.
+    return 0
 
 
 def read_payload() -> dict[str, Any]:

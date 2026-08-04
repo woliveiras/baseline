@@ -76,11 +76,12 @@ class HookTests(unittest.TestCase):
             ok = self.run_guard("pre-tool", self.fixture("pretool-valid.json"), cwd)
             self.assertEqual(0, ok.returncode, ok.stdout + ok.stderr)
             blocked = self.run_guard("pre-tool", self.fixture("pretool-dangerous.json"), cwd)
-            self.assertEqual(2, blocked.returncode)
+            self.assertEqual(0, blocked.returncode)
             self.assertEqual("deny", json.loads(blocked.stdout)["hookSpecificOutput"]["permissionDecision"])
             for name in ("pretool-missing.json", "pretool-malformed.json"):
                 result = self.run_guard("pre-tool", self.fixture(name), cwd)
-                self.assertEqual(2, result.returncode, name)
+                self.assertEqual(0, result.returncode, name)
+                self.assertEqual("deny", json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"])
 
     def test_exact_authority_grant(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -89,7 +90,8 @@ class HookTests(unittest.TestCase):
             command = "git push origin feature"
             payload = json.dumps({"cwd": str(cwd), "hook_event_name": "PreToolUse", "tool_name": "Bash", "tool_input": {"command": command}})
             denied = self.run_guard("pre-tool", payload, cwd)
-            self.assertEqual(2, denied.returncode)
+            self.assertEqual(0, denied.returncode)
+            self.assertEqual("deny", json.loads(denied.stdout)["hookSpecificOutput"]["permissionDecision"])
             grant = {"version": 1, "grants": [{"operation": "push", "command_sha256": hashlib.sha256(command.encode()).hexdigest()}]}
             (cwd / ".tuxedo" / "authority.json").write_text(json.dumps(grant))
             allowed = self.run_guard("pre-tool", payload, cwd)
@@ -107,10 +109,12 @@ class HookTests(unittest.TestCase):
             (control / "policy.json").write_text(json.dumps(policy))
             payload = json.dumps({"cwd": str(cwd), "hook_event_name": "Stop"})
             missing = self.run_guard("stop", payload, cwd)
-            self.assertEqual(2, missing.returncode)
+            self.assertEqual(0, missing.returncode)
+            self.assertEqual("block", json.loads(missing.stdout)["decision"])
             (control / "receipts.json").write_text("{")
             malformed = self.run_guard("stop", payload, cwd)
-            self.assertEqual(2, malformed.returncode)
+            self.assertEqual(0, malformed.returncode)
+            self.assertEqual("block", json.loads(malformed.stdout)["decision"])
             hashes = {name: hashlib.sha256((cwd / name).read_bytes()).hexdigest() for name in paths}
             receipt = {"version": 1, "spec": paths[0], "behavior_matrix": paths[1], "evidence": paths[2], "artifact_hashes": hashes}
             (control / "receipts.json").write_text(json.dumps(receipt))
@@ -118,7 +122,7 @@ class HookTests(unittest.TestCase):
             self.assertEqual(0, valid.returncode, valid.stdout + valid.stderr)
             (cwd / paths[2]).write_text("changed")
             stale = self.run_guard("stop", payload, cwd)
-            self.assertEqual(2, stale.returncode)
+            self.assertEqual(0, stale.returncode)
             self.assertIn("stale", stale.stdout)
 
 
