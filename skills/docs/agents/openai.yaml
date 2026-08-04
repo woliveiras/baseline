@@ -1,0 +1,4 @@
+interface:
+  display_name: "Docs"
+  short_description: "Maintain focused durable project documentation"
+  default_prompt: "Use $docs to update the smallest durable documentation surface."
