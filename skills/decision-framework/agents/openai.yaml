@@ -1,0 +1,4 @@
+interface:
+  display_name: "Decision Framework"
+  short_description: "Make explicit evidence-weighted decisions"
+  default_prompt: "Use $decision-framework to compare these options transparently."
