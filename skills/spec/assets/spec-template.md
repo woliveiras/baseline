@@ -14,7 +14,6 @@ test_provenance: []
 navigation: []
 authority: {granted: [], withheld: [push, release, publish, deploy, production, destructive]}
 dependencies: []
-origin: user-request
 ---
 
 # Intent
