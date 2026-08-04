@@ -2,22 +2,15 @@
 
 Tuxedo is an installable, spec-driven software engineering toolkit distributed as a Codex plugin and portable Agent Skills. It keeps intent, behavioral oracles, implementation, evidence, and review connected throughout a change.
 
-It is not a CLI, package manager, daemon, agent runtime, file synchronizer, telemetry system, or replacement for Codex. Codex is the initial installation and evaluation client; the core skill workflows remain client-neutral.
-
 ## From Geremmyas to Tuxedo
 
-Geremmyas began as an attempt to reinforce spec-driven development while
-working with coding agents. It combined specifications, tests, reviews,
-workflow guidance, and executable guardrails to reduce drift between
-intended and implemented behavior.
+Tuxedo is a successor to Geremmyas, a previous project that explored spec-driven development with coding agents.
 
-Tuxedo carries that purpose forward as a portable, evidence-driven
-engineering toolkit. It treats specifications as active engineering
-artifacts: they guide implementation, provide the source for test oracles,
-and remain part of verification and review.
+Geremmyas began as an attempt to reinforce spec-driven development while working with coding agents. It combined specifications, tests, reviews, workflow guidance, and executable guardrails to reduce drift between intended and implemented behavior.
 
-The project is named after Geremmyas, my tuxedo cat and the namesake of the
-toolkit that preceded it.
+Tuxedo carries that purpose forward as a portable, evidence-driven engineering toolkit. It treats specifications as active engineering artifacts: they guide implementation, provide the source for test oracles, and remain part of verification and review.
+
+The project is named after Geremmyas, my tuxedo cat and the namesake of the toolkit that preceded it.
 
 ## Included capabilities
 
