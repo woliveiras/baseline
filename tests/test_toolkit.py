@@ -61,6 +61,13 @@ class ToolkitStructureTests(unittest.TestCase):
         for forbidden in ("geremmyas ", "go:embed", "geremmyas.yml", "internal/cli", "catalog/packs"):
             self.assertNotIn(forbidden, corpus.lower())
 
+    def test_eval_dry_run_covers_all_comparisons(self):
+        result = subprocess.run(["python3", str(ROOT / "evals" / "run.py"), "--dry-run"], text=True, capture_output=True, check=False)
+        self.assertEqual(0, result.returncode, result.stderr)
+        runs = json.loads(result.stdout)["runs"]
+        self.assertEqual(48, len(runs))
+        self.assertEqual({"baseline", "core", "focal", "broad", "current", "proposed"}, {run["variant"] for run in runs})
+
 
 class HookTests(unittest.TestCase):
     def run_guard(self, mode: str, payload: str, cwd: Path):

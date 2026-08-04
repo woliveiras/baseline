@@ -15,7 +15,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-VARIANTS = ("baseline", "core", "focal", "broad")
+VARIANTS = ("baseline", "core", "focal", "broad", "current", "proposed")
 
 
 def load_tasks():
@@ -29,15 +29,15 @@ def materialize(case: dict, destination: Path) -> None:
         path.write_text(content)
 
 
-def configure(variant: str, task: dict, workspace: Path) -> None:
+def configure(variant: str, task: dict, workspace: Path, source_root: Path) -> None:
     if variant != "baseline":
-        shutil.copy2(ROOT / "AGENTS.md", workspace / "AGENTS.md")
-    if variant in {"focal", "broad"}:
+        shutil.copy2(source_root / "AGENTS.md", workspace / "AGENTS.md")
+    if variant in {"focal", "broad", "current", "proposed"}:
         skill_root = workspace / ".agents" / "skills"
         skill_root.mkdir(parents=True)
-        names = [task["focal_skill"]] if variant == "focal" else sorted(path.name for path in (ROOT / "skills").iterdir() if path.is_dir())
+        names = [task["focal_skill"]] if variant == "focal" else sorted(path.name for path in (source_root / "skills").iterdir() if path.is_dir())
         for name in names:
-            shutil.copytree(ROOT / "skills" / name, skill_root / name)
+            shutil.copytree(source_root / "skills" / name, skill_root / name)
 
 
 def score(text: str, task: dict) -> dict:
@@ -47,16 +47,19 @@ def score(text: str, task: dict) -> dict:
     return {"pass": all(required.values()) and not any(forbidden.values()), "required": required, "forbidden": forbidden}
 
 
-def execute(task: dict, variant: str, catalog: dict, codex: str) -> dict:
+def execute(task: dict, variant: str, catalog: dict, codex: str, proposed_root: Path) -> dict:
     with tempfile.TemporaryDirectory(prefix="tuxedo-eval-") as tmp:
         workspace = Path(tmp)
         materialize(catalog[task["fixture"]], workspace)
-        configure(variant, task, workspace)
-        command = [codex, "exec", "--json", "--sandbox", "workspace-write", "--skip-git-repo-check", "-C", str(workspace), task["prompt"]]
+        source_root = proposed_root if variant == "proposed" else ROOT
+        configure(variant, task, workspace, source_root)
+        final_message = workspace / ".tuxedo-final.txt"
+        command = [codex, "exec", "--json", "--ephemeral", "--ignore-user-config", "--sandbox", "workspace-write", "--skip-git-repo-check", "-o", str(final_message), "-C", str(workspace), task["prompt"]]
         started = time.time()
         completed = subprocess.run(command, text=True, capture_output=True, check=False)
-        combined = completed.stdout + "\n" + completed.stderr
-        return {"task": task["id"], "variant": variant, "command": command, "exit_code": completed.returncode, "seconds": round(time.time() - started, 3), "score": score(combined, task), "raw": combined}
+        raw = completed.stdout + "\n" + completed.stderr
+        answer = final_message.read_text(errors="replace") if final_message.exists() else ""
+        return {"task": task["id"], "variant": variant, "source_root": str(source_root), "command": command, "exit_code": completed.returncode, "seconds": round(time.time() - started, 3), "score": score(answer, task), "answer": answer, "raw": raw}
 
 
 def main() -> int:
@@ -66,6 +69,7 @@ def main() -> int:
     parser.add_argument("--variant", choices=VARIANTS, action="append")
     parser.add_argument("--task", action="append")
     parser.add_argument("--codex", default=shutil.which("codex") or "codex")
+    parser.add_argument("--proposed-root", type=Path, default=ROOT, help="candidate Tuxedo root for the proposed variant")
     args = parser.parse_args()
     tasks = load_tasks()
     if args.task:
@@ -79,9 +83,9 @@ def main() -> int:
     results = []
     for task in tasks:
         for variant in variants:
-            result = execute(task, variant, catalog, args.codex)
+            result = execute(task, variant, catalog, args.codex, args.proposed_root.resolve())
             results.append(result)
-            print(json.dumps({key: value for key, value in result.items() if key != "raw"}))
+            print(json.dumps({key: value for key, value in result.items() if key not in {"raw", "answer"}}))
     stamp = time.strftime("%Y%m%d-%H%M%S", time.gmtime())
     output = ROOT / "evals" / "results" / f"run-{stamp}.json"
     output.write_text(json.dumps({"runs": results}, indent=2))
