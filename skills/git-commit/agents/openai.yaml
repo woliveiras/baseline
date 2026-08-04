@@ -1,0 +1,4 @@
+interface:
+  display_name: "Git Commit"
+  short_description: "Create safe atomic local Git commits"
+  default_prompt: "Use $git-commit to commit the verified task-owned slice safely."
