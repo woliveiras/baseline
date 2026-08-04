@@ -1,0 +1,1 @@
+{"cwd":"FIXTURE_CWD","hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"python3 -m unittest"}}
