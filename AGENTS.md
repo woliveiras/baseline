@@ -18,13 +18,22 @@ For material behavior changes, preserve traceability through:
 
 ## Proportionality
 
-Classify work by behavioral blast radius and risk, never line count: `trivial`, `small`, `medium`, or `large/high-risk`. A small diff can be high-risk. Medium and larger testable changes require at least one `spec-derived`, `independent`, or `external` oracle. Use explicit context separation for medium and larger review work.
+Classify work by the highest applicable condition, never line count:
+
+| Tier | Boundary | Minimum evidence and review |
+| --- | --- | --- |
+| `trivial` | No observable behavior, contract, data, security, dependency, or runtime effect. | Focused validation; review may stay inline. |
+| `small` | One localized behavior in one established boundary, easy rollback, and no sensitive risk domain. | Criterion-linked oracle and one isolated reviewer across the three phases. |
+| `medium` | Multiple modules, a public contract, schema/serialization, persistence, concurrency, compatibility, or a non-local dependency seam. | Explicit matrix, at least one `spec-derived`, `independent`, or `external` oracle, and reconstructed review contexts. |
+| `large/high-risk` | Cross-context architecture, irreversible migration, unproven rollback, or security, privacy, authorization, data-loss, money, compliance, production, release, or publication exposure. | Independent phase reviewers when available, explicit rollback/residual risk, and the strongest relevant suite. |
+
+When conditions disagree, use the higher tier. A familiar implementation does not lower a sensitive risk domain.
 
 ## Authority and evidence
 
 - Work autonomously inside the authorized local scope and preserve unrelated changes.
-- Require explicit human authority for push, history rewrite, release, publication, deploy, production mutation, destructive operations, and irreversible policy changes.
-- Hooks enforce only mechanical conditions. They cannot establish architecture quality, semantic completeness, human authorization provenance, runtime safety, or empirical effectiveness.
+- Require explicit human authority for push, history rewrite, release, publication, deploy, production mutation, destructive operations, and irreversible policy changes. Use Codex Rules for configured standard direct-command prompts and prohibitions; keep sandbox and approval policy authoritative for other forms.
+- Hooks reinforce only mechanical workflow conditions: current spec, matrix, test and implementation trees, evidence, documentation decision, and three-phase review receipts. They cannot establish architecture quality, semantic completeness, actual reviewer independence, runtime safety, or empirical effectiveness.
 - Do not add a direct dependency without evidence for provenance, maintenance, license, security, necessity, and build-versus-buy.
 - Do not claim completion without fresh commands, outputs, and residual limitations.
 

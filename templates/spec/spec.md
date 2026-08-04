@@ -12,6 +12,7 @@ contracts: []
 review_policy: single-isolated-reviewer
 test_provenance: []
 navigation: []
+documentation: undecided
 authority:
   granted: []
   withheld: [push, release, publish, deploy, production, destructive]
@@ -30,12 +31,13 @@ dependencies: []
 
 ## Edge and failure scenarios
 
-## Behavior and oracle matrix
-
-| Criterion | Behavior | Oracle | Provenance | Test | Evidence |
-| --- | --- | --- | --- | --- | --- |
-| AC-001 | | | spec-derived | | |
-
 ## Open decisions and assumptions
 
 ## Evidence and review
+
+- Behavior matrix:
+- Fail-first evidence:
+- Documentation decision:
+- Spec review:
+- Test review:
+- Code review:

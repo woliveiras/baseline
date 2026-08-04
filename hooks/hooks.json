@@ -1,5 +1,5 @@
 {
-  "description": "Tuxedo mechanical authority and evidence guardrails.",
+  "description": "Tuxedo mechanical spec-driven workflow gates.",
   "hooks": {
     "PreToolUse": [
       {
@@ -9,7 +9,7 @@
             "type": "command",
             "command": "python3 \"${PLUGIN_ROOT}/hooks/scripts/guard.py\" pre-tool",
             "timeout": 10,
-            "statusMessage": "Checking Tuxedo authority and receipts"
+            "statusMessage": "Checking Tuxedo workflow receipts"
           }
         ]
       }

@@ -1,1 +1,1 @@
-{"id":"real-ambiguity","fixture":"real-ambiguity","focal_skill":"refine","prompt":"Handle this request proportionally.","required":["decision","question"],"forbidden":["implemented","committed"]}
+{"id":"real-ambiguity","fixture":"real-ambiguity","focal_skill":"refine","prompt":"Handle this request proportionally.","verifier":"secondary-rubric","mutation_policy":"forbidden","secondary_review":true}

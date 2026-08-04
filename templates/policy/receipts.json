@@ -1,11 +1,45 @@
 {
-  "version": 1,
+  "version": 2,
   "spec": "specs/0000-example/spec.md",
   "behavior_matrix": "specs/0000-example/behavior-matrix.md",
   "evidence": "specs/0000-example/evidence.md",
+  "trees": {
+    "tests": {
+      "tests/example_test.py": "sha256-hex"
+    },
+    "implementation": {
+      "src/example.py": "sha256-hex"
+    }
+  },
+  "test_evidence": {
+    "fail_first": {
+      "test_tree": "sha256-of-current-test-tree-map",
+      "command": "focused test command",
+      "observed_failure": "the expected behavioral failure"
+    },
+    "passing": {
+      "test_tree": "sha256-of-current-test-tree-map",
+      "command": "focused test command",
+      "observed_result": "the passing result"
+    }
+  },
+  "documentation": {
+    "decision": "required",
+    "rationale": "The public behavior changed.",
+    "artifacts": ["README.md"]
+  },
+  "reviews": {
+    "spec": "specs/0000-example/reviews/spec.json",
+    "tests": "specs/0000-example/reviews/tests.json",
+    "code": "specs/0000-example/reviews/code.json"
+  },
   "artifact_hashes": {
     "specs/0000-example/spec.md": "sha256-hex",
     "specs/0000-example/behavior-matrix.md": "sha256-hex",
-    "specs/0000-example/evidence.md": "sha256-hex"
+    "specs/0000-example/evidence.md": "sha256-hex",
+    "specs/0000-example/reviews/spec.json": "sha256-hex",
+    "specs/0000-example/reviews/tests.json": "sha256-hex",
+    "specs/0000-example/reviews/code.json": "sha256-hex",
+    "README.md": "sha256-hex"
   }
 }

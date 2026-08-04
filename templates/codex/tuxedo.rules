@@ -1,0 +1,124 @@
+# Copy this file to .codex/rules/tuxedo.rules in a trusted project.
+# Codex evaluates rules on command arguments and prompts for human authority.
+# These are exact direct-command prefixes. Executable paths, wrappers, and
+# global options inserted before a subcommand are outside this template.
+
+prefix_rule(
+    pattern = ["rm", ["-rf", "-fr"], ["/", ".", "./"]],
+    decision = "forbidden",
+    justification = "Use a recoverable operation scoped below the project root.",
+    match = ["rm -rf /", "rm -fr ."],
+    not_match = ["rm -rf build/tmp", "rg '$HOME' README.md"],
+)
+
+prefix_rule(
+    pattern = ["rm", ["-r", "-R", "--recursive"], ["-f", "--force"], ["/", ".", "./"]],
+    decision = "forbidden",
+    justification = "Use a recoverable operation scoped below the project root.",
+    match = ["rm -r -f /", "rm --recursive --force ."],
+    not_match = ["rm -r build/tmp", "rm -f build/output.txt"],
+)
+
+prefix_rule(
+    pattern = ["rm", ["-f", "--force"], ["-r", "-R", "--recursive"], ["/", ".", "./"]],
+    decision = "forbidden",
+    justification = "Use a recoverable operation scoped below the project root.",
+    match = ["rm -f -r /", "rm --force --recursive ./"],
+    not_match = ["rm -f build/output.txt", "rm -r build/tmp"],
+)
+
+prefix_rule(
+    pattern = ["git", "reset", "--hard"],
+    decision = "prompt",
+    justification = "History and worktree destruction requires explicit human authority.",
+    match = ["git reset --hard HEAD"],
+    not_match = ["git reset --soft HEAD", "git status"],
+)
+
+prefix_rule(
+    pattern = ["git", "clean", ["-fd", "-df", "-f", "-d"]],
+    decision = "prompt",
+    justification = "Unrecoverable Git cleanup requires explicit human authority.",
+    match = ["git clean -fd", "git clean -f -d"],
+    not_match = ["git clean -n", "git status"],
+)
+
+prefix_rule(
+    pattern = ["git", "push"],
+    decision = "prompt",
+    justification = "Push changes external state and requires explicit human authority.",
+    match = ["git push origin main", "git push --force-with-lease"],
+    not_match = ["git status", "rg push README.md"],
+)
+
+prefix_rule(
+    pattern = ["gh", "release", ["create", "delete", "edit", "upload"]],
+    decision = "prompt",
+    justification = "Release mutation requires explicit human authority.",
+    match = ["gh release create v1.0.0", "gh release delete v1.0.0"],
+    not_match = ["gh release view v1.0.0", "gh pr view 42"],
+)
+
+prefix_rule(
+    pattern = ["gh", "pr", ["create", "merge", "close", "reopen"]],
+    decision = "prompt",
+    justification = "Pull-request mutation requires explicit human authority.",
+    match = ["gh pr create --fill", "gh pr merge 42"],
+    not_match = ["gh pr view 42", "gh pr checks 42"],
+)
+
+prefix_rule(
+    pattern = [["npm", "pnpm"], "publish"],
+    decision = "prompt",
+    justification = "Package publication requires explicit human authority.",
+    match = ["npm publish", "pnpm publish --access public"],
+    not_match = ["npm pack", "pnpm test"],
+)
+
+prefix_rule(
+    pattern = ["cargo", "publish"],
+    decision = "prompt",
+    justification = "Package publication requires explicit human authority.",
+    match = ["cargo publish"],
+    not_match = ["cargo test", "cargo package"],
+)
+
+prefix_rule(
+    pattern = ["twine", "upload"],
+    decision = "prompt",
+    justification = "Package publication requires explicit human authority.",
+    match = ["twine upload dist/example.whl"],
+    not_match = ["twine check dist/example.whl"],
+)
+
+prefix_rule(
+    pattern = ["kubectl", ["apply", "delete"]],
+    decision = "prompt",
+    justification = "Cluster mutation requires explicit human authority and a verified target.",
+    match = ["kubectl apply -f manifest.yaml", "kubectl delete deployment api"],
+    not_match = ["kubectl diff -f manifest.yaml", "kubectl get pods"],
+)
+
+prefix_rule(
+    pattern = ["terraform", ["apply", "destroy"]],
+    decision = "prompt",
+    justification = "Infrastructure mutation requires explicit human authority and a verified target.",
+    match = ["terraform apply", "terraform destroy"],
+    not_match = ["terraform plan", "terraform validate"],
+)
+
+prefix_rule(
+    pattern = ["vercel", ["--prod", "deploy"]],
+    decision = "prompt",
+    justification = "Deployment requires explicit human authority and a verified target.",
+    match = ["vercel --prod", "vercel deploy --prod"],
+    not_match = ["vercel inspect example", "vercel env ls"],
+)
+
+prefix_rule(
+    pattern = ["gcloud", ["app", "functions", "run"], "deploy"],
+    decision = "prompt",
+    justification = "Deployment requires explicit human authority and a verified target.",
+    match = ["gcloud app deploy", "gcloud run deploy api"],
+    not_match = ["gcloud app describe", "gcloud run services list"],
+)

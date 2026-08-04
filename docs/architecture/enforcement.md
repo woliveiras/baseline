@@ -1,244 +1,122 @@
-# Hook guardrails and enforcement boundaries
+# Enforcement boundaries
 
-Tuxedo's hooks provide two mechanical safety checks while Codex works in a project:
+Tuxedo separates two kinds of executable reinforcement:
 
-1. Stop dangerous or unauthorized shell commands before they run.
-2. Optionally stop a commit or turn completion when its recorded engineering evidence is missing or stale.
+1. Codex Rules handle command authority and command-level safety.
+2. Tuxedo hooks validate the mechanical integrity of the spec-driven workflow.
 
-The hooks check commands, files, and SHA-256 hashes. They do not decide whether a specification is correct, whether tests are sufficient, or whether an architecture is good.
+Neither mechanism decides whether a specification, test, architecture, or documentation change is semantically good.
 
-## When the hooks run
+## Codex Rules
 
-Tuxedo uses the standard plugin hook file at `hooks/hooks.json`. After installing or enabling the plugin, open `/hooks` in Codex, inspect the definitions, and trust them. Codex skips plugin hooks until this review is complete. If a hook definition changes, Codex requires another review because its trusted hash changed.
+Tuxedo ships `templates/codex/tuxedo.rules` as an opt-in project template. Copy it to `.codex/rules/tuxedo.rules` in a trusted project and restart Codex.
 
-Two events are configured:
+For the exact, standard direct command forms listed in the template, it:
 
-| Event | When it runs | What Tuxedo does |
-| --- | --- | --- |
-| `PreToolUse` for `Bash` | Before every shell command Codex attempts | Allows ordinary commands, blocks categorically dangerous commands, checks grants for protected commands, and checks receipts before `git commit` when enabled. |
-| `Stop` | When Codex is about to finish a turn | Checks completion receipts when the project opted into the `stop` requirement. If evidence is missing or stale, asks Codex to continue instead of finishing. |
+- forbids a narrow set of broad recursive deletions;
+- prompts before push, destructive Git cleanup, release, package publication, deployment, cluster mutation, and infrastructure mutation;
+- includes `match` and `not_match` examples that Codex validates when loading the rules.
 
-The hook may run for an ordinary command such as `python3 -m unittest`, find no protected condition, and return without interfering.
+Codex Rules evaluate command arguments and use Codex's native shell handling. They replace Tuxedo's former regular-expression command classifier and exact-command authority files. The approval shown by Codex is the authority boundary; Tuxedo does not duplicate it in `.tuxedo/authority.json`.
 
-## Command protection
+Rules are an experimental Codex feature. The included policies use exact argument prefixes. An absolute executable such as `/usr/bin/git`, a wrapper such as `env git`, or a global option inserted before the matched subcommand such as `git -C project push` does not match the corresponding template rule. Shell scripts with substitutions, redirections, assignments, wildcards, or control flow may also be treated conservatively as one shell invocation instead of being decomposed. The sandbox, project trust, approval configuration, and organizational policy remain authoritative for forms outside the template.
 
-Commands fall into three groups.
+## Workflow hooks
 
-### Ordinary commands
+The plugin loads `hooks/hooks.json` after the user reviews and trusts its current definition.
 
-Commands that do not match a protected rule continue normally. Examples include focused tests, read-only Git inspection, formatting, and local builds.
+| Event | Mechanical gate |
+| --- | --- |
+| `PreToolUse` for `Bash` | Before a direct `git commit ...`, validate the opt-in completion receipt. Other commands pass through unchanged. |
+| `Stop` | Before Codex finishes a turn, validate the opt-in completion receipt. |
+
+A direct commit means the command tokenizes with `git` as the executable and `commit` as its first argument. The hook deliberately does not parse compound shell programs. The `Stop` gate remains the complete end-of-turn check.
+
+Hooks are inactive for a project without `.tuxedo/policy.json`. To opt in, copy `templates/policy/policy.json` to that path.
+
+## Receipt chain
+
+The version 2 completion receipt binds the current artifacts into this dependency chain:
 
 ```text
-Codex attempts: python3 -m unittest
-Hook result: no protected condition
-Outcome: command runs
+spec
+  -> spec review
+  -> behavior/oracle matrix
+  -> test tree
+  -> test review
+  -> implementation tree + evidence + documentation decision
+  -> code review
+  -> commit / Stop gate
 ```
 
-### Categorically blocked commands
+The receipt names:
 
-The current hook always blocks broad operations that are difficult to recover. An authority grant cannot override this group; use a safer, explicitly scoped alternative.
+- the spec, behavior matrix, and evidence record;
+- complete SHA-256 maps for the configured test and implementation scopes;
+- structured fail-first and passing records tied to the current test-tree digest, with non-empty commands and observations;
+- an explicit documentation decision with rationale and optional hashed artifacts;
+- spec, test, and code review receipts;
+- hashes for all canonical and review artifacts.
 
-Examples:
+The default policy requires non-empty test and implementation trees. Its `tree_scopes` are an illustrative conventional layout: maintainers must adapt the include and exclude globs to the project's real source and test layout. Each receipt tree must then contain exactly every current file in its configured scope; omitted files and files borrowed from another scope fail the gate. A spec-only or documentation-only workflow can set `required_trees` to an empty list or require only the applicable tree without weakening the other checks.
+
+### Three review receipts
+
+Start from the assets in `templates/review/` or the self-contained assets bundled with the `verify` skill.
+
+- Spec review receives the spec, declares tests and implementation unexposed, and records the resulting matrix hash.
+- Test review receives the approved spec, matrix, spec-review receipt, test-tree digest, and fail-first record digest while declaring the implementation unexposed.
+- Code review receives the upstream artifacts, implementation and test-tree digests, complete test-evidence digest, fresh evidence, and documentation digest.
+
+Set a review receipt to `approved` only after its actionable findings are reconciled. A downstream review includes the hash of its upstream review, so changing an earlier artifact invalidates the final gate.
+
+### Hashes and digests
+
+Each file hash is the lowercase SHA-256 of its bytes:
 
 ```bash
-rm -fr /
-rm -r -f $HOME
-git reset --hard HEAD
-git clean -f -d
-mkfs ...
-diskutil erase ...
-dd if=...
+shasum -a 256 path/to/file
 ```
 
-Flow:
-
-```text
-Codex attempts a categorically blocked command
-                    |
-                    v
-          PreToolUse denies it
-                    |
-                    v
-       Command never reaches the shell
-```
-
-### Protected commands requiring an exact grant
-
-The hook protects commands associated with push, release, publication, deploy, production, or destructive mutations. Current examples include:
-
-- `git push`;
-- `gh release`, `npm publish`, `cargo publish`, and `twine upload`;
-- `vercel --prod`, deployment commands, `gcloud ... deploy`, and `kubectl apply`;
-- commands marked as production operations;
-- `terraform destroy`, `kubectl delete`, `DROP DATABASE`, `DROP TABLE`, and `DELETE FROM`.
-
-Before one of these commands can run, `.tuxedo/authority.json` must contain a grant with:
-
-- the matching operation name;
-- the SHA-256 hash of the complete command string Codex is about to execute.
-
-For example, this command:
+A tree digest is the SHA-256 of its path-to-hash object serialized as minified JSON with sorted keys. This command prints the digest of a saved hash map without reading source contents into model context:
 
 ```bash
-git push origin feature
+python3 -c 'import hashlib,json,sys; value=json.load(open(sys.argv[1])); print(hashlib.sha256(json.dumps(value,sort_keys=True,separators=(",", ":")).encode()).hexdigest())' tree-hashes.json
 ```
 
-has this SHA-256 hash:
-
-```text
-07ee9c93ab3fbe9709f0dbfb8aa3497c3163e562dad3d9607d27491da47f90d2
-```
-
-Its grant is:
+The documentation digest uses the same canonical serialization over:
 
 ```json
 {
-  "version": 1,
-  "grants": [
-    {
-      "operation": "push",
-      "command_sha256": "07ee9c93ab3fbe9709f0dbfb8aa3497c3163e562dad3d9607d27491da47f90d2",
-      "note": "Push the reviewed feature branch."
-    }
-  ]
-}
-```
-
-Calculate a command hash without executing the command:
-
-```bash
-python3 -c 'import hashlib; command="git push origin feature"; print(hashlib.sha256(command.encode()).hexdigest())'
-```
-
-The match is exact. Whitespace, arguments, targets, or chained commands change the hash and invalidate the grant. A compound command that matches multiple protected operations needs a grant for every matching operation, all using the hash of the complete compound command.
-
-Flow without a matching grant:
-
-```text
-Codex attempts: git push origin feature
-                    |
-                    v
-      .tuxedo/authority.json absent,
-       malformed, or hash does not match
-                    |
-                    v
-          PreToolUse denies it
-                    |
-                    v
-       Command never reaches the shell
-```
-
-Flow with the matching grant:
-
-```text
-Codex attempts: git push origin feature
-                    |
-                    v
-     Matching push grant and exact hash
-                    |
-                    v
-          PreToolUse allows it
-                    |
-                    v
-              Command runs
-```
-
-The hook proves only that a matching local grant exists. It cannot prove who created the file or whether that person had organizational authority.
-
-## Evidence receipts
-
-Receipts are optional. They are inactive when the project has no `.tuxedo/policy.json`.
-
-To opt in, copy `templates/policy/policy.json` to `.tuxedo/policy.json`. The default template requires receipts before both `git commit` and `Stop`:
-
-```json
-{
-  "version": 1,
-  "require_receipts_on": ["commit", "stop"],
-  "receipt_path": ".tuxedo/receipts.json"
-}
-```
-
-The receipt points to the active specification, behavior matrix, and evidence record. It also stores the expected SHA-256 hash of each artifact:
-
-```json
-{
-  "version": 1,
-  "spec": "specs/0007-example/spec.md",
-  "behavior_matrix": "specs/0007-example/behavior-matrix.md",
-  "evidence": "specs/0007-example/evidence.md",
+  "decision": "required or not-required",
+  "rationale": "the recorded rationale",
   "artifact_hashes": {
-    "specs/0007-example/spec.md": "<current SHA-256>",
-    "specs/0007-example/behavior-matrix.md": "<current SHA-256>",
-    "specs/0007-example/evidence.md": "<current SHA-256>"
+    "path/from/documentation.artifacts": "its receipt hash"
   }
 }
 ```
 
-Generate a file hash with:
+The fail-first record and complete `test_evidence` object use the same canonical serialization. Both the fail-first and passing records must name the digest of the current configured test tree. Their commands and observations must be non-empty. For a workflow with no test scope, `test_evidence` may be `null`.
 
-```bash
-shasum -a 256 specs/0007-example/spec.md
-```
+The hook recalculates every file hash, both tree digests, the structured test-evidence digests, the documentation digest, and the expected inputs of all three reviews.
 
-### Commit example
+## What the gates establish
 
-Assume the project requires a receipt on `commit`.
+The hooks establish that:
 
-```text
-Codex attempts: git commit -m "feat: add example"
-                    |
-                    v
-      PreToolUse reads the policy and receipt
-                    |
-          +---------+---------+
-          |                   |
-          v                   v
- All required files      Receipt missing,
- exist and hashes        malformed, incomplete,
- still match             or hash is stale
-          |                   |
-          v                   v
- Commit runs          Commit is denied
-```
+- required artifacts exist inside the project;
+- their current bytes match the receipt;
+- required test and implementation trees are non-empty and exactly cover their configured scopes;
+- fail-first and passing records refer to the current test tree and contain commands and observations;
+- documentation impact was explicitly decided;
+- required documentation artifacts are hashed;
+- review receipts declare the expected context separation;
+- every downstream review references the current upstream digests.
 
-### Completion example
+The dependency chain reinforces the artifacts Tuxedo requires: spec and behavior matrix, fail-first and passing test evidence tied to the current test tree, test review before final code review, and an explicit documentation decision. It cannot prove that the recorded commands really ran or establish wall-clock ordering: an agent could create a dishonest receipt later. A policy with incomplete `tree_scopes` can also omit files that its globs never select. The gate cannot prove that a reviewer actually avoided implementation exposure or that an oracle captures the right behavior. Those remain skill, review, policy-configuration, and evaluation concerns.
 
-Assume the project requires a receipt on `stop`. Codex ran tests and created a receipt, but someone then edited the spec. Its current hash no longer matches the recorded hash.
+## Malformed inputs and privacy
 
-```text
-Codex attempts to finish the turn
-                    |
-                    v
-          Stop validates receipts
-                    |
-                    v
-       Spec hash differs from receipt
-                    |
-                    v
-   Stop asks Codex to continue and refresh
-         the evidence before finishing
-```
+Malformed hook input, escaping artifact paths, stale hashes, incomplete reviews, or invalid documentation decisions fail closed when the corresponding gate is active.
 
-If the project requires only commit receipts, use `"require_receipts_on": ["commit"]`. If it requires only completion receipts, use `["stop"]`. Removing `.tuxedo/policy.json` disables receipt checks but does not disable command protection.
-
-## Malformed hook input
-
-If Codex invokes a protected hook with missing or malformed JSON, an invalid working directory, or an unexpected event shape, Tuxedo denies the operation instead of guessing. This fail-safe behavior is covered by deterministic fixtures.
-
-## What the hooks do not enforce
-
-The hooks do not establish:
-
-- the semantic quality or completeness of a spec, test, review, or architecture;
-- that a receipt contains good evidence rather than merely current files;
-- that an authority grant was created by a human or approved by an organization;
-- coverage of aliases, arbitrary wrapper binaries, hosted tools, unsupported tool paths, or future schema changes;
-- reversal of an effect that already happened;
-- completion enforcement outside a trusted and enabled Codex hook runtime.
-
-`Stop` can request another continuation; it cannot prove that the final result is correct. Projects that require centrally enforced organizational policy need managed Codex policy or another control outside this plugin.
-
-## Privacy and execution properties
-
-The hook runs locally and deterministically. It performs no network requests. It reads only its JSON event, the opt-in policy/grant/receipt files, and the bytes of explicitly named receipt artifacts to calculate hashes. It never emits artifact contents, prompts, environment variables, or secrets.
+The hook runs locally, performs no network requests, and reads only its event, policy, receipt, configured tree scopes, and named artifacts. It emits no artifact contents, prompts, environment variables, transcripts, or secrets.

@@ -1,7 +1,7 @@
 ---
 id: SPEC-0000
-title: Short title
-summary: Routing summary
+title: Short behavior-focused title
+summary: One sentence for routing
 status: draft
 scope: []
 risk: small
@@ -12,7 +12,10 @@ contracts: []
 review_policy: single-isolated-reviewer
 test_provenance: []
 navigation: []
-authority: {granted: [], withheld: [push, release, publish, deploy, production, destructive]}
+documentation: undecided
+authority:
+  granted: []
+  withheld: [push, release, publish, deploy, production, destructive]
 dependencies: []
 ---
 
@@ -24,8 +27,17 @@ dependencies: []
 
 - **AC-001** Given ..., when ..., then ...
 
-## Exclusions and edge cases
+## Explicit exclusions
 
-## Behavior and oracle matrix
+## Edge and failure scenarios
 
-## Decisions, evidence, and review
+## Open decisions and assumptions
+
+## Evidence and review
+
+- Behavior matrix:
+- Fail-first evidence:
+- Documentation decision:
+- Spec review:
+- Test review:
+- Code review:

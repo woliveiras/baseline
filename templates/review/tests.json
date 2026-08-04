@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "phase": "tests",
+  "status": "pending",
+  "context": {
+    "tests_exposed": true,
+    "implementation_exposed": false
+  },
+  "input_hashes": {
+    "spec": "sha256-hex",
+    "behavior_matrix": "sha256-hex",
+    "tests": "sha256-hex",
+    "spec_review": "sha256-hex",
+    "fail_first": "sha256-hex"
+  },
+  "output_hashes": {},
+  "findings": []
+}

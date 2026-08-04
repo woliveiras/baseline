@@ -26,18 +26,23 @@ spec
   -> tests
   -> implementation
   -> evidence
-  -> spec / test / code review
+  -> isolated spec / test / code review
 ```
 
 Specs remain active artifacts. They may be corrected when evidence exposes ambiguity or contradiction, but code, tests, and documentation must then be reconciled explicitly. Passing tests are evidence, not proof that the intended behavior was captured.
 
-## Hooks
+## Executable reinforcement
 
-The plugin bundles opt-in Codex lifecycle hooks that block a narrow set of mechanically identifiable dangerous commands, require exact-command authority receipts for protected operations, and validate artifact hashes when a project opts into completion receipts. Codex requires users to review and trust plugin hooks. Hooks do not inspect transcripts, collect prompts, send network requests, or decide semantic quality. See `docs/architecture/enforcement.md` for the exact boundary.
+Tuxedo separates command authority from workflow integrity:
+
+- `templates/codex/tuxedo.rules` uses native Codex Rules for explicitly listed, standard direct command prefixes. The template forbids a few literal broad-deletion forms and requests human approval for listed direct forms of push, destructive Git cleanup, release, publication, deployment, and infrastructure mutations.
+- plugin hooks reinforce Tuxedo's spec-driven workflow at direct commits and turn completion. An opt-in version 2 receipt binds the current spec, behavior matrix, every file in configured test and implementation scopes, fail-first and passing evidence, the documentation decision, and the three review phases through SHA-256 hashes.
+
+Rules and hooks do not inspect transcripts, collect prompts, send network requests, or decide semantic quality. Exact prefix rules do not cover executable paths, wrappers, or global options inserted before a subcommand. Receipt hashes make stale or incomplete relationships detectable; they cannot prove wall-clock TDD order, oracle quality, or actual reviewer independence. See `docs/architecture/enforcement.md` for the exact boundary and setup.
 
 ## Installation and development
 
-The repository itself is the plugin. Validate it with the current `plugin-creator` validator before adding it to a local marketplace. Installation, publication, release, and global changes are intentionally not automated by this repository.
+The repository itself is the plugin. Validate it with the current `plugin-creator` validator before adding it to a local marketplace. Installation, publication, release, and global changes are intentionally not automated by this repository. Codex Rules are project opt-in: copy the template to `.codex/rules/tuxedo.rules` in a trusted project and restart Codex.
 
 Local deterministic checks:
 
@@ -46,7 +51,7 @@ python3 -m unittest discover -s tests -v
 python3 evals/run.py --dry-run
 ```
 
-The evaluation harness is Codex-first and maintainer-only. It compares baseline, minimal core, focal skill, broad configuration, and current-versus-proposed variants. It never runs in CI and does not execute model calls unless a maintainer opts in.
+The evaluation harness is Codex-first and maintainer-only. It compares baseline, minimal core, focal skill, broad configuration, and distinct current-versus-proposed roots with seeded ordering and repeated trials. Executable fixture tasks use deterministic hidden oracles. Architectural and intent-sensitive tasks remain `needs-review` until the secondary rubric is applied; response keywords never establish a pass. The runner never executes model calls unless a maintainer passes `--execute`.
 
 ## Provenance and influences
 

@@ -1,6 +1,6 @@
 # Behavior and oracle matrix
 
-Create the matrix during spec review, before exposing the reviewer to the new implementation.
+Create the matrix as a separate artifact during spec review, before exposing the reviewer to tests or the new implementation. Use [the bundled template](../assets/behavior-matrix-template.md) when the project has no stronger format.
 
 | Criterion | Scenario | Invariant | Observable oracle | Provenance | Planned test | Evidence |
 | --- | --- | --- | --- | --- | --- | --- |

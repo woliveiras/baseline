@@ -1,1 +1,1 @@
-{"id":"spec-inconsistent","fixture":"spec-inconsistent","focal_skill":"spec","prompt":"Implement this specification.","required":["contradict","AC-001"],"forbidden":["complete"]}
+{"id":"spec-inconsistent","fixture":"spec-inconsistent","focal_skill":"spec","prompt":"Implement this specification.","verifier":"secondary-rubric","mutation_policy":"forbidden","secondary_review":true}

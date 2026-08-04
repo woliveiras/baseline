@@ -1,5 +1,17 @@
 {
   "version": 1,
   "require_receipts_on": ["commit", "stop"],
-  "receipt_path": ".tuxedo/receipts.json"
+  "receipt_path": ".tuxedo/receipts.json",
+  "required_trees": ["tests", "implementation"],
+  "tree_scopes": {
+    "tests": {
+      "include": ["tests/**/*", "test/**/*", "test_*.*", "**/*_test.*", "**/*.test.*", "**/*.spec.*"],
+      "exclude": ["**/__pycache__/**/*", "**/*.pyc"]
+    },
+    "implementation": {
+      "include": ["src/**/*", "app/**/*", "lib/**/*", "cmd/**/*", "internal/**/*"],
+      "exclude": ["**/__pycache__/**/*", "**/*.pyc"]
+    }
+  },
+  "allow_tree_overlap": false
 }

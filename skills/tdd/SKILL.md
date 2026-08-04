@@ -9,11 +9,11 @@ Preserve the chain from criterion to oracle to test to implementation.
 
 1. Read the full spec and matrix. Select one criterion-sized slice and confirm its oracle provenance using [provenance](./references/provenance.md).
 2. Write the smallest test at the most economical public seam: unit, integration, contract, or end-to-end. Prefer observable behavior over collaborator order or private structure.
-3. Run it before production changes. Confirm it fails for the expected behavioral reason; infrastructure errors and unrelated failures are not red evidence.
+3. Run it before production changes. Confirm it fails for the expected behavioral reason; infrastructure errors and unrelated failures are not red evidence. Record the criterion, test-tree state, command, and observed failure in the project's evidence artifact before implementation.
 4. Implement the smallest coherent behavior that satisfies the criterion without weakening the oracle.
 5. Run the focused test, nearby suite, and relevant static checks. Add boundary cases where the matrix requires them, not to inflate counts.
 6. Refactor only while behavior remains green. Re-run fresh evidence after refactoring.
-7. Update the matrix with the test and evidence. If the spec, test, and code disagree, stop the slice and reconcile intent explicitly.
+7. Update the matrix and evidence artifact with the passing result. If the spec, test, and code disagree, stop the slice and reconcile intent explicitly.
 
 For medium and larger testable changes, require at least one `spec-derived`, `independent`, or `external` oracle. Treat tests written after viewing the new implementation as `implementation-aware` unless their oracle clearly comes from an independent source.
 
