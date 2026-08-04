@@ -1,0 +1,6 @@
+interface:
+  display_name: "Improve Architecture"
+  short_description: "Find evidence-backed architecture improvements"
+  default_prompt: "Use $improve-architecture to audit this architecture without changing it."
+policy:
+  allow_implicit_invocation: false
