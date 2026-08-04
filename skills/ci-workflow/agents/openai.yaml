@@ -1,0 +1,4 @@
+interface:
+  display_name: "CI Workflow"
+  short_description: "Build safe evidence-producing CI workflows"
+  default_prompt: "Use $ci-workflow to design or repair this CI workflow."
