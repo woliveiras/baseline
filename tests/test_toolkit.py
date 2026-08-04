@@ -85,6 +85,10 @@ class HookTests(unittest.TestCase):
             blocked = self.run_guard("pre-tool", self.fixture("pretool-dangerous.json"), cwd)
             self.assertEqual(0, blocked.returncode)
             self.assertEqual("deny", json.loads(blocked.stdout)["hookSpecificOutput"]["permissionDecision"])
+            for command in ("rm -fr /", "rm -r -f $HOME", "git clean -f -d"):
+                payload = json.dumps({"cwd": str(cwd), "hook_event_name": "PreToolUse", "tool_name": "Bash", "tool_input": {"command": command}})
+                result = self.run_guard("pre-tool", payload, cwd)
+                self.assertEqual("deny", json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"], command)
             for name in ("pretool-missing.json", "pretool-malformed.json"):
                 result = self.run_guard("pre-tool", self.fixture(name), cwd)
                 self.assertEqual(0, result.returncode, name)
@@ -103,6 +107,14 @@ class HookTests(unittest.TestCase):
             (cwd / ".tuxedo" / "authority.json").write_text(json.dumps(grant))
             allowed = self.run_guard("pre-tool", payload, cwd)
             self.assertEqual(0, allowed.returncode, allowed.stdout + allowed.stderr)
+
+            combined = command + " && terraform destroy"
+            combined_payload = json.dumps({"cwd": str(cwd), "hook_event_name": "PreToolUse", "tool_name": "Bash", "tool_input": {"command": combined}})
+            combined_digest = hashlib.sha256(combined.encode()).hexdigest()
+            grant["grants"] = [{"operation": "push", "command_sha256": combined_digest}]
+            (cwd / ".tuxedo" / "authority.json").write_text(json.dumps(grant))
+            denied_combined = self.run_guard("pre-tool", combined_payload, cwd)
+            self.assertEqual("deny", json.loads(denied_combined.stdout)["hookSpecificOutput"]["permissionDecision"])
 
     def test_receipts_valid_stale_missing_and_malformed(self):
         with tempfile.TemporaryDirectory() as tmp:

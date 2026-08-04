@@ -12,9 +12,9 @@ from typing import Any
 
 
 BLOCKED_PATTERNS = (
-    (re.compile(r"(^|[;&|]\s*)rm\s+-[^\n]*r[^\n]*f[^\n]*(?:\s/\s*$|\s/~?\s*$|\$HOME|\$\{HOME\})", re.I), "broad recursive deletion"),
+    (re.compile(r"\brm\b(?=[^;\n]*\s-[^\s]*r)(?=[^;\n]*\s-[^\s]*f)[^;\n]*(?:\s/|\s~|\$HOME|\$\{HOME\})(?:\s|$)", re.I), "broad recursive deletion"),
     (re.compile(r"\bgit\s+reset\s+--hard\b", re.I), "history and worktree destruction"),
-    (re.compile(r"\bgit\s+clean\s+-[^\s]*[fdx][^\s]*", re.I), "unrecoverable Git cleanup"),
+    (re.compile(r"\bgit\s+clean\b(?=[^;\n]*\s-[^\s]*f)(?=[^;\n]*\s-[^\s]*d)", re.I), "unrecoverable Git cleanup"),
     (re.compile(r"\b(?:mkfs|diskutil\s+erase|dd\s+if=).+", re.I), "disk destruction"),
 )
 
@@ -153,7 +153,6 @@ def pre_tool(payload: dict[str, Any]) -> int:
     for operation, pattern in PROTECTED_PATTERNS:
         if pattern.search(command):
             authorize(cwd, operation, command)
-            break
     if re.search(r"\bgit\s+commit\b", command, re.I):
         validate_receipts(cwd, "commit")
     return 0
