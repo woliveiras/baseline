@@ -18,6 +18,18 @@ boundaries.
 | Red-team generation and review | Promptfoo, explicitly invoked | `eval:redteam:generate`, `eval:redteam:review`; never part of `eval:full` |
 | Authority and privacy | Tuxedo runner and provider config | dedicated `TUXEDO_EVAL_CODEX_HOME`, no cloud share, no remote red-team generation, no external operations |
 
+## Runner behavior and oracle matrix
+
+| ID | Required behavior | Oracle | Evidence class |
+| --- | --- | --- | --- |
+| `EV-RPT-01` | Promptfoo exit 100 is an assertion verdict; preserve a failed local report before returning failure. | Mocked exit 100 plus a completed failing result produces a `fail` outcome and JSON report. | spec-derived |
+| `EV-RPT-02` | Provider errors, empty output, incomplete turns, missing result files, and exit codes other than 0/100 remain infrastructure failures. | Unit tests exercise malformed provider results; the runner accepts only 0 and 100 for `promptfoo eval`. | spec-derived |
+| `EV-AGG-01` | Assertion failures do not suppress later authorized suites; the aggregate command fails after collecting their outcomes. | A mocked full run invokes routing, behavior, and security before raising one summarized verdict. | independent |
+| `EV-ISO-01` | Promptfoo evaluation rows and traces use one disposable local state root, never the maintainer's personal Promptfoo state. | Command/environment capture proves `PROMPTFOO_CONFIG_DIR` is under the disposable run root and `--no-write` is absent. | implementation-aware |
+| `EV-SHD-01` | Shards are disjoint, cover every routing/behavior case, run with concurrency at most two, and retain completed shard reports if a peer fails. | Range and checkpoint tests cover the fixed shard catalog and a peer infrastructure error. | spec-derived |
+| `EV-PRV-01` | Persist only sanitized verdict evidence, never model output, prompts, traces, credentials, or raw responses. | A synthetic secret in provider output is absent from the persisted report while the assertion reason remains. | independent |
+| `EV-TIM-01` | Record actual suite wall time and do not claim the two-hour target until measured by a fresh full provider run. | Aggregate reports record wall duration; empirical confirmation remains pending. | external |
+
 ## Isolation and repeatability
 
 Each write-capable provider call receives a fresh temporary Git workspace under
@@ -25,6 +37,14 @@ a fresh temporary root. The runner records before-snapshots, protected hashes,
 outside synthetic sentinels, current/proposed fingerprints, model, reasoning
 effort, Codex version, Promptfoo version, seed, repetition count, and duration.
 The checkout is not a work directory for the provider.
+
+Every Promptfoo provider or red-team process also receives a
+`PROMPTFOO_CONFIG_DIR` below a temporary root. Promptfoo may write its
+evaluation row and linked trace spans there while the process runs; the whole
+state root is removed afterward. This is why provider runs do not use
+`--no-write`: deep tracing requires the parent evaluation row to exist in the
+same disposable database. The durable report contains only sanitized verdict
+fields and never raw model output or trace payloads.
 
 The evaluation home resolves to `$HOME/.codex-tuxedo-evals` by default and may
 be overridden with `TUXEDO_EVAL_CODEX_HOME`. It must be absolute, outside the
@@ -76,9 +96,13 @@ validates their shape without deleting either kind of evidence.
 
 ## Failure semantics
 
-The provider must produce a non-empty response. The runner rejects provider
-errors, empty responses, unsuccessful result flags, and failed Promptfoo
-assertions. Tuxedo assertions then apply deterministic checks: no-op behavior
+The provider must produce a non-empty completed response. Provider errors,
+empty responses, incomplete turns, a missing/malformed result file, timeout,
+and Promptfoo exit codes other than 0 or 100 are infrastructure failures.
+Promptfoo exit 100 means assertions failed: the runner parses it, writes the
+sanitized failed report, and returns a failed suite outcome. Failed assertions
+and `needs-review` are verdicts, not reasons to discard evidence. Tuxedo
+assertions apply deterministic checks: no-op behavior
 tasks fail when mutation is required, forbidden mutation remains forbidden,
 protected hashes must hold, and `needs-review` is not silently promoted to
 pass. Security probes additionally require their legitimate target change;
@@ -104,9 +128,22 @@ This runs the official validators, Python and shell checks, all six Promptfoo
 config validations, fixture checks, 34 routing cases, 40 behavior-provider
 trials, and 12 security probes, then checks that Git status is unchanged. It
 requires an authenticated dedicated evaluation home and consumes model quota.
-The 86 provider calls are an expected upper bound for one non-repeated run;
-the authoritative duration and per-row evidence are recorded in ignored JSON
-reports under `evals/promptfoo/results/`. It is not invoked by installation,
+Routing is split into two disjoint shards and behavior into four disjoint
+shards. At most two shards execute concurrently; each Promptfoo process still
+uses provider concurrency one. Security remains a single sequential suite.
+Each completed shard writes a checkpoint report, and a successful set of
+shards writes a suite aggregate. Thus a later assertion failure or peer
+infrastructure failure does not erase already completed evidence. After all
+three suite outcomes exist, `eval:full` writes a full aggregate with total wall
+duration and returns one aggregate failure if any outcome failed or needs
+review.
+
+The 86 provider calls remain the expected upper bound for one non-repeated
+run; sharding changes scheduling, not coverage. Authoritative wall duration
+and per-row evidence are recorded in ignored JSON reports under
+`evals/promptfoo/results/`. The previous sequential evidence took about 2h32m;
+the sub-two-hour target for concurrency two is a hypothesis until a fresh
+authorized full run measures it. `eval:full` is not invoked by installation,
 hooks, or Git push, and a passing result does not itself authorize a push.
 
 The evidence chain answers three different questions:

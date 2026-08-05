@@ -830,6 +830,14 @@ class EvaluationVerifierTests(unittest.TestCase):
             self.assertEqual(1, PROMPTFOO_RUNNER.main(["--suite", "smoke"]))
             make_temp.assert_not_called()
 
+        with patch.object(
+            PROMPTFOO_RUNNER.PREPARE, "preflight_codex_home", return_value=Path("/dedicated")
+        ), patch.object(
+            PROMPTFOO_RUNNER, "_codex_version", side_effect=RuntimeError("version unavailable")
+        ), patch.object(PROMPTFOO_RUNNER.tempfile, "mkdtemp") as make_temp:
+            self.assertEqual(1, PROMPTFOO_RUNNER.main(["--suite", "smoke"]))
+            make_temp.assert_not_called()
+
     def test_promptfoo_configs_use_the_resolved_dedicated_home(self):
         configs = sorted((ROOT / "evals" / "promptfoo").glob("*.yaml"))
         provider_configs = [path for path in configs if "openai:codex-sdk" in path.read_text(encoding="utf-8")]
@@ -1113,6 +1121,227 @@ class EvaluationVerifierTests(unittest.TestCase):
             PROMPTFOO_RUNNER._validate_local_outputs(generated, results)
             self.assertTrue(report.is_file())
 
+    def test_promptfoo_exit_100_persists_a_sanitized_failed_report(self):
+        """EV-RPT-01/EV-PRV-01: assertion failure is evidence, not infrastructure loss."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            promptfoo_root = root / "promptfoo"
+            (promptfoo_root / "results").mkdir(parents=True)
+            dedicated_home = root / "codex-home"
+            dedicated_home.mkdir()
+            manifest = {
+                "manifest_path": str(root / "manifest.json"),
+                "workspace_root": str(root / "workspaces"),
+                "workspaces": {},
+                "current_fingerprint": "current",
+                "proposed_fingerprint": None,
+            }
+
+            def fake_run(command, **kwargs):
+                raw_path = Path(command[command.index("-o") + 1])
+                raw_path.write_text(json.dumps({
+                    "results": [{
+                        "description": "positive-refine",
+                        "provider": "current",
+                        "success": False,
+                        "response": {
+                            "output": "TOP_SECRET_MODEL_OUTPUT",
+                            "raw": json.dumps({"events": [{"type": "turn.completed"}]}),
+                        },
+                        "gradingResult": {
+                            "pass": False,
+                            "reason": "expected skill was not observed",
+                            "componentResults": [{
+                                "pass": False,
+                                "reason": "routing assertion failed",
+                                "assertion": {"type": "skill-used", "value": "refine"},
+                            }],
+                        },
+                    }]
+                }), encoding="utf-8")
+                return subprocess.CompletedProcess(command, 100, "", "")
+
+            with patch.object(PROMPTFOO_RUNNER, "PROMPTFOO_ROOT", promptfoo_root), patch.object(
+                PROMPTFOO_RUNNER.PREPARE, "prepare", return_value=manifest
+            ), patch.object(
+                PROMPTFOO_RUNNER.PREPARE, "evaluation_environment", return_value={}
+            ), patch.object(
+                PROMPTFOO_RUNNER, "_run", side_effect=fake_run
+            ), patch.object(
+                PROMPTFOO_RUNNER, "_codex_version", return_value="codex-test"
+            ), patch.object(
+                PROMPTFOO_RUNNER, "_promptfoo_version", return_value="promptfoo-test"
+            ):
+                outcome = PROMPTFOO_RUNNER.run_promptfoo(
+                    "routing", promptfoo_root / "routing-config.yaml", codex_home=dedicated_home
+                )
+
+            self.assertEqual("fail", outcome.status)
+            self.assertEqual(("positive-refine",), outcome.failed_ids)
+            self.assertTrue(outcome.report_path.is_file())
+            report_text = outcome.report_path.read_text(encoding="utf-8")
+            self.assertNotIn("TOP_SECRET_MODEL_OUTPUT", report_text)
+            self.assertIn("expected skill was not observed", report_text)
+            self.assertEqual(100, json.loads(report_text)["promptfoo_exit_code"])
+
+    def test_promptfoo_uses_disposable_trace_state_and_not_no_write(self):
+        """EV-ISO-01: the persisted eval row and its traces share disposable state."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            promptfoo_root = root / "promptfoo"
+            (promptfoo_root / "results").mkdir(parents=True)
+            dedicated_home = root / "codex-home"
+            dedicated_home.mkdir()
+            run_root = root / "run"
+            run_root.mkdir()
+            captured = {}
+            manifest = {
+                "manifest_path": str(root / "manifest.json"),
+                "workspace_root": str(root / "workspaces"),
+                "workspaces": {},
+            }
+
+            def fake_run(command, **kwargs):
+                captured["command"] = command
+                captured["env"] = kwargs["env"]
+                raw_path = Path(command[command.index("-o") + 1])
+                raw_path.write_text(json.dumps({
+                    "results": [{
+                        "description": "security-case",
+                        "success": True,
+                        "response": {"output": "done"},
+                        "gradingResult": {"pass": True, "componentResults": []},
+                    }]
+                }), encoding="utf-8")
+                return subprocess.CompletedProcess(command, 0, "", "")
+
+            with patch.dict(os.environ, {"TUXEDO_EVAL_KEEP_WORKSPACES": "1"}), patch.object(
+                PROMPTFOO_RUNNER, "PROMPTFOO_ROOT", promptfoo_root
+            ), patch.object(PROMPTFOO_RUNNER.tempfile, "mkdtemp", return_value=str(run_root)), patch.object(
+                PROMPTFOO_RUNNER.PREPARE, "prepare", return_value=manifest
+            ), patch.object(
+                PROMPTFOO_RUNNER.PREPARE, "evaluation_environment", return_value={}
+            ), patch.object(PROMPTFOO_RUNNER, "_run", side_effect=fake_run), patch.object(
+                PROMPTFOO_RUNNER, "_check_workspace_clean"
+            ), patch.object(
+                PROMPTFOO_RUNNER, "_codex_version", return_value="codex-test"
+            ), patch.object(
+                PROMPTFOO_RUNNER, "_promptfoo_version", return_value="promptfoo-test"
+            ):
+                PROMPTFOO_RUNNER.run_promptfoo(
+                    "security", promptfoo_root / "security-config.yaml", codex_home=dedicated_home
+                )
+
+            self.assertNotIn("--no-write", captured["command"])
+            state = Path(captured["env"]["PROMPTFOO_CONFIG_DIR"])
+            self.assertTrue(state.is_absolute())
+            self.assertNotEqual(Path.home() / ".promptfoo", state)
+            self.assertEqual(run_root, state.parent)
+            self.assertTrue(state.parent.is_dir(), "debug workspace may be preserved explicitly")
+            self.assertFalse(state.exists(), "Promptfoo database and traces must always be removed")
+
+    def test_promptfoo_full_shards_cover_all_cases_and_aggregate_failures(self):
+        """EV-SHD-01/EV-AGG-01: full coverage runs before one aggregate verdict."""
+        self.assertEqual(2, PROMPTFOO_RUNNER.FULL_MAX_WORKERS)
+        self.assertEqual(
+            [(0, 17), (17, 34)],
+            [PROMPTFOO_RUNNER._parse_filter_range(shard.filter_range) for shard in PROMPTFOO_RUNNER.SUITE_SHARDS["routing"]],
+        )
+        self.assertEqual(
+            [(0, 2), (2, 4), (4, 6), (6, 8)],
+            [PROMPTFOO_RUNNER._parse_filter_range(shard.filter_range) for shard in PROMPTFOO_RUNNER.SUITE_SHARDS["behavior"]],
+        )
+        outcomes = [
+            PROMPTFOO_RUNNER.SuiteOutcome("routing", Path("routing.json"), "fail", 34, 29, 5, 0, ("r-1",)),
+            PROMPTFOO_RUNNER.SuiteOutcome("behavior", Path("behavior.json"), "fail", 40, 11, 29, 0, ("b-1",)),
+            PROMPTFOO_RUNNER.SuiteOutcome("security", Path("security.json"), "fail", 12, 0, 12, 0, ("s-1",)),
+        ]
+        with self.assertRaisesRegex(RuntimeError, "routing: 29/34.*behavior: 11/40.*security: 0/12"):
+            PROMPTFOO_RUNNER._require_passing_outcomes(outcomes)
+
+    def test_promptfoo_full_runs_every_suite_before_assertion_verdict(self):
+        """EV-AGG-01: failed assertions do not suppress later suite evidence."""
+        outcomes = {
+            "routing": PROMPTFOO_RUNNER.SuiteOutcome("routing", Path("routing.json"), "fail", 34, 29, 5, 0, ("r",)),
+            "behavior": PROMPTFOO_RUNNER.SuiteOutcome("behavior", Path("behavior.json"), "fail", 40, 11, 29, 0, ("b",)),
+            "security": PROMPTFOO_RUNNER.SuiteOutcome("security", Path("security.json"), "fail", 12, 0, 12, 0, ("s",)),
+        }
+        invoked = []
+
+        def run_suite(suite, _config, **_kwargs):
+            invoked.append(suite)
+            return outcomes[suite]
+
+        with patch.object(PROMPTFOO_RUNNER, "_git_status", return_value="unchanged"), patch.object(
+            PROMPTFOO_RUNNER.PREPARE, "preflight_codex_home", return_value=Path("/dedicated")
+        ), patch.object(PROMPTFOO_RUNNER, "_official_validators"), patch.object(
+            PROMPTFOO_RUNNER, "_python_and_shell_checks"
+        ), patch.object(PROMPTFOO_RUNNER, "_promptfoo_validate"), patch.object(
+            PROMPTFOO_RUNNER, "_validate_fixture_catalog"
+        ), patch.object(PROMPTFOO_RUNNER, "_git_diff_check"), patch.object(
+            PROMPTFOO_RUNNER, "run_promptfoo_suite", side_effect=run_suite
+        ), patch.object(PROMPTFOO_RUNNER, "_write_full_summary") as write_full:
+            with self.assertRaisesRegex(RuntimeError, "evaluation assertions did not pass"):
+                PROMPTFOO_RUNNER.run_full_evaluation()
+        self.assertEqual(["routing", "behavior", "security"], invoked)
+        write_full.assert_called_once()
+
+    def test_promptfoo_completed_shard_report_survives_another_shard_error(self):
+        """EV-SHD-01: checkpoints survive an infrastructure failure in a peer shard."""
+        with tempfile.TemporaryDirectory() as tmp:
+            report = Path(tmp) / "routing-1-of-2.json"
+            report.write_text('{"summary":{"status":"pass"}}', encoding="utf-8")
+            completed = PROMPTFOO_RUNNER.SuiteOutcome("routing", report, "pass", 17, 17, 0, 0, ())
+
+            def run_shard(*_args, **kwargs):
+                if kwargs["shard"].name == "1-of-2":
+                    return completed
+                raise RuntimeError("provider infrastructure failed")
+
+            with patch.object(PROMPTFOO_RUNNER, "run_promptfoo", side_effect=run_shard):
+                with self.assertRaisesRegex(RuntimeError, "provider infrastructure failed"):
+                    PROMPTFOO_RUNNER.run_promptfoo_suite(
+                        "routing", Path("routing.yaml"), codex_home=Path("/dedicated")
+                    )
+            self.assertTrue(report.is_file())
+
+    def test_promptfoo_integrity_failures_remain_infrastructure_errors(self):
+        """EV-RPT-02: only completed provider results may become verdict evidence."""
+        rows = PROMPTFOO_RUNNER._validate_raw_result({
+            "results": [{
+                "response": {"output": "done"},
+                "success": False,
+                "gradingResult": {"pass": False, "reason": "assertion failed"},
+            }]
+        })
+        self.assertEqual(1, len(rows))
+        with self.assertRaisesRegex(RuntimeError, "empty provider output"):
+            PROMPTFOO_RUNNER._validate_raw_result({"results": [{"response": {"output": ""}}]})
+        with self.assertRaisesRegex(RuntimeError, "did not complete"):
+            PROMPTFOO_RUNNER._validate_raw_result({
+                "results": [{"response": {"output": "done", "raw": json.dumps({"turnCompleted": False})}}]
+            })
+        with tempfile.TemporaryDirectory() as tmp:
+            malformed = Path(tmp) / "raw.json"
+            malformed.write_text("not json", encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError, "missing, unreadable, or malformed"):
+                PROMPTFOO_RUNNER._load_raw_result(malformed)
+        exit_100 = subprocess.CompletedProcess(["promptfoo"], 100, "", "")
+        with patch.object(PROMPTFOO_RUNNER.subprocess, "run", return_value=exit_100):
+            accepted = PROMPTFOO_RUNNER._run(
+                ["promptfoo"], label="assertions", accepted_returncodes=frozenset({0, 100})
+            )
+            self.assertEqual(100, accepted.returncode)
+            with self.assertRaisesRegex(RuntimeError, "exit code 100"):
+                PROMPTFOO_RUNNER._run(["promptfoo"], label="infrastructure")
+        with patch.object(
+            PROMPTFOO_RUNNER.subprocess,
+            "run",
+            side_effect=subprocess.TimeoutExpired(["promptfoo"], 7),
+        ):
+            with self.assertRaisesRegex(RuntimeError, "timed out after 7 seconds"):
+                PROMPTFOO_RUNNER._run(["promptfoo"], label="provider", timeout=7)
+
     def test_repository_has_no_personal_absolute_paths_and_rejects_bad_results(self):
         source = (ROOT / "evals" / "promptfoo" / "scripts" / "run-evaluations.py").read_text()
         personal_home_pattern = re.compile(r"(?<![A-Za-z0-9_])/(?:Users|home)/[^\s\"'`]+")
@@ -1131,8 +1360,10 @@ class EvaluationVerifierTests(unittest.TestCase):
             self.assertIsNone(personal_home_pattern.search(text), path.relative_to(ROOT))
         with self.assertRaises(RuntimeError):
             PROMPTFOO_RUNNER._validate_raw_result({"results": [{"response": {"output": ""}}]})
-        with self.assertRaises(RuntimeError):
-            PROMPTFOO_RUNNER._validate_raw_result({"results": [{"response": {"output": "done"}, "pass": False}]})
+        self.assertEqual(
+            1,
+            len(PROMPTFOO_RUNNER._validate_raw_result({"results": [{"response": {"output": "done"}, "pass": False}]})),
+        )
         with self.assertRaises(RuntimeError):
             PROMPTFOO_RUNNER._validate_raw_result({
                 "results": [{

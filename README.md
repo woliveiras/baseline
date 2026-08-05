@@ -144,6 +144,25 @@ empirical agent evidence is needed, then decide independently whether the
 change is ready to push. `eval:redteam:generate`, `eval:redteam:review`, and
 `eval:redteam:full` are also explicit maintainer actions.
 
+The full stack splits routing into two shards and behavior into four, with at
+most two shards active at once; each provider process remains internally
+sequential and security remains one suite. Sharding changes elapsed time, not
+the 86-call coverage. Every shard gets a disposable workspace and a disposable
+Promptfoo state database so evaluation rows and deep traces remain linked
+without touching personal Promptfoo state. A completed shard immediately
+writes a sanitized checkpoint report. Promptfoo exit 100 is treated as an
+assertion verdict: the report is retained, remaining suites run, and the
+command writes a full aggregate with total wall duration, then returns one
+aggregate failure after all suite outcomes are available.
+Timeouts, provider errors, incomplete turns, malformed/missing results, and
+other exit codes remain infrastructure errors. Raw model output, prompts,
+traces, and credentials are never copied into the durable report.
+
+The earlier sequential run took about 2h32m. Concurrency two is intended to
+bring the full stack below two hours, but that target remains unconfirmed until
+another explicitly authorized `pnpm run eval:full` records its actual wall
+duration. No coverage or reasoning level is reduced to meet the target.
+
 The suites test different properties of the skills:
 
 - `eval:skills` runs positive and negative routing cases for every distributed

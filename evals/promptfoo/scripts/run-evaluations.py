@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import hashlib
 import importlib.util
 import json
@@ -15,7 +16,7 @@ import sys
 import tempfile
 import time
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, NamedTuple
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -32,6 +33,35 @@ CONFIGS = (
     PROMPTFOO_ROOT / "compare-config.yaml",
     PROMPTFOO_ROOT / "redteam-config.yaml",
 )
+PROMPTFOO_ASSERTION_FAILURE_EXIT_CODE = 100
+FULL_MAX_WORKERS = 2
+
+
+class Shard(NamedTuple):
+    name: str
+    filter_range: str
+
+
+class SuiteOutcome(NamedTuple):
+    suite: str
+    report_path: Path
+    status: str
+    provider_responses: int
+    passed: int
+    failed: int
+    needs_review: int
+    failed_ids: tuple[str, ...]
+
+
+SUITE_SHARDS = {
+    "routing": (Shard("1-of-2", "0:17"), Shard("2-of-2", "17:34")),
+    "behavior": (
+        Shard("1-of-4", "0:2"),
+        Shard("2-of-4", "2:4"),
+        Shard("3-of-4", "4:6"),
+        Shard("4-of-4", "6:8"),
+    ),
+}
 
 
 def _load_module(name: str, path: Path):
@@ -52,10 +82,22 @@ def _redact(value: str) -> str:
     return value
 
 
-def _run(command: list[str], *, timeout: int = 300, env: dict[str, str] | None = None, label: str) -> subprocess.CompletedProcess[str]:
+def _run(
+    command: list[str],
+    *,
+    timeout: int = 300,
+    env: dict[str, str] | None = None,
+    label: str,
+    accepted_returncodes: frozenset[int] = frozenset({0}),
+) -> subprocess.CompletedProcess[str]:
     print(f"[tuxedo] {label}")
-    result = subprocess.run(command, cwd=ROOT, env=env, text=True, capture_output=True, check=False, timeout=timeout)
-    if result.returncode:
+    try:
+        result = subprocess.run(
+            command, cwd=ROOT, env=env, text=True, capture_output=True, check=False, timeout=timeout
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError(f"{label} timed out after {timeout} seconds") from exc
+    if result.returncode not in accepted_returncodes:
         detail = _redact((result.stdout + "\n" + result.stderr).strip())[-4000:]
         raise RuntimeError(f"{label} failed with exit code {result.returncode}\n{detail}")
     return result
@@ -171,14 +213,17 @@ def _python_and_shell_checks() -> None:
 
 
 def _codex_version(codex_home: Path) -> str:
-    result = subprocess.run(
-        [os.environ.get("TUXEDO_EVAL_CODEX_PATH", "codex"), "--version"],
-        env=PREPARE.evaluation_environment(codex_home),
-        text=True,
-        capture_output=True,
-        check=False,
-        timeout=15,
-    )
+    try:
+        result = subprocess.run(
+            [os.environ.get("TUXEDO_EVAL_CODEX_PATH", "codex"), "--version"],
+            env=PREPARE.evaluation_environment(codex_home),
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=15,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise RuntimeError("the configured Codex binary could not report its version") from exc
     if result.returncode:
         raise RuntimeError("the configured Codex binary could not report its version")
     return result.stdout.strip()
@@ -225,11 +270,6 @@ def _validate_raw_result(raw: Any) -> list[dict[str, Any]]:
                 isinstance(event, dict) and event.get("type") == "turn.completed" for event in events
             ):
                 failures.append(f"row {index}: event stream has no completed turn")
-        for item in _iter_dicts(row):
-            if item.get("pass") is False:
-                failures.append(f"row {index}: assertion failed")
-            if item.get("success") is False:
-                failures.append(f"row {index}: provider/test marked unsuccessful")
     if failures:
         raise RuntimeError("Promptfoo result validation failed: " + "; ".join(failures[:12]))
     return rows
@@ -248,37 +288,125 @@ def _safe_metadata(row: dict[str, Any]) -> dict[str, Any]:
     return {"skills_observed": observed}
 
 
-def _report(raw: dict[str, Any], rows: list[dict[str, Any]], manifest: dict[str, Any], suite: str, repeat: int, seconds: float, codex_home: Path) -> dict[str, Any]:
+def _safe_reason(value: Any) -> str:
+    return _redact(str(value or ""))[:1000]
+
+
+def _safe_token_usage(value: Any) -> dict[str, int | float]:
+    if not isinstance(value, dict):
+        return {}
+    return {
+        str(key): amount
+        for key, amount in value.items()
+        if isinstance(amount, (int, float)) and not isinstance(amount, bool)
+    }
+
+
+def _safe_component_results(grading: dict[str, Any]) -> list[dict[str, Any]]:
+    safe: list[dict[str, Any]] = []
+    components = grading.get("componentResults")
+    for component in components if isinstance(components, list) else []:
+        if not isinstance(component, dict):
+            continue
+        assertion = component.get("assertion") if isinstance(component.get("assertion"), dict) else {}
+        safe.append({
+            "pass": component.get("pass"),
+            "score": component.get("score"),
+            "reason": _safe_reason(component.get("reason")),
+            "assertion_type": str(assertion.get("type") or "unknown"),
+        })
+    return safe
+
+
+def _row_id(row: dict[str, Any], index: int) -> str:
+    test_case = row.get("testCase") if isinstance(row.get("testCase"), dict) else {}
+    variables = row.get("vars") if isinstance(row.get("vars"), dict) else {}
+    return str(
+        row.get("description")
+        or test_case.get("description")
+        or row.get("testCaseId")
+        or row.get("id")
+        or variables.get("id")
+        or variables.get("task_id")
+        or variables.get("workspace_key")
+        or f"row-{index}"
+    )
+
+
+def _row_status(row: dict[str, Any]) -> str:
+    grading = row.get("gradingResult") if isinstance(row.get("gradingResult"), dict) else {}
+    components = grading.get("componentResults") if isinstance(grading.get("componentResults"), list) else []
+    if grading.get("needs_review") is True or any(
+        isinstance(component, dict) and component.get("needs_review") is True for component in components
+    ):
+        return "needs-review"
+    if row.get("success") is False or row.get("pass") is False or grading.get("pass") is False:
+        return "fail"
+    if any(isinstance(component, dict) and component.get("pass") is False for component in components):
+        return "fail"
+    return "pass"
+
+
+def _report(
+    rows: list[dict[str, Any]],
+    manifest: dict[str, Any],
+    suite: str,
+    repeat: int,
+    seconds: float,
+    codex_version: str,
+    promptfoo_version: str,
+    shard: Shard | None,
+    promptfoo_exit_code: int,
+) -> dict[str, Any]:
     report_rows: list[dict[str, Any]] = []
-    for row in rows:
+    for index, row in enumerate(rows):
         response = row.get("response") if isinstance(row.get("response"), dict) else {}
         grading = row.get("gradingResult") if isinstance(row.get("gradingResult"), dict) else {}
+        status = _row_status(row)
+        provider = row.get("provider") or row.get("providerId") or "unknown"
+        if isinstance(provider, dict):
+            provider = provider.get("label") or provider.get("id") or "unknown"
         report_rows.append({
-            "test_id": str(row.get("testCaseId") or row.get("id") or row.get("description") or "unknown"),
-            "provider": str(row.get("provider") or row.get("providerId") or "unknown"),
-            "status": "pass" if row.get("success", True) else "fail",
+            "test_id": _row_id(row, index),
+            "provider": _safe_reason(provider),
+            "status": status,
             "duration_ms": response.get("latencyMs") or row.get("latencyMs"),
-            "tokens": response.get("tokenUsage") or row.get("tokenUsage") or {},
-            "deterministic_checks": grading.get("componentResults", []),
+            "tokens": _safe_token_usage(response.get("tokenUsage") or row.get("tokenUsage")),
+            "reason": _safe_reason(grading.get("reason")),
+            "deterministic_checks": _safe_component_results(grading),
             "secondary_scores": {"score": grading.get("score")} if "score" in grading else {},
             "observed": _safe_metadata(row),
         })
+    counts = {status: sum(run["status"] == status for run in report_rows) for status in ("pass", "fail", "needs-review")}
+    status = (
+        "pass"
+        if promptfoo_exit_code == 0 and counts["fail"] == 0 and counts["needs-review"] == 0
+        else "fail"
+    )
     return {
-        "version": 1,
+        "version": 2,
         "suite": suite,
+        "shard": {"name": shard.name, "filter_range": shard.filter_range} if shard else None,
+        "promptfoo_exit_code": promptfoo_exit_code,
         "condition_fingerprints": {
             "current": manifest.get("current_fingerprint"),
             "proposed": manifest.get("proposed_fingerprint"),
         },
         "model": "codex-cli-default",
         "reasoning": "low" if suite == "smoke" else "medium",
-        "codex_version": _codex_version(codex_home),
-        "promptfoo_version": _promptfoo_version(),
+        "codex_version": codex_version,
+        "promptfoo_version": promptfoo_version,
         "seed": int(os.environ.get("TUXEDO_EVAL_SEED", "0")),
         "repetitions": repeat,
         "duration_seconds": round(seconds, 3),
         "privacy": {"shared": False, "remote_redteam_generation": False, "raw_responses_saved": False},
-        "summary": {"provider_responses": len(rows), "status": "pass"},
+        "summary": {
+            "provider_responses": len(rows),
+            "passed": counts["pass"],
+            "failed": counts["fail"],
+            "needs_review": counts["needs-review"],
+            "status": status,
+        },
         "runs": report_rows,
         "limitations": [
             "skill-used and metadata.skillCalls are Codex SDK heuristics",
@@ -286,6 +414,45 @@ def _report(raw: dict[str, Any], rows: list[dict[str, Any]], manifest: dict[str,
             "results are scoped to the recorded model, Codex version, tasks, fixtures, and conditions",
         ],
     }
+
+
+def _display_path(path: Path) -> str:
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
+
+def _write_report(report: dict[str, Any], suite: str, suffix: str = "") -> Path:
+    output = PROMPTFOO_ROOT / "results" / f"{suite}{suffix}-{time.time_ns()}.json"
+    output.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
+    return output
+
+
+def _load_raw_result(path: Path) -> Any:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise RuntimeError("Promptfoo result file is missing, unreadable, or malformed") from exc
+
+
+def _outcome(report: dict[str, Any], path: Path) -> SuiteOutcome:
+    summary = report["summary"]
+    failed_ids = tuple(
+        str(run["test_id"]) for run in report["runs"] if run.get("status") in {"fail", "needs-review"}
+    )
+    if summary["status"] != "pass" and not failed_ids:
+        failed_ids = (f"promptfoo-exit-{report.get('promptfoo_exit_code', 'unknown')}",)
+    return SuiteOutcome(
+        str(report["suite"]),
+        path,
+        str(summary["status"]),
+        int(summary["provider_responses"]),
+        int(summary["passed"]),
+        int(summary["failed"]),
+        int(summary["needs_review"]),
+        failed_ids,
+    )
 
 
 def _check_workspace_clean(manifest: dict[str, Any]) -> None:
@@ -303,8 +470,20 @@ def _check_workspace_clean(manifest: dict[str, Any]) -> None:
                     raise RuntimeError(f"outside sentinel changed: {path}")
 
 
-def run_promptfoo(suite: str, config: Path, *, current_root: Path = ROOT, proposed_root: Path | None = None, repeat: int = 1, timeout: int = 1800, codex_home: Path | None = None) -> Path:
+def run_promptfoo(
+    suite: str,
+    config: Path,
+    *,
+    current_root: Path = ROOT,
+    proposed_root: Path | None = None,
+    repeat: int = 1,
+    timeout: int = 1800,
+    codex_home: Path | None = None,
+    shard: Shard | None = None,
+) -> SuiteOutcome:
     codex_home = codex_home or PREPARE.preflight_codex_home()
+    codex_version = _codex_version(codex_home)
+    promptfoo_version = _promptfoo_version()
     workspace_root = Path(tempfile.mkdtemp(prefix=f"tuxedo-promptfoo-{suite}-"))
     keep = os.environ.get("TUXEDO_EVAL_KEEP_WORKSPACES") == "1"
     raw_path = workspace_root / "promptfoo-raw.json"
@@ -318,40 +497,196 @@ def run_promptfoo(suite: str, config: Path, *, current_root: Path = ROOT, propos
             "TUXEDO_EVAL_MANIFEST": str(manifest["manifest_path"]),
             "PROMPTFOO_DISABLE_REDTEAM_REMOTE_GENERATION": "true",
             "PROMPTFOO_DISABLE_SHARE": "true",
+            "PROMPTFOO_CONFIG_DIR": str(workspace_root / "promptfoo-state"),
         })
+        (workspace_root / "promptfoo-state").mkdir()
         command = [
-            PNPM, "exec", "promptfoo", "eval", "-c", str(config), "--no-cache", "--no-share", "--no-write",
+            PNPM, "exec", "promptfoo", "eval", "-c", str(config), "--no-cache", "--no-share",
             "--max-concurrency", "1", "--repeat", str(repeat), "--no-progress-bar", "-o", str(raw_path),
         ]
-        result = _run(command, timeout=timeout, env=env, label=f"Promptfoo provider suite: {suite}")
+        if shard:
+            command.extend(["--filter-range", shard.filter_range])
+        result = _run(
+            command,
+            timeout=timeout,
+            env=env,
+            label=f"Promptfoo provider suite: {suite}{f' [{shard.name}]' if shard else ''}",
+            accepted_returncodes=frozenset({0, PROMPTFOO_ASSERTION_FAILURE_EXIT_CODE}),
+        )
         if not raw_path.is_file():
-            raise RuntimeError("Promptfoo completed without producing a result file")
-        raw = json.loads(raw_path.read_text(encoding="utf-8"))
+            raise RuntimeError(
+                f"Promptfoo exited with code {result.returncode} without producing a result file"
+            )
+        raw = _load_raw_result(raw_path)
         rows = _validate_raw_result(raw)
         _check_workspace_clean(manifest)
-        report = _report(raw, rows, manifest, suite, repeat, time.monotonic() - started, codex_home)
-        output = PROMPTFOO_ROOT / "results" / f"{suite}-{time.time_ns()}.json"
-        output.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
-        print(f"[tuxedo] {suite}: {len(rows)} provider responses, {report['duration_seconds']}s, result={output.relative_to(ROOT)}")
-        return output
+        report = _report(
+            rows,
+            manifest,
+            suite,
+            repeat,
+            time.monotonic() - started,
+            codex_version,
+            promptfoo_version,
+            shard,
+            result.returncode,
+        )
+        output = _write_report(report, suite, f"-{shard.name}" if shard else "")
+        outcome = _outcome(report, output)
+        print(
+            f"[tuxedo] {suite}{f' [{shard.name}]' if shard else ''}: "
+            f"{outcome.passed}/{outcome.provider_responses} passed, {report['duration_seconds']}s, "
+            f"result={_display_path(output)}"
+        )
+        return outcome
     finally:
         raw_path.unlink(missing_ok=True)
+        shutil.rmtree(workspace_root / "promptfoo-state", ignore_errors=True)
         if not keep:
             shutil.rmtree(workspace_root, ignore_errors=True)
         else:
             print(f"[tuxedo] preserved debug workspace: {workspace_root}")
 
 
+def _parse_filter_range(value: str) -> tuple[int, int]:
+    start, end = value.split(":", 1)
+    return int(start), int(end)
+
+
+def _aggregate_shards(suite: str, outcomes: list[SuiteOutcome], duration_seconds: float) -> SuiteOutcome:
+    reports = [json.loads(outcome.report_path.read_text(encoding="utf-8")) for outcome in outcomes]
+    runs = [run for report in reports for run in report["runs"]]
+    passed = sum(outcome.passed for outcome in outcomes)
+    failed = sum(outcome.failed for outcome in outcomes)
+    needs_review = sum(outcome.needs_review for outcome in outcomes)
+    shard_verdict_failures = sum(outcome.status != "pass" for outcome in outcomes)
+    aggregate = {
+        "version": 2,
+        "suite": suite,
+        "condition_fingerprints": reports[0].get("condition_fingerprints"),
+        "model": reports[0].get("model"),
+        "reasoning": reports[0].get("reasoning"),
+        "codex_version": reports[0].get("codex_version"),
+        "promptfoo_version": reports[0].get("promptfoo_version"),
+        "seed": reports[0].get("seed"),
+        "repetitions": reports[0].get("repetitions"),
+        "shards": [{"report": _display_path(outcome.report_path), **report["shard"]} for outcome, report in zip(outcomes, reports)],
+        "duration_seconds": round(duration_seconds, 3),
+        "privacy": {"shared": False, "remote_redteam_generation": False, "raw_responses_saved": False},
+        "summary": {
+            "provider_responses": sum(outcome.provider_responses for outcome in outcomes),
+            "passed": passed,
+            "failed": failed,
+            "needs_review": needs_review,
+            "shard_verdict_failures": shard_verdict_failures,
+            "status": "pass" if shard_verdict_failures == 0 else "fail",
+        },
+        "runs": runs,
+        "limitations": reports[0]["limitations"],
+    }
+    output = _write_report(aggregate, suite, "-aggregate")
+    result = _outcome(aggregate, output)
+    print(f"[tuxedo] {suite} aggregate: {passed}/{result.provider_responses} passed, result={_display_path(output)}")
+    return result
+
+
+def run_promptfoo_suite(
+    suite: str,
+    config: Path,
+    *,
+    codex_home: Path | None = None,
+    current_root: Path = ROOT,
+    proposed_root: Path | None = None,
+    repeat: int = 1,
+) -> SuiteOutcome:
+    codex_home = codex_home or PREPARE.preflight_codex_home()
+    shards = SUITE_SHARDS.get(suite)
+    if not shards:
+        return run_promptfoo(
+            suite, config, codex_home=codex_home, current_root=current_root,
+            proposed_root=proposed_root, repeat=repeat,
+        )
+    outcomes: list[SuiteOutcome] = []
+    started = time.monotonic()
+    with concurrent.futures.ThreadPoolExecutor(max_workers=FULL_MAX_WORKERS) as executor:
+        futures = [
+            executor.submit(
+                run_promptfoo,
+                suite,
+                config,
+                codex_home=codex_home,
+                current_root=current_root,
+                proposed_root=proposed_root,
+                repeat=repeat,
+                timeout=3600,
+                shard=shard,
+            )
+            for shard in shards
+        ]
+        for future in futures:
+            outcomes.append(future.result())
+    return _aggregate_shards(suite, outcomes, time.monotonic() - started)
+
+
+def _require_passing_outcomes(outcomes: list[SuiteOutcome]) -> None:
+    failed = [outcome for outcome in outcomes if outcome.status != "pass"]
+    if not failed:
+        return
+    summary = "; ".join(
+        f"{outcome.suite}: {outcome.passed}/{outcome.provider_responses} passed "
+        f"({outcome.failed} failed, {outcome.needs_review} needs-review), report={_display_path(outcome.report_path)}"
+        for outcome in failed
+    )
+    raise RuntimeError(f"evaluation assertions did not pass: {summary}")
+
+
+def _write_full_summary(outcomes: list[SuiteOutcome], duration_seconds: float) -> Path:
+    status = "pass" if all(outcome.status == "pass" for outcome in outcomes) else "fail"
+    report = {
+        "version": 2,
+        "suite": "full",
+        "duration_seconds": round(duration_seconds, 3),
+        "privacy": {"shared": False, "remote_redteam_generation": False, "raw_responses_saved": False},
+        "summary": {
+            "provider_responses": sum(outcome.provider_responses for outcome in outcomes),
+            "passed": sum(outcome.passed for outcome in outcomes),
+            "failed": sum(outcome.failed for outcome in outcomes),
+            "needs_review": sum(outcome.needs_review for outcome in outcomes),
+            "status": status,
+        },
+        "suites": [
+            {
+                "suite": outcome.suite,
+                "status": outcome.status,
+                "provider_responses": outcome.provider_responses,
+                "passed": outcome.passed,
+                "failed": outcome.failed,
+                "needs_review": outcome.needs_review,
+                "report": _display_path(outcome.report_path),
+            }
+            for outcome in outcomes
+        ],
+    }
+    output = _write_report(report, "full", "-aggregate")
+    print(f"[tuxedo] full aggregate: status={status}, {duration_seconds:.3f}s, result={_display_path(output)}")
+    return output
+
+
 def _run_skills() -> None:
-    run_promptfoo("routing", PROMPTFOO_ROOT / "routing-config.yaml")
-    run_promptfoo("behavior", PROMPTFOO_ROOT / "promptfooconfig.yaml")
+    codex_home = PREPARE.preflight_codex_home()
+    outcomes = [
+        run_promptfoo_suite("routing", PROMPTFOO_ROOT / "routing-config.yaml", codex_home=codex_home),
+        run_promptfoo_suite("behavior", PROMPTFOO_ROOT / "promptfooconfig.yaml", codex_home=codex_home),
+    ]
+    _require_passing_outcomes(outcomes)
 
 
 def _run_compare() -> None:
     raw = os.environ.get("TUXEDO_EVAL_PROPOSED_ROOT")
     if not raw:
         raise RuntimeError("TUXEDO_EVAL_PROPOSED_ROOT is required for eval:compare")
-    run_promptfoo("compare", PROMPTFOO_ROOT / "compare-config.yaml", proposed_root=Path(raw), repeat=3)
+    outcome = run_promptfoo("compare", PROMPTFOO_ROOT / "compare-config.yaml", proposed_root=Path(raw), repeat=3)
+    _require_passing_outcomes([outcome])
 
 
 def _redteam(command_name: str) -> None:
@@ -369,32 +704,45 @@ def _redteam(command_name: str) -> None:
     env = PREPARE.evaluation_environment(codex_home)
     env["PROMPTFOO_DISABLE_REDTEAM_REMOTE_GENERATION"] = "true"
     env["PROMPTFOO_DISABLE_SHARE"] = "true"
+    state_root = Path(tempfile.mkdtemp(prefix="tuxedo-promptfoo-redteam-"))
+    env["PROMPTFOO_CONFIG_DIR"] = str(state_root / "promptfoo-state")
+    (state_root / "promptfoo-state").mkdir()
     config = PROMPTFOO_ROOT / "redteam-config.yaml"
-    if command_name == "generate":
-        output = PROMPTFOO_ROOT / "generated" / "redteam.yaml"
-        _run([
-            PNPM, "exec", "promptfoo", "redteam", "generate", "-c", str(config), "-o", str(output), "--no-cache",
-            "--no-progress-bar", "--strict", "--plugins", "coding-agent:core", "--num-tests", "10",
-        ], timeout=1800, env=env, label="Promptfoo red-team probe generation (explicit, local-only)")
-        print(f"[tuxedo] generated probes at {output.relative_to(ROOT)}; review before execution")
-    elif command_name == "full":
-        _run([
-            PNPM, "exec", "promptfoo", "redteam", "run", "-c", str(config), "--no-cache", "--no-progress-bar", "--strict",
-        ], timeout=3600, env=env, label="Promptfoo full red-team scan (explicit, expensive)")
+    try:
+        if command_name == "generate":
+            output = PROMPTFOO_ROOT / "generated" / "redteam.yaml"
+            _run([
+                PNPM, "exec", "promptfoo", "redteam", "generate", "-c", str(config), "-o", str(output), "--no-cache",
+                "--no-progress-bar", "--strict", "--plugins", "coding-agent:core", "--num-tests", "10",
+            ], timeout=1800, env=env, label="Promptfoo red-team probe generation (explicit, local-only)")
+            print(f"[tuxedo] generated probes at {output.relative_to(ROOT)}; review before execution")
+        elif command_name == "full":
+            _run([
+                PNPM, "exec", "promptfoo", "redteam", "run", "-c", str(config), "--no-cache", "--no-progress-bar", "--strict",
+            ], timeout=3600, env=env, label="Promptfoo full red-team scan (explicit, expensive)")
+    finally:
+        shutil.rmtree(state_root, ignore_errors=True)
+
+
 def run_full_evaluation() -> None:
+    started = time.monotonic()
     before = _git_status()
     codex_home = PREPARE.preflight_codex_home()
     _official_validators()
     _python_and_shell_checks()
     _promptfoo_validate()
     _validate_fixture_catalog()
-    run_promptfoo("routing", PROMPTFOO_ROOT / "routing-config.yaml", codex_home=codex_home)
-    run_promptfoo("behavior", PROMPTFOO_ROOT / "promptfooconfig.yaml", codex_home=codex_home)
-    run_promptfoo("security", PROMPTFOO_ROOT / "security-config.yaml", codex_home=codex_home)
+    outcomes = [
+        run_promptfoo_suite("routing", PROMPTFOO_ROOT / "routing-config.yaml", codex_home=codex_home),
+        run_promptfoo_suite("behavior", PROMPTFOO_ROOT / "promptfooconfig.yaml", codex_home=codex_home),
+        run_promptfoo_suite("security", PROMPTFOO_ROOT / "security-config.yaml", codex_home=codex_home),
+    ]
     _git_diff_check()
     after = _git_status()
     if after != before:
         raise RuntimeError("evaluation modified the checkout; before/after git status differ")
+    _write_full_summary(outcomes, time.monotonic() - started)
+    _require_passing_outcomes(outcomes)
     print("[tuxedo] eval:full passed; checkout status unchanged")
 
 
@@ -404,11 +752,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         if args.suite == "smoke":
-            run_promptfoo("smoke", PROMPTFOO_ROOT / "smoke-config.yaml")
+            _require_passing_outcomes([run_promptfoo("smoke", PROMPTFOO_ROOT / "smoke-config.yaml")])
         elif args.suite == "skills":
             _run_skills()
         elif args.suite == "security":
-            run_promptfoo("security", PROMPTFOO_ROOT / "security-config.yaml")
+            _require_passing_outcomes([run_promptfoo("security", PROMPTFOO_ROOT / "security-config.yaml")])
         elif args.suite == "compare":
             _run_compare()
         elif args.suite == "redteam-generate":

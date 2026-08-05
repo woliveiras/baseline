@@ -269,7 +269,62 @@ completed with 0/12 passing. The security run also recorded Promptfoo
 `TraceStore`/`EvaluatorTracing` persistence errors, so it does not establish
 that all 12 agents violated the security boundaries. The dedicated
 authentication status remained valid, and no provider process or repository
-change remained afterward.
+change remained afterward. A later isolated behavior rerun completed in
+1h19m53s with 11/40 passing and 29 failing; the isolated security run completed
+in 17m57s with 0/12 passing. Together with routing at 54m31s, sequential suite
+wall time was about 2h32m21s. Because the old runner discarded raw exports on
+exit 100, the exact five routing case identifiers were not retained; recovering
+them requires a fresh run with the amended checkpoint behavior.
+
+## Amendment: durable verdict evidence and bounded sharding
+
+The earlier execution exposed two orchestration defects independently of the
+skill verdicts. Promptfoo uses exit code 100 when assertions fail, but the
+runner treated every nonzero exit as infrastructure failure and deleted the raw
+export before writing sanitized evidence. In addition, security enabled deep
+tracing while passing `--no-write`; trace rows then lacked their required
+persisted parent evaluation and produced `TraceStore`/`EvaluatorTracing`
+errors. A sequential rerun of the three provider suites also measured about
+2h32m in total, beyond the intended two-hour review window.
+
+The amended decision distinguishes execution integrity from evaluation
+verdicts. Exit 0 and exit 100 may produce valid evidence; exit 100 always
+remains a failed command outcome, but only after its sanitized report is
+written. Provider errors, timeout, empty output, incomplete turns,
+missing/malformed exports, and all other exit codes remain infrastructure
+failures. Raw prompts, model output, trace payloads, and credentials remain
+ephemeral. Only test identity, provider/condition, pass/fail/needs-review,
+sanitized reasons and deterministic component results, timing, token usage,
+versions, fingerprints, and heuristic skill metadata may enter durable local
+reports.
+
+Every Promptfoo provider or red-team process now uses a
+`PROMPTFOO_CONFIG_DIR` inside a disposable run root and may persist the
+evaluation row required by linked trace spans. That database is removed with
+the workspace after sanitized evidence is extracted; personal Promptfoo state
+is neither read nor written. Routing uses
+two zero-based, end-exclusive shards (`0:17`, `17:34`) and behavior uses four
+(`0:2`, `2:4`, `4:6`, `6:8`). At most two shards run concurrently and each
+Promptfoo process keeps provider concurrency one. Security remains a single
+suite. The ranges preserve all 86 calls and unchanged reasoning settings.
+Completed shard reports are checkpoints; successful shard sets also produce a
+suite aggregate. Assertion failures do not prevent later authorized suites,
+and `eval:full` writes a full aggregate with total wall duration before it
+emits one final summarized failure after all three suite outcomes exist.
+
+Deterministic evidence executed for this amendment proves:
+
+- [x] exit 100 persists a failed sanitized report without raw model output;
+- [x] assertion verdicts are separate from provider/incomplete-turn failures;
+- [x] all routing, behavior, and security suite outcomes precede the aggregate assertion failure;
+- [x] shard ranges are disjoint and complete, concurrency is bounded at two, and a completed checkpoint survives a peer error;
+- [x] Promptfoo state is disposable and tracing no longer combines with `--no-write`.
+- [ ] a fresh authorized `pnpm run eval:full` confirms trace persistence with the real provider and measures wall time below two hours;
+- [ ] routing, behavior, and security verdicts are green.
+
+The two-hour objective is not yet an empirical claim. The amended scheduling
+is expected to improve wall time without weakening coverage, but only a fresh
+authorized full run can confirm it and replace the prior non-green evidence.
 
 Re-evaluate this decision if Promptfoo drops Codex support, the Codex SDK or App Server changes materially, Promptfoo requires cloud sharing, adapters duplicate more logic than they remove, hidden oracles cannot be integrated, workspace or credential isolation weakens, the full evaluation becomes impractical for empirical review, another framework provides superior integration with less evidence loss, or `evals/run.py` becomes demonstrably redundant.
 
