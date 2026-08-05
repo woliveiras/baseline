@@ -37,18 +37,30 @@ the status label `Logged in using ChatGPT`; API-key, agent-identity, ambiguous,
 and failed statuses are rejected. Neither `OPENAI_API_KEY` nor
 `CODEX_API_KEY` is a requirement or fallback for this path.
 `TUXEDO_EVAL_CODEX_PATH` can select the Codex executable.
+Provider configurations omit a fixed `model` so the Codex CLI selects a model
+supported by the authenticated ChatGPT/Codex account; result metadata records
+`codex-cli-default`. A future model pin requires a fresh compatibility check
+against the selected authentication method.
 
 The home may contain operational state created by Codex, including
 authentication, minimal configuration, logs, history, sessions, state
-databases, and shell snapshots. Top-level `skills`, `plugins`, `memories`,
-`rules`, instruction files, and MCP configuration are rejected because they
-can change evaluated behavior. Tuxedo parses `config.toml` fail-closed: only
-`cli_auth_credentials_store` is allowed; `hooks`, `profiles`, `model`,
-`model_provider(s)`, MCP, instruction, policy, and unknown top-level settings
-are rejected. Tuxedo does not validate the semantics of the allowed auth-store
-value, so the maintainer must keep the file minimal; an unrecognized future
-status label also fails closed. Content isolation and authentication reuse are
-separate properties:
+databases, and shell snapshots. Codex-managed `skills/.system`,
+`plugins/cache/openai-curated-remote`, and an empty
+`plugins/.remote-plugin-install-staging` are also allowed because the CLI may
+materialize them during normal operation. Personal or unknown skill/plugin
+namespaces, `memories`, `rules`, instruction files, and MCP configuration are
+rejected because they can change evaluated behavior. Tuxedo parses
+`config.toml` fail-closed: `cli_auth_credentials_store` and Codex project
+`trust_level` metadata are allowed; `hooks`, `profiles`, `model`,
+`model_provider(s)`, MCP, instruction, policy, unknown settings, and other
+project metadata are rejected. This small allowlist recognizes the current
+CLI-managed surfaces; a future surface fails closed and the curated plugin
+cache is trusted only as Codex-managed operational content. Tuxedo does not
+validate the semantics of the allowed auth-store value, so the maintainer must
+keep the file minimal; an unrecognized future status label also fails closed.
+Allowed managed entries are required to be real directories/files rather than
+symlinks, so a personal target cannot hide behind an allowed name.
+Content isolation and authentication reuse are separate properties:
 the account session is intentionally reused, while personal behavior-bearing
 content is not.
 

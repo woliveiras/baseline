@@ -91,16 +91,29 @@ statuses are rejected. A ChatGPT/Codex login is the canonical local
 authentication path; neither `OPENAI_API_KEY` nor `CODEX_API_KEY` is required
 or accepted as a silent substitute by the evaluation preflight.
 
+The provider configurations intentionally omit a fixed `model`: the Codex CLI
+selects a model supported by the authenticated ChatGPT/Codex account. Reports
+record this as `codex-cli-default`; a future model pin requires a fresh
+compatibility check against the selected authentication method.
+
 The dedicated home may contain Codex operational state such as authentication,
 minimal configuration, logs, history, sessions, state databases, and shell
-snapshots. Top-level `skills`, `plugins`, `memories`, `rules`, instruction
-files, and MCP configuration are rejected because they can change evaluated
-behavior. Tuxedo parses `config.toml` fail-closed: only
-`cli_auth_credentials_store` is allowed; `hooks`, `profiles`, `model`,
-`model_provider(s)`, MCP, instruction, policy, and unknown top-level settings
-are rejected. Tuxedo does not validate the semantics of the allowed auth-store
-value, so keep the file minimal; an unrecognized future status label also
-fails closed. To switch accounts, set a
+snapshots. Codex-managed `skills/.system`,
+`plugins/cache/openai-curated-remote`, and an empty
+`plugins/.remote-plugin-install-staging` are also allowed because the CLI may
+materialize them during normal operation. Personal or unknown skill/plugin
+namespaces, `memories`, `rules`, instruction files, and MCP configuration are
+rejected because they can change evaluated behavior. Tuxedo parses
+`config.toml` fail-closed: `cli_auth_credentials_store` and Codex project
+`trust_level` metadata are allowed; `hooks`, `profiles`, `model`,
+`model_provider(s)`, MCP, instruction, policy, unknown settings, and other
+project metadata are rejected. This small allowlist recognizes the current
+CLI-managed surfaces; a future surface fails closed and the curated plugin
+cache is trusted only as Codex-managed operational content. Tuxedo does not
+validate the semantics of the allowed auth-store value, so keep the file
+minimal; an unrecognized future status label also fails closed. Allowed managed
+entries are required to be real directories/files rather than symlinks, so a
+personal target cannot hide behind an allowed name. To switch accounts, set a
 different `TUXEDO_EVAL_CODEX_HOME` and run `pnpm run eval:login`; to remove a
 dedicated session, remove that home manually after confirming it is not needed.
 No login secret enters this repository.

@@ -9,7 +9,6 @@ providers:
   - id: openai:codex-sdk
     label: current
     config:
-      model: gpt-5.2-codex
       model_reasoning_effort: medium
       working_dir: '{{ env.TUXEDO_EVAL_WORKSPACE_ROOT }}/{{workspace_key}}/current'
       sandbox_mode: workspace-write
@@ -26,7 +25,6 @@ providers:
   - id: openai:codex-sdk
     label: proposed
     config:
-      model: gpt-5.2-codex
       model_reasoning_effort: medium
       working_dir: '{{ env.TUXEDO_EVAL_WORKSPACE_ROOT }}/{{workspace_key}}/proposed'
       sandbox_mode: workspace-write

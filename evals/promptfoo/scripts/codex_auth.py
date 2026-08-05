@@ -27,10 +27,9 @@ API_KEY_ENV_NAMES = ("OPENAI_API_KEY", "CODEX_API_KEY")
 # These are behavior-bearing content surfaces. Authentication, configuration,
 # logs, history, sessions, state databases, and shell snapshots are allowed
 # because the Codex CLI can create them during ordinary operation. config.toml
-# is fail-closed: only the authentication-storage setting below is allowed.
+# is fail-closed: only authentication storage and the CLI's project-trust
+# metadata below are allowed.
 FORBIDDEN_CONTENT = {
-    "skills": "personal skills can change the evaluated instructions",
-    "plugins": "personal plugins can change the evaluated tools or instructions",
     "memories": "personal memories can change the evaluated context",
     "rules": "personal rules can change the evaluated policy",
     "instructions": "personal instruction files can change the evaluated context",
@@ -39,7 +38,12 @@ FORBIDDEN_CONTENT = {
     "mcp.toml": "personal MCP configuration can change the evaluated tools",
     "agents.md": "global instructions can change the evaluated context",
 }
-ALLOWED_CONFIG_KEYS = {"cli_auth_credentials_store"}
+ALLOWED_SYSTEM_SKILLS = {".system"}
+ALLOWED_PLUGIN_SURFACES = {".remote-plugin-install-staging", "cache"}
+ALLOWED_PLUGIN_CACHE_NAMESPACES = {"openai-curated-remote"}
+ALLOWED_CONFIG_KEYS = {"cli_auth_credentials_store", "projects"}
+ALLOWED_PROJECT_KEYS = {"trust_level"}
+ALLOWED_PROJECT_TRUST_LEVELS = {"trusted", "untrusted"}
 BEHAVIOR_CONFIG_KEYS = {
     "approval_policy",
     "developer_instructions",
@@ -135,15 +139,59 @@ def _validate_content_surfaces(home: Path) -> None:
         return
     if not home.is_dir():
         raise RuntimeError(f"Dedicated Codex evaluation home is not a directory: {_display_home(home)}")
-    names = {entry.name.casefold() for entry in home.iterdir()}
-    violations = sorted(name for name in names if name in FORBIDDEN_CONTENT)
+    entries = list(home.iterdir())
+    violations: list[tuple[str, str]] = []
+    for entry in entries:
+        name = entry.name.casefold()
+        if name in FORBIDDEN_CONTENT:
+            violations.append((entry.name, FORBIDDEN_CONTENT[name]))
+        elif name == "skills":
+            if entry.is_symlink() or not entry.is_dir():
+                violations.append((entry.name, "personal skills can change the evaluated instructions"))
+                continue
+            for child in entry.iterdir():
+                if child.is_symlink() or child.name.casefold() not in ALLOWED_SYSTEM_SKILLS:
+                    violations.append(
+                        (f"{entry.name}/{child.name}", "personal skills can change the evaluated instructions")
+                    )
+        elif name == "plugins":
+            if entry.is_symlink() or not entry.is_dir():
+                violations.append((entry.name, "personal plugins can change the evaluated tools or instructions"))
+                continue
+            for child in entry.iterdir():
+                child_name = child.name.casefold()
+                if child.is_symlink() or child_name not in ALLOWED_PLUGIN_SURFACES:
+                    violations.append(
+                        (f"{entry.name}/{child.name}", "personal plugins can change the evaluated tools or instructions")
+                    )
+                elif child_name == ".remote-plugin-install-staging" and any(child.iterdir()):
+                    violations.append(
+                        (f"{entry.name}/{child.name}", "staged personal plugins can change the evaluated tools or instructions")
+                    )
+                elif child_name == "cache":
+                    if child.is_symlink() or not child.is_dir():
+                        violations.append(
+                            (f"{entry.name}/{child.name}", "personal plugins can change the evaluated tools or instructions")
+                        )
+                        continue
+                    for namespace in child.iterdir():
+                        if namespace.is_symlink() or namespace.name.casefold() not in ALLOWED_PLUGIN_CACHE_NAMESPACES:
+                            violations.append(
+                                (
+                                    f"{entry.name}/{child.name}/{namespace.name}",
+                                    "personal plugins can change the evaluated tools or instructions",
+                                )
+                            )
     if violations:
-        reasons = sorted({FORBIDDEN_CONTENT[name] for name in violations})
+        names = sorted(name for name, _ in violations)
+        reasons = sorted({reason for _, reason in violations})
         raise RuntimeError(
             "Dedicated Codex evaluation home contains behavior-bearing personal content "
-            f"({', '.join(violations)}): {'; '.join(reasons)}"
+            f"({', '.join(names)}): {'; '.join(reasons)}"
         )
     config = home / "config.toml"
+    if config.is_symlink():
+        raise RuntimeError("Dedicated Codex evaluation home config.toml must not be a symlink")
     if config.is_file():
         try:
             parsed = tomllib.loads(config.read_text(encoding="utf-8"))
@@ -159,9 +207,28 @@ def _validate_content_surfaces(home: Path) -> None:
                 )
             raise RuntimeError(
                 "Dedicated Codex evaluation home config.toml contains unsupported settings; "
-                "only cli_auth_credentials_store is allowed: "
+                "only cli_auth_credentials_store and projects trust metadata are allowed: "
                 + ", ".join(configured)
             )
+        projects = parsed.get("projects")
+        if projects is not None:
+            if not isinstance(projects, dict):
+                raise RuntimeError(
+                    "Dedicated Codex evaluation home config.toml has unsupported projects metadata"
+                )
+            for project_path, project_config in projects.items():
+                if not isinstance(project_path, str) or not Path(project_path).is_absolute():
+                    raise RuntimeError(
+                        "Dedicated Codex evaluation home config.toml has an unsafe project path"
+                    )
+                if not isinstance(project_config, dict) or set(project_config) != ALLOWED_PROJECT_KEYS:
+                    raise RuntimeError(
+                        "Dedicated Codex evaluation home config.toml has unsupported project metadata"
+                    )
+                if project_config["trust_level"] not in ALLOWED_PROJECT_TRUST_LEVELS:
+                    raise RuntimeError(
+                        "Dedicated Codex evaluation home config.toml has an unsupported project trust level"
+                    )
 
 
 def _codex_command() -> str:

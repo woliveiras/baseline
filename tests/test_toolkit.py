@@ -654,11 +654,19 @@ class EvaluationVerifierTests(unittest.TestCase):
             for name in ("auth.json", "config.toml", "history.jsonl", "state.sqlite", "shell_snapshots", "sessions", "logs"):
                 entry = dedicated / name
                 if name == "config.toml":
-                    entry.write_text('cli_auth_credentials_store = "file"\n', encoding="utf-8")
+                    entry.write_text(
+                        'cli_auth_credentials_store = "file"\n'
+                        f'[projects."{dedicated / "workspace"}"]\n'
+                        'trust_level = "trusted"\n',
+                        encoding="utf-8",
+                    )
                 elif "." in name:
                     entry.write_text("synthetic", encoding="utf-8")
                 else:
                     entry.mkdir()
+            (dedicated / "skills" / ".system").mkdir(parents=True)
+            (dedicated / "plugins" / "cache" / "openai-curated-remote").mkdir(parents=True)
+            (dedicated / "plugins" / ".remote-plugin-install-staging").mkdir(parents=True)
             result = subprocess.CompletedProcess(
                 ["codex", "login", "status"], 0, stdout="Logged in using ChatGPT", stderr=""
             )
@@ -701,7 +709,7 @@ class EvaluationVerifierTests(unittest.TestCase):
                     PROMPTFOO_PREPARE.preflight_codex_home()
 
     def test_codex_preflight_rejects_behavior_bearing_personal_surfaces(self):
-        for marker in ("skills", "plugins", "memories", "rules", "instructions", "mcp", "AGENTS.md"):
+        for marker in ("memories", "rules", "instructions", "mcp", "AGENTS.md"):
             with self.subTest(marker=marker), tempfile.TemporaryDirectory() as tmp:
                 home_root = Path(tmp)
                 dedicated = home_root / "dedicated"
@@ -718,6 +726,58 @@ class EvaluationVerifierTests(unittest.TestCase):
                         PROMPTFOO_PREPARE.preflight_codex_home()
                 run.assert_not_called()
 
+        for relative in (
+            Path("skills") / "personal",
+            Path("plugins") / "personal",
+            Path("plugins") / "cache" / "personal-marketplace",
+        ):
+            with self.subTest(marker=str(relative)), tempfile.TemporaryDirectory() as tmp:
+                home_root = Path(tmp)
+                dedicated = home_root / "dedicated"
+                dedicated.mkdir()
+                (dedicated / relative).mkdir(parents=True)
+                with self._auth_environment(home_root, TUXEDO_EVAL_CODEX_HOME=str(dedicated)), patch.object(
+                    PROMPTFOO_AUTH.subprocess, "run"
+                ) as run:
+                    with self.assertRaisesRegex(RuntimeError, "behavior-bearing personal content"):
+                        PROMPTFOO_PREPARE.preflight_codex_home()
+                run.assert_not_called()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            home_root = Path(tmp)
+            dedicated = home_root / "dedicated"
+            dedicated.mkdir()
+            managed_target = home_root / "managed-target"
+            managed_target.mkdir()
+            (dedicated / "skills").mkdir()
+            try:
+                (dedicated / "skills" / ".system").symlink_to(managed_target, target_is_directory=True)
+            except OSError as exc:
+                self.skipTest(f"symlinks unavailable: {exc}")
+            with self._auth_environment(home_root, TUXEDO_EVAL_CODEX_HOME=str(dedicated)), patch.object(
+                PROMPTFOO_AUTH.subprocess, "run"
+            ) as run:
+                with self.assertRaisesRegex(RuntimeError, "behavior-bearing personal content"):
+                    PROMPTFOO_PREPARE.preflight_codex_home()
+            run.assert_not_called()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            home_root = Path(tmp)
+            dedicated = home_root / "dedicated"
+            dedicated.mkdir()
+            config_target = home_root / "personal-config.toml"
+            config_target.write_text("model = 'personal-model'\n", encoding="utf-8")
+            try:
+                (dedicated / "config.toml").symlink_to(config_target)
+            except OSError as exc:
+                self.skipTest(f"symlinks unavailable: {exc}")
+            with self._auth_environment(home_root, TUXEDO_EVAL_CODEX_HOME=str(dedicated)), patch.object(
+                PROMPTFOO_AUTH.subprocess, "run"
+            ) as run:
+                with self.assertRaisesRegex(RuntimeError, "config.toml must not be a symlink"):
+                    PROMPTFOO_PREPARE.preflight_codex_home()
+            run.assert_not_called()
+
         config_surfaces = {
             "mcp_servers": "[mcp_servers.personal]\ncommand = 'personal-mcp'\n",
             "hooks": "[hooks.personal]\ncommand = 'personal-hook'\n",
@@ -725,6 +785,9 @@ class EvaluationVerifierTests(unittest.TestCase):
             "model": "model = 'personal-model'\n",
             "model_provider": "model_provider = 'personal-provider'\n",
             "model_providers": "[model_providers.personal]\nname = 'personal-provider'\n",
+            "projects": '[projects."relative-project"]\ntrust_level = "trusted"\n',
+            "project_settings": '[projects."/tmp/project"]\nmodel = "personal-model"\n',
+            "project_trust": '[projects."/tmp/project"]\ntrust_level = "personal"\n',
             "unknown": "future_personal_setting = true\n",
         }
         for label, config in config_surfaces.items():
@@ -737,8 +800,16 @@ class EvaluationVerifierTests(unittest.TestCase):
                     PROMPTFOO_AUTH.subprocess, "run"
                 ) as run:
                     expected_error = (
-                        "behavior-bearing personal settings" if label != "unknown" else "unsupported settings"
+                        "behavior-bearing personal settings"
+                        if label not in {"unknown", "projects", "project_settings", "project_trust"}
+                        else "unsupported settings"
                     )
+                    if label == "projects":
+                        expected_error = "unsafe project path"
+                    elif label == "project_settings":
+                        expected_error = "unsupported project metadata"
+                    elif label == "project_trust":
+                        expected_error = "unsupported project trust level"
                     with self.assertRaisesRegex(RuntimeError, expected_error):
                         PROMPTFOO_PREPARE.preflight_codex_home()
                 run.assert_not_called()
@@ -757,6 +828,8 @@ class EvaluationVerifierTests(unittest.TestCase):
         for config in provider_configs:
             text = config.read_text(encoding="utf-8")
             self.assertGreaterEqual(text.count("CODEX_HOME: '{{ env.TUXEDO_EVAL_CODEX_HOME }}'"), 1, config)
+            self.assertNotRegex(text, r"(?m)^\s+model:\s")
+            self.assertNotRegex(text, r"gpt-5\.[0-9]+(?:\.[0-9]+)?-codex")
             self.assertNotIn("/Users/", text)
 
     def catalog(self) -> dict:

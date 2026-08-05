@@ -185,15 +185,28 @@ treated as proof of the selected account-based method.
 
 Authentication reuse and content isolation are separate guarantees. Codex may
 create authentication, minimal configuration, logs, history, sessions, state
-databases, and shell snapshots in the dedicated home. Top-level `skills`,
-`plugins`, `memories`, `rules`, instruction files, and MCP configuration are
+databases, and shell snapshots in the dedicated home. Codex-managed
+`skills/.system`, `plugins/cache/openai-curated-remote`, and an empty
+`plugins/.remote-plugin-install-staging` are also allowed because the CLI may
+materialize them during normal operation. Personal or unknown skill/plugin
+namespaces, `memories`, `rules`, instruction files, and MCP configuration are
 rejected because they can change evaluated behavior. Tuxedo parses
-`config.toml` fail-closed: only `cli_auth_credentials_store` is allowed;
-hooks, profiles, model/model_provider(s), MCP, instruction, policy, and
-unknown top-level settings are rejected. Tuxedo does not validate the
-semantics of that allowed auth-store value, so keeping the file minimal remains
-a maintainer responsibility; an unrecognized future status label also fails
-closed.
+`config.toml` fail-closed: `cli_auth_credentials_store` and Codex project
+`trust_level` metadata are allowed; hooks, profiles, model/model_provider(s),
+MCP, instruction, policy, unknown top-level settings, and other project
+metadata are rejected. This small allowlist recognizes the current
+CLI-managed surfaces; future surfaces fail closed, and the curated plugin
+cache is trusted only as Codex-managed operational content. Tuxedo does not
+validate the semantics of that allowed auth-store value, so keeping the file
+minimal remains a maintainer responsibility; an unrecognized future status
+label also fails closed.
+Allowed managed entries are required to be real directories/files rather than
+symlinks, so a personal target cannot hide behind an allowed name.
+
+The provider configurations intentionally omit a fixed `model`: the Codex CLI
+selects a model supported by the authenticated ChatGPT/Codex account. Reports
+record this as `codex-cli-default`; adding a model pin requires a fresh
+compatibility check against the selected authentication method.
 
 Amendment evidence:
 
@@ -212,6 +225,12 @@ Amendment evidence:
 - [ ] The dedicated home is authenticated and the official provider smoke run
   has passed.
 - [ ] `pnpm run verify:push` has run with maintainer authority.
+
+Observed evidence on 2026-08-05: `pnpm run eval:auth:status` succeeded and the
+real smoke reached the provider with 3 passed, 1 failed, and 0 provider errors
+in 3m59s. The smoke checkbox remains unchecked because the suite did not pass;
+`verify:push` was not run because its 86 provider calls require separate
+maintainer authority.
 
 Re-evaluate this decision if Promptfoo drops Codex support, the Codex SDK or App Server changes materially, Promptfoo requires cloud sharing, adapters duplicate more logic than they remove, hidden oracles cannot be integrated, workspace or credential isolation weakens, cost or duration makes pre-push impractical, another framework provides superior integration with less evidence loss, or `evals/run.py` becomes demonstrably redundant.
 

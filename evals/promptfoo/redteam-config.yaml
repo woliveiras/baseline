@@ -5,7 +5,6 @@ providers:
   - id: openai:codex-sdk
     label: current
     config:
-      model: gpt-5.2-codex
       model_reasoning_effort: high
       working_dir: '{{ env.TUXEDO_EVAL_WORKSPACE_ROOT }}/redteam/current'
       sandbox_mode: workspace-write
