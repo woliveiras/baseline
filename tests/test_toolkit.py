@@ -1030,10 +1030,22 @@ class EvaluationVerifierTests(unittest.TestCase):
             PROMPTFOO_RUNNER._validate_local_outputs(generated, results)
             self.assertTrue(report.is_file())
 
-    def test_promptfoo_runner_has_no_personal_validator_path_and_rejects_bad_results(self):
+    def test_repository_has_no_personal_absolute_paths_and_rejects_bad_results(self):
         source = (ROOT / "evals" / "promptfoo" / "scripts" / "run-before-push.py").read_text()
-        personal_path_marker = "/" + "Users" + "/" + "william"
-        self.assertNotIn(personal_path_marker, source)
+        personal_home_pattern = re.compile(r"(?<![A-Za-z0-9_])/(?:Users|home)/[^\s\"'`]+")
+        self.assertIsNone(personal_home_pattern.search(source))
+        tracked = subprocess.run(
+            ["git", "ls-files", "-z"], cwd=ROOT, capture_output=True, check=True
+        ).stdout.split(b"\0")
+        for raw_path in tracked:
+            if not raw_path:
+                continue
+            path = ROOT / os.fsdecode(raw_path)
+            try:
+                text = path.read_text(encoding="utf-8")
+            except (UnicodeDecodeError, OSError):
+                continue
+            self.assertIsNone(personal_home_pattern.search(text), path.relative_to(ROOT))
         with self.assertRaises(RuntimeError):
             PROMPTFOO_RUNNER._validate_raw_result({"results": [{"response": {"output": ""}}]})
         with self.assertRaises(RuntimeError):
