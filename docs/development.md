@@ -1,0 +1,81 @@
+# Developing Tuxedo
+
+This guide covers the repository layout, the toolchain, and how to develop and
+test changes. The authoritative rules are in the
+[engineering contract](../AGENTS.md); this guide is the practical companion.
+
+## The product is the repository
+
+Tuxedo is not a program with a build step. The repository is the plugin. There
+is intentionally no CLI, daemon, package manager, sync layer, telemetry, client
+generator, or runtime dependency, and none should be added.
+
+## Repository layout
+
+- `skills/` holds the 17 distributed workflow skills. Each is a `SKILL.md` with
+  optional `references/`, `assets/`, and `agents/` beside it.
+- `hooks/` holds the workflow-integrity hook (`hooks.json` and
+  `scripts/guard.py`).
+- `templates/` holds opt-in Codex Rules, policy and receipt templates, the three
+  review assets, and the spec templates.
+- `docs/` holds this maintainer documentation.
+- `evals/` holds the maintainer-only evaluation harness (the deterministic
+  runner plus the Promptfoo orchestration). It is not installed with the plugin.
+- `tests/` holds the deterministic tests for the mechanical invariants.
+
+`docs/`, `tests/`, and `evals/` are maintainer-only and are not part of the
+installed plugin surface.
+
+## Toolchain
+
+- Python uses UV. Run scripts and tests with `uv run python ...`. Do not
+  introduce a virtualenv or pip workflow.
+- Node.js uses PNPM. Install with `pnpm install --frozen-lockfile` and run
+  package commands with `pnpm run` or `pnpm exec`. Do not use npm or maintain a
+  `package-lock.json`.
+
+## How to develop
+
+- Read the complete governing spec or skill before changing it. Metadata only
+  routes; it never replaces reading the full text.
+- Keep each `SKILL.md` concise and imperative. Put optional depth one level down
+  in `references/`.
+- Keep portable workflow logic client-neutral. Codex invocation policy belongs
+  in `agents/openai.yaml`, and Codex lifecycle behavior belongs in `hooks/`.
+- Add a deterministic test for every mechanical invariant you introduce.
+- Classify work by the highest applicable proportionality tier (see the
+  contract), never by line count.
+
+## How to test
+
+Local deterministic checks are fast and make no model calls:
+
+```bash
+uv run python -m unittest discover -s tests -v
+uv run python evals/run.py --dry-run
+```
+
+`evals/run.py` never calls a model unless a maintainer passes `--execute`. The
+legacy runner compares baseline, minimal core, focal skill, broad configuration,
+and distinct current-versus-proposed roots with seeded ordering and hidden
+deterministic oracles. Architectural and intent-sensitive tasks stay
+`needs-review` until the secondary rubric is applied; response keywords never
+establish a pass.
+
+Before completing a material change, run the checks listed in the
+[engineering contract](../AGENTS.md): the official plugin validator, the
+official skill validator for every skill, the unit tests, the eval dry-run,
+shell syntax checks, `git diff --check`, and `git status --short`.
+
+The empirical provider evaluations (Promptfoo plus Codex) are maintainer-only
+and explicit. They are described in
+[the harness guide](guides/using-the-eval-harness.md) and
+[the evaluation architecture](architecture/evaluations.md), and are never
+implied by installation, hooks, or a Git push.
+
+## Committing
+
+Commit coherent, task-owned slices locally with Conventional Commits
+(`type(scope): subject`). Never infer authority for push, force-push, amend,
+rebase, tag, release, publication, or deploy. See the
+[`git-commit` skill](../skills/git-commit/SKILL.md) for the safe procedure.
