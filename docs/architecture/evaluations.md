@@ -65,7 +65,7 @@ contents. A trace schema without inspectable events is recorded as
 The normal pre-push sequence is:
 
 ```bash
-npm run verify:push
+pnpm run verify:push
 ```
 
 This runs the official validators, Python and shell checks, all six Promptfoo
@@ -79,15 +79,15 @@ reports under `evals/promptfoo/results/`.
 Use the narrower commands when the full gate is disproportionate:
 
 ```bash
-npm run eval:smoke
-npm run eval:skills
-npm run eval:security
-npm run eval:compare      # requires TUXEDO_EVAL_PROPOSED_ROOT
-npm run eval:redteam:generate
-npm run eval:redteam:review
+pnpm run eval:smoke
+pnpm run eval:skills
+pnpm run eval:security
+pnpm run eval:compare      # requires TUXEDO_EVAL_PROPOSED_ROOT
+pnpm run eval:redteam:generate
+pnpm run eval:redteam:review
 ```
 
-`npm run eval:redteam:full` is intentionally explicit and expensive. No
+`pnpm run eval:redteam:full` is intentionally explicit and expensive. No
 red-team command is implied by ordinary validation or `verify:push`.
 
 ## Residual limitations

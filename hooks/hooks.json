@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/hooks/scripts/guard.py\" pre-tool",
+            "command": "uv run python \"${PLUGIN_ROOT}/hooks/scripts/guard.py\" pre-tool",
             "timeout": 10,
             "statusMessage": "Checking Tuxedo workflow receipts"
           }
@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/hooks/scripts/guard.py\" stop",
+            "command": "uv run python \"${PLUGIN_ROOT}/hooks/scripts/guard.py\" stop",
             "timeout": 10,
             "statusMessage": "Checking Tuxedo completion receipts"
           }

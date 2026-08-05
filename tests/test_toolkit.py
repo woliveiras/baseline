@@ -123,7 +123,7 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertFalse((ROOT / "templates/policy/authority.json").exists())
 
     def test_eval_dry_run_is_seeded_and_covers_all_comparisons(self):
-        command = ["python3", str(ROOT / "evals" / "run.py"), "--dry-run", "--seed", "17"]
+        command = ["uv", "run", "python", str(ROOT / "evals" / "run.py"), "--dry-run", "--seed", "17"]
         first = subprocess.run(command, text=True, capture_output=True, check=False)
         second = subprocess.run(command, text=True, capture_output=True, check=False)
         self.assertEqual(0, first.returncode, first.stderr)
@@ -138,7 +138,7 @@ class ToolkitStructureTests(unittest.TestCase):
     def test_eval_rejects_same_current_and_proposed_root(self):
         result = subprocess.run(
             [
-                "python3", str(ROOT / "evals" / "run.py"), "--execute",
+                "uv", "run", "python", str(ROOT / "evals" / "run.py"), "--execute",
                 "--variant", "proposed", "--task", "clear-local-change",
                 "--proposed-root", str(ROOT),
             ],
@@ -157,7 +157,7 @@ class ToolkitStructureTests(unittest.TestCase):
             shutil.copytree(ROOT / "skills", candidate / "skills")
             result = subprocess.run(
                 [
-                    "python3", str(ROOT / "evals" / "run.py"), "--execute",
+                    "uv", "run", "python", str(ROOT / "evals" / "run.py"), "--execute",
                     "--variant", "proposed", "--task", "clear-local-change",
                     "--proposed-root", str(candidate),
                 ],
@@ -173,7 +173,7 @@ class ToolkitStructureTests(unittest.TestCase):
             output = Path(tmp) / "result.json"
             result = subprocess.run(
                 [
-                    "python3", str(ROOT / "evals" / "run.py"), "--execute",
+                    "uv", "run", "python", str(ROOT / "evals" / "run.py"), "--execute",
                     "--variant", "baseline", "--task", "no-change-correct",
                     "--codex", "/usr/bin/true", "--timeout", "5",
                     "--output", str(output),
@@ -217,7 +217,7 @@ class CodexRulesTests(unittest.TestCase):
 class HookTests(unittest.TestCase):
     def run_guard(self, mode: str, payload: str, cwd: Path):
         payload = payload.replace("FIXTURE_CWD", str(cwd))
-        return subprocess.run(["python3", str(GUARD), mode], input=payload, text=True, capture_output=True, check=False)
+        return subprocess.run(["uv", "run", "python", str(GUARD), mode], input=payload, text=True, capture_output=True, check=False)
 
     def fixture(self, name: str) -> str:
         return (ROOT / "tests" / "fixtures" / "hooks" / name).read_text()
@@ -265,12 +265,12 @@ class HookTests(unittest.TestCase):
         test_evidence = {
             "fail_first": {
                 "test_tree": digest_map(tests),
-                "command": "python3 -m unittest tests/test_example.py",
+                "command": "uv run python -m unittest tests/test_example.py",
                 "observed_failure": "expected VALUE behavior was absent",
             },
             "passing": {
                 "test_tree": digest_map(tests),
-                "command": "python3 -m unittest tests/test_example.py",
+                "command": "uv run python -m unittest tests/test_example.py",
                 "observed_result": "focused test passed",
             },
         }

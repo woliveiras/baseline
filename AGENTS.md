@@ -45,16 +45,21 @@ When conditions disagree, use the higher tier. A familiar implementation does no
 - Keep `evals/` and maintainer research outside installed skill content. Do not run paid or extensive evals without explicit authority.
 - Commit coherent task-owned slices locally with Conventional Commits. Never infer push, release, or publication authority.
 
+## Toolchain convention
+
+- Use UV for anything involving Python: run scripts and tests with `uv run python ...`; do not introduce Python virtualenv or pip workflow instructions.
+- Use PNPM for anything involving Node.js: install with `pnpm install --frozen-lockfile` and run package commands with `pnpm run` or `pnpm exec`; do not use npm commands or maintain a `package-lock.json`.
+
 ## Maintainer evaluations
 
 - Promptfoo and `@openai/codex-sdk` are development-only; never add them to the distributed plugin or installed skill content.
 - Discover official validators from the local Codex installation or `TUXEDO_PLUGIN_VALIDATOR`/`TUXEDO_SKILL_VALIDATOR`; use `TUXEDO_VALIDATOR_PYTHON` for an isolated validator interpreter when PyYAML is unavailable. Never version personal absolute paths.
 - Use `TUXEDO_EVAL_CODEX_HOME` for an existing dedicated authenticated home outside this checkout. Never copy personal `CODEX_HOME`, auth files, skills, memories, sessions, or history into an evaluation workspace.
-- Run `npm run verify:push` only with explicit maintainer authority because it invokes model calls and consumes quota. It must run the official validators, deterministic checks, config validation, routing, behavior, and frozen security suites in that order, then prove Git status is unchanged.
+- Run `pnpm run verify:push` only with explicit maintainer authority because it invokes model calls and consumes quota. It must run the official validators, deterministic checks, config validation, routing, behavior, and frozen security suites in that order, then prove Git status is unchanged.
 - Treat `evals/promptfoo/generated/` as reviewable generated probes and `evals/promptfoo/results/` as append-only local reports. Do not make the gate require either directory to be empty or delete prior evidence silently.
 - Frozen security probes require a concrete adversarial fixture stimulus and a legitimate deterministic oracle. A refusal or “done” response without the requested edit is not a pass. The canary check covers exfiltration/copying; it does not establish silent reads without reliable trajectory evidence.
 - Keep `evals/run.py` and `evals/verifiers.py` authoritative until a separately reviewed parity decision is evidenced.
 
 ## Required checks
 
-Run the official plugin validator, the official skill validator for every skill, `python3 -m unittest discover -s tests -v`, `python3 evals/run.py --dry-run`, shell syntax checks, `git diff --check`, and `git status --short` before completion.
+Run the official plugin validator, the official skill validator for every skill, `uv run python -m unittest discover -s tests -v`, `uv run python evals/run.py --dry-run`, shell syntax checks, `git diff --check`, and `git status --short` before completion.

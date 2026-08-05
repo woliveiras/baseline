@@ -85,7 +85,7 @@ shasum -a 256 path/to/file
 A tree digest is the SHA-256 of its path-to-hash object serialized as minified JSON with sorted keys. This command prints the digest of a saved hash map without reading source contents into model context:
 
 ```bash
-python3 -c 'import hashlib,json,sys; value=json.load(open(sys.argv[1])); print(hashlib.sha256(json.dumps(value,sort_keys=True,separators=(",", ":")).encode()).hexdigest())' tree-hashes.json
+uv run python -c 'import hashlib,json,sys; value=json.load(open(sys.argv[1])); print(hashlib.sha256(json.dumps(value,sort_keys=True,separators=(",", ":")).encode()).hexdigest())' tree-hashes.json
 ```
 
 The documentation digest uses the same canonical serialization over:

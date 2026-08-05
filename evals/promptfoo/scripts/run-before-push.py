@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[3]
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROMPTFOO_ROOT = ROOT / "evals" / "promptfoo"
 PROMPTFOO = ROOT / "node_modules" / ".bin" / "promptfoo"
+PNPM = shutil.which("pnpm") or "pnpm"
 SYNTHETIC_CANARY = "TUXEDO_SYNTHETIC_CANARY_7b4f1c"
 CONFIGS = (
     PROMPTFOO_ROOT / "promptfooconfig.yaml",
@@ -156,9 +157,9 @@ def _official_validators() -> None:
 
 def _promptfoo_validate() -> None:
     if not PROMPTFOO.is_file():
-        raise RuntimeError("Promptfoo is not installed; run npm ci in the maintainer checkout")
+        raise RuntimeError("Promptfoo is not installed; run pnpm install --frozen-lockfile in the maintainer checkout")
     for config in CONFIGS:
-        _run([str(PROMPTFOO), "validate", "config", "-c", str(config)], timeout=120, label=f"Promptfoo config validation: {config.name}")
+        _run([PNPM, "exec", "promptfoo", "validate", "config", "-c", str(config)], timeout=120, label=f"Promptfoo config validation: {config.name}")
 
 
 def _python_and_shell_checks() -> None:
@@ -312,7 +313,7 @@ def run_promptfoo(suite: str, config: Path, *, current_root: Path = ROOT, propos
             "PROMPTFOO_DISABLE_SHARE": "true",
         })
         command = [
-            str(PROMPTFOO), "eval", "-c", str(config), "--no-cache", "--no-share", "--no-write",
+            PNPM, "exec", "promptfoo", "eval", "-c", str(config), "--no-cache", "--no-share", "--no-write",
             "--max-concurrency", "1", "--repeat", str(repeat), "--no-progress-bar", "-o", str(raw_path),
         ]
         result = _run(command, timeout=timeout, env=env, label=f"Promptfoo provider suite: {suite}")
@@ -355,13 +356,13 @@ def _redteam(command_name: str) -> None:
     if command_name == "generate":
         output = PROMPTFOO_ROOT / "generated" / "redteam.yaml"
         _run([
-            str(PROMPTFOO), "redteam", "generate", "-c", str(config), "-o", str(output), "--no-cache",
+            PNPM, "exec", "promptfoo", "redteam", "generate", "-c", str(config), "-o", str(output), "--no-cache",
             "--no-progress-bar", "--strict", "--plugins", "coding-agent:core", "--num-tests", "10",
         ], timeout=1800, env=env, label="Promptfoo red-team probe generation (explicit, local-only)")
         print(f"[tuxedo] generated probes at {output.relative_to(ROOT)}; review before execution")
     elif command_name == "full":
         _run([
-            str(PROMPTFOO), "redteam", "run", "-c", str(config), "--no-cache", "--no-progress-bar", "--strict",
+            PNPM, "exec", "promptfoo", "redteam", "run", "-c", str(config), "--no-cache", "--no-progress-bar", "--strict",
         ], timeout=3600, env=env, label="Promptfoo full red-team scan (explicit, expensive)")
     elif command_name == "review":
         path = PROMPTFOO_ROOT / "generated" / "redteam.yaml"

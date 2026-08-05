@@ -47,11 +47,11 @@ The repository itself is the plugin. Validate it with the current `plugin-creato
 Local deterministic checks:
 
 ```bash
-python3 -m unittest discover -s tests -v
-python3 evals/run.py --dry-run
+uv run python -m unittest discover -s tests -v
+uv run python evals/run.py --dry-run
 ```
 
-The evaluation harness is Codex-first and maintainer-only. It compares baseline, minimal core, focal skill, broad configuration, and distinct current-versus-proposed roots with seeded ordering and repeated trials. Executable fixture tasks use deterministic hidden oracles. Architectural and intent-sensitive tasks remain `needs-review` until the secondary rubric is applied; response keywords never establish a pass. The runner never executes model calls unless a maintainer passes `--execute`.
+The legacy deterministic runner is Codex-first and maintainer-only. It compares baseline, minimal core, focal skill, broad configuration, and distinct current-versus-proposed roots with seeded ordering and repeated trials. Executable fixture tasks use deterministic hidden oracles. Architectural and intent-sensitive tasks remain `needs-review` until the secondary rubric is applied; response keywords never establish a pass. `evals/run.py` never executes model calls unless a maintainer passes `--execute`; the separate Promptfoo commands below intentionally do.
 
 ## Maintainer-only Promptfoo evaluations
 
@@ -61,13 +61,14 @@ workspaces with `network_access_enabled: false`, no Promptfoo sharing, and a
 dedicated authenticated `TUXEDO_EVAL_CODEX_HOME` outside the checkout. The
 runner never copies personal Codex authentication or content.
 
-Install with Node `>=22.22.0` and run `npm ci`. Then use:
+Use Node `>=22.22.0`, UV for Python, and PNPM for Node. Install Node
+dependencies with `pnpm install --frozen-lockfile`, then run:
 
 ```bash
-npm run eval:smoke
-npm run eval:skills
-npm run eval:security
-npm run verify:push
+pnpm run eval:smoke
+pnpm run eval:skills
+pnpm run eval:security
+pnpm run verify:push
 ```
 
 `verify:push` executes the official validators, deterministic suites, 34

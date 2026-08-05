@@ -104,7 +104,7 @@ The maintainer tooling uses exact versions resolved on 2026-08-05:
 - `promptfoo@0.122.0`, MIT, published and maintained through the official Promptfoo repository and npm package. It is preferred to expanding the custom runner because it supplies the generic provider, assertion, comparison, repetition, reporting, and coding-agent red-team surfaces already required here.
 - `@openai/codex-sdk@0.146.0`, Apache-2.0, published and maintained through the official OpenAI Codex repository and npm package. It is required by the official Promptfoo Codex provider and matches the locally installed Codex CLI family.
 
-The effective package engine requirements are Node `>=22.22.0` for Promptfoo and Node `>=18` for the Codex SDK; the maintainer package uses the stricter Promptfoo requirement. The lockfile is committed to constrain transitive resolution. A local `npm audit --omit=optional` on 2026-08-05 reported four transitive advisories (three moderate and one high), including `undici` and AI SDK packages; no automatic remediation was applied because changing the locked graph would require a separate reviewed upgrade. Supply-chain risks remain: both packages execute local Node tooling, Promptfoo has a broad transitive graph, and provider behavior can change across upgrades. Mitigations are exact versions, a committed lockfile, local-only result paths, disabled cache and remote red-team generation, no cloud login, isolated disposable workspaces, no production credentials in fixtures, and review of upgrades. Tuxedo still owns the distributed plugin contract, skill portability, deterministic evidence, and authority boundaries; Promptfoo is not a runtime dependency of the plugin.
+The effective package engine requirements are Node `>=22.22.0` for Promptfoo and Node `>=18` for the Codex SDK; the maintainer package uses the stricter Promptfoo requirement. The PNPM lockfile is committed to constrain transitive resolution. The repository sets PNPM `minimumReleaseAge: 0` so an ambient machine-wide release-age policy cannot make this exact, reviewed lockfile un-installable; it does not relax exact versioning, audit, or upgrade review. A local `pnpm audit --prod` on 2026-08-05 found no production dependencies; the full `pnpm audit` reported 14 dev/optional advisory entries (two low, seven moderate, and five high), including `undici` and AI SDK packages. No automatic remediation was applied because changing the locked graph would require a separate reviewed upgrade. Supply-chain risks remain: both packages execute local Node tooling, Promptfoo has a broad transitive graph, and provider behavior can change across upgrades. Mitigations are exact versions, a committed lockfile, local-only result paths, disabled cache and remote red-team generation, no cloud login, isolated disposable workspaces, no production credentials in fixtures, and review of upgrades. Tuxedo still owns the distributed plugin contract, skill portability, deterministic evidence, and authority boundaries; Promptfoo is not a runtime dependency of the plugin.
 
 ## Consequences
 
@@ -146,7 +146,7 @@ This decision is implemented when the following checks are evidenced:
 - [x] Every write-capable trial uses a fresh disposable workspace.
 - [x] Positive and negative routing cases exist for every distributed skill.
 - [ ] Approved frozen security probes run locally without remote generation.
-- [ ] `npm run verify:push` fails for provider, deterministic, routing, security, incomplete-turn, and result-validation failures.
+- [ ] `pnpm run verify:push` fails for provider, deterministic, routing, security, incomplete-turn, and result-validation failures.
 - [x] Empty processes cannot produce a pass and deterministic failures take precedence.
 - [ ] Red-team generation is not part of pre-push.
 - [x] Results, caches, workspaces, and evaluation Codex homes remain ignored.
@@ -164,8 +164,9 @@ is absent. A real provider run and `verify:push` were intentionally not marked:
 this checkout had neither a dedicated authenticated `TUXEDO_EVAL_CODEX_HOME`
 nor `OPENAI_API_KEY`; the attempted smoke command stopped at that required
 preflight without using personal Codex state. No security or red-team model run
-was claimed. A local `npm audit --omit=optional` remains four transitive
-advisories (three moderate, one high) and is recorded as upgrade-review risk.
+was claimed. A local `pnpm audit --prod` found no production dependencies; the
+full PNPM audit reported 14 dev/optional advisory entries (two low, seven
+moderate, five high) and is recorded as upgrade-review risk.
 
 Re-evaluate this decision if Promptfoo drops Codex support, the Codex SDK or App Server changes materially, Promptfoo requires cloud sharing, adapters duplicate more logic than they remove, hidden oracles cannot be integrated, workspace or credential isolation weakens, cost or duration makes pre-push impractical, another framework provides superior integration with less evidence loss, or `evals/run.py` becomes demonstrably redundant.
 

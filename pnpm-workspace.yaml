@@ -1,0 +1,3 @@
+# Keep the exact, committed lockfile usable without inheriting a global
+# package-manager release-age policy. Dependency review remains required.
+minimumReleaseAge: 0
