@@ -191,13 +191,30 @@ def literal(node: ast.AST) -> Any:
         return None
 
 
+def _assertion_operands(node: ast.stmt) -> tuple[ast.expr, ast.expr] | None:
+    if isinstance(node, ast.Assert) and isinstance(node.test, ast.Compare) and len(node.test.ops) == 1:
+        if not isinstance(node.test.ops[0], ast.Eq):
+            return None
+        return node.test.left, node.test.comparators[0]
+    if (
+        isinstance(node, ast.Expr)
+        and isinstance(node.value, ast.Call)
+        and isinstance(node.value.func, ast.Attribute)
+        and isinstance(node.value.func.value, ast.Name)
+        and node.value.func.value.id in {"self", "cls"}
+        and node.value.func.attr == "assertEqual"
+        and len(node.value.args) == 2
+        and not node.value.keywords
+    ):
+        return node.value.args[0], node.value.args[1]
+    return None
+
+
 def is_upper_bound_assertion(node: ast.stmt) -> bool:
-    if not isinstance(node, ast.Assert) or not isinstance(node.test, ast.Compare) or len(node.test.ops) != 1:
+    operands = _assertion_operands(node)
+    if operands is None:
         return False
-    left = node.test.left
-    right = node.test.comparators[0]
-    if not isinstance(node.test.ops[0], ast.Eq):
-        return False
+    left, right = operands
     call = left if isinstance(left, ast.Call) else right if isinstance(right, ast.Call) else None
     expected_node = right if call is left else left
     if not isinstance(call, ast.Call) or not isinstance(call.func, ast.Name) or call.func.id != "clamp":
@@ -210,18 +227,40 @@ def is_upper_bound_assertion(node: ast.stmt) -> bool:
     return value > high and expected == high
 
 
+def _is_test_case_class(node: ast.ClassDef) -> bool:
+    if node.name.startswith("Test"):
+        return True
+    for base in node.bases:
+        if isinstance(base, ast.Name) and base.id == "TestCase":
+            return True
+        if isinstance(base, ast.Attribute) and base.attr == "TestCase":
+            return True
+    return False
+
+
+def _collected_test_functions(tree: ast.Module) -> list[tuple[ast.FunctionDef, bool]]:
+    collected: list[tuple[ast.FunctionDef, bool]] = []
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef):
+            collected.append((node, False))
+        elif isinstance(node, ast.ClassDef) and _is_test_case_class(node):
+            collected.extend((child, True) for child in node.body if isinstance(child, ast.FunctionDef))
+    return collected
+
+
 def has_collected_upper_bound_assertion(workspace: Path) -> bool:
     for path in sorted(workspace.glob("test*.py")):
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         except (OSError, SyntaxError):
             continue
-        for function in tree.body:
+        for function, is_method in _collected_test_functions(tree):
+            expected_args = 1 if is_method else 0
             if (
-                not isinstance(function, ast.FunctionDef)
-                or not function.name.startswith("test_")
+                not function.name.startswith("test_")
                 or function.decorator_list
-                or function.args.args
+                or len(function.args.args) != expected_args
+                or (is_method and function.args.args[0].arg not in {"self", "cls"})
                 or function.args.posonlyargs
                 or function.args.kwonlyargs
                 or function.args.vararg

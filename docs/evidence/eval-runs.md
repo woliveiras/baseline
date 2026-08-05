@@ -84,6 +84,24 @@ Collected before dedicated Codex authentication was valid.
   internally aggregated result. The current evidence is intentionally not
   classified as green.
 
+## 2026-08-05 — focused regression-fixture correction
+
+- A preserved diagnostic run showed that baseline/core produced a correct
+  three-boundary clamp implementation but were rejected because the static
+  regression oracle recognized only pytest `assert`, not collected unittest
+  `assertEqual` methods. Other conditions exposed a separate fixture defect:
+  the starting implementation violated adjacent behavior that the bug report
+  did not identify and the visible tests did not preserve.
+- The fixture now starts with passing lower-bound and in-range tests and fails
+  only the reported upper-bound behavior. The hidden oracle remains stricter
+  and checks all three behaviors with different values. The AST verifier accepts
+  direct literal pytest and unittest assertions while continuing to reject
+  assertions nested under unreachable control flow.
+- Deterministic evidence: 55 unit tests and the 48-run legacy dry-run passed.
+- Focused provider evidence: `bug-with-regression` passed 5/5 conditions in
+  823.554 seconds. This is focused evidence only; it does not make the complete
+  behavior or full suite green.
+
 ## 2026-08-05 — deterministic validity corrections (no provider run)
 
 - Preserved `needs-review` as a distinct verdict and ensured hard deterministic

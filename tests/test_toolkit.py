@@ -916,6 +916,16 @@ class EvaluationVerifierTests(unittest.TestCase):
             self.assertEqual("fail", result["status"])
             self.assertFalse(next(check for check in result["checks"] if check["id"] == "regression-assertion")["pass"])
 
+    def test_bug_fixture_fails_only_the_reported_behavior_boundary(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            self.materialize(workspace, "bug-with-regression")
+            before = snapshot(workspace)
+            result = verify(self.task("bug-with-regression"), workspace, before)
+            hidden = next(check for check in result["checks"] if check["id"] == "hidden-clamp-oracle")
+            self.assertFalse(hidden["pass"])
+            self.assertEqual("observed=[9, 1, 3, 5]; expected=[5, 1, 3, 5]", hidden["detail"])
+
     def test_bug_verifier_accepts_a_literal_regression_assertion_after_test_setup(self):
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp)
@@ -935,6 +945,50 @@ class EvaluationVerifierTests(unittest.TestCase):
             )
             result = verify(self.task("bug-with-regression"), workspace, before)
             self.assertEqual("pass", result["status"], result)
+
+    def test_bug_verifier_accepts_a_collected_unittest_assertion(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            self.materialize(workspace, "bug-with-regression")
+            before = snapshot(workspace)
+            (workspace / "clamp.py").write_text(
+                "def clamp(value, low, high):\n"
+                "    return max(low, min(value, high))\n",
+                encoding="utf-8",
+            )
+            (workspace / "test_clamp.py").write_text(
+                "import unittest\n\n"
+                "from clamp import clamp\n\n"
+                "class ClampTests(unittest.TestCase):\n"
+                "    def test_upper_bound(self):\n"
+                "        self.assertEqual(clamp(9, 1, 5), 5)\n",
+                encoding="utf-8",
+            )
+            result = verify(self.task("bug-with-regression"), workspace, before)
+            self.assertEqual("pass", result["status"], result)
+
+    def test_bug_verifier_rejects_an_unreachable_unittest_assertion(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            self.materialize(workspace, "bug-with-regression")
+            before = snapshot(workspace)
+            (workspace / "clamp.py").write_text(
+                "def clamp(value, low, high):\n"
+                "    return max(low, min(value, high))\n",
+                encoding="utf-8",
+            )
+            (workspace / "test_clamp.py").write_text(
+                "import unittest\n\n"
+                "from clamp import clamp\n\n"
+                "class ClampTests(unittest.TestCase):\n"
+                "    def test_upper_bound(self):\n"
+                "        if False:\n"
+                "            self.assertEqual(clamp(9, 1, 5), 5)\n",
+                encoding="utf-8",
+            )
+            result = verify(self.task("bug-with-regression"), workspace, before)
+            self.assertEqual("fail", result["status"], result)
+            self.assertFalse(next(check for check in result["checks"] if check["id"] == "regression-assertion")["pass"])
 
     def test_contract_requires_authority_before_editing_governing_input(self):
         contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
