@@ -155,18 +155,63 @@ This decision is implemented when the following checks are evidenced:
 
 Evidence status for 2026-08-05: exact package and lock metadata, six Promptfoo
 configuration validations, the official plugin validator, all 17 official skill
-validators, 29 unit tests, the legacy dry-run, shell syntax, `git diff --check`,
+validators, 38 unit tests, the legacy dry-run, shell syntax, `git diff --check`,
 ignored-path checks, and direct preparation of all 12 security manifests passed.
 The security catalog now gives every probe a distinct fixture stimulus and a
 legitimate deterministic target-change oracle; trajectory checks inspect only
 structured Codex command/file events and return `needs-review` when that schema
 is absent. A real provider run and `verify:push` were intentionally not marked:
-this checkout had neither a dedicated authenticated `TUXEDO_EVAL_CODEX_HOME`
-nor `OPENAI_API_KEY`; the attempted smoke command stopped at that required
-preflight without using personal Codex state. No security or red-team model run
-was claimed. A local `pnpm audit --prod` found no production dependencies; the
-full PNPM audit reported 14 dev/optional advisory entries (two low, seven
-moderate, five high) and is recorded as upgrade-review risk.
+the dedicated Codex authentication status was not valid, so no provider or
+personal Codex state was used. No security or red-team model run was claimed.
+A local `pnpm audit --prod` found no production dependencies; the full PNPM
+audit reported 14 dev/optional advisory entries (two low, seven moderate, five
+high) and is recorded as upgrade-review risk.
+
+## Amendment: dedicated Codex CLI authentication
+
+On 2026-08-05, the maintainer evaluation boundary was amended to reuse a
+ChatGPT/Codex account session without reusing the personal Codex environment.
+The default home is `$HOME/.codex-tuxedo-evals`; `TUXEDO_EVAL_CODEX_HOME` may
+override it only with an absolute path outside this checkout and outside the
+personal `CODEX_HOME`/`$HOME/.codex`, after symlink resolution. The explicit
+`pnpm run eval:login` command creates that dedicated directory when necessary
+and runs `codex login`; `pnpm run eval:auth:status` and every model-running
+preflight use `codex login status`. No command reads, copies, prints, or
+symlinks `auth.json`, and neither `OPENAI_API_KEY` nor `CODEX_API_KEY` can
+satisfy or silently replace the dedicated login. The preflight accepts only
+the status label `Logged in using ChatGPT`; API-key, agent-identity, ambiguous,
+and failed statuses are rejected, so a successful exit code alone is not
+treated as proof of the selected account-based method.
+
+Authentication reuse and content isolation are separate guarantees. Codex may
+create authentication, minimal configuration, logs, history, sessions, state
+databases, and shell snapshots in the dedicated home. Top-level `skills`,
+`plugins`, `memories`, `rules`, instruction files, and MCP configuration are
+rejected because they can change evaluated behavior. Tuxedo parses
+`config.toml` fail-closed: only `cli_auth_credentials_store` is allowed;
+hooks, profiles, model/model_provider(s), MCP, instruction, policy, and
+unknown top-level settings are rejected. Tuxedo does not validate the
+semantics of that allowed auth-store value, so keeping the file minimal remains
+a maintainer responsibility; an unrecognized future status label also fails
+closed.
+
+Amendment evidence:
+
+- [x] Default and override home resolution reject relative, personal,
+  checkout, and unsafe symlink paths.
+- [x] Login creates only the dedicated home and passes it as `CODEX_HOME` to
+  the configured Codex executable.
+- [x] Status and evaluation preflight use `codex login status`, isolate both
+  API-key environment variables, require the reported ChatGPT method, and fail
+  before disposable workspaces.
+- [x] All six provider configurations receive the resolved home through
+  `cli_env.CODEX_HOME`.
+- [x] Deterministic tests cover status success/failure, missing home,
+  operational state, behavior-bearing content rejection, secret redaction, and
+  non-implicit login.
+- [ ] The dedicated home is authenticated and the official provider smoke run
+  has passed.
+- [ ] `pnpm run verify:push` has run with maintainer authority.
 
 Re-evaluate this decision if Promptfoo drops Codex support, the Codex SDK or App Server changes materially, Promptfoo requires cloud sharing, adapters duplicate more logic than they remove, hidden oracles cannot be integrated, workspace or credential isolation weakens, cost or duration makes pre-push impractical, another framework provides superior integration with less evidence loss, or `evals/run.py` becomes demonstrably redundant.
 

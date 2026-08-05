@@ -48,7 +48,7 @@ PREPARE = _load_module("tuxedo_prepare_workspaces", SCRIPT_DIR / "prepare-worksp
 
 def _redact(value: str) -> str:
     value = value.replace(SYNTHETIC_CANARY, "[synthetic-canary-redacted]")
-    value = re.sub(r"(?i)(auth\.json|OPENAI_API_KEY)\s*[:=]\s*[^\s,}]+", r"\1=[redacted]", value)
+    value = re.sub(r"(?i)(auth\.json|OPENAI_API_KEY|CODEX_API_KEY)\s*[:=]\s*[^\s,}]+", r"\1=[redacted]", value)
     return value
 
 
@@ -170,8 +170,15 @@ def _python_and_shell_checks() -> None:
             _run(["sh", "-n", str(path)], timeout=30, label=f"shell syntax: {path.relative_to(ROOT)}")
 
 
-def _codex_version() -> str:
-    result = subprocess.run([os.environ.get("TUXEDO_EVAL_CODEX_PATH", "codex"), "--version"], text=True, capture_output=True, check=False, timeout=15)
+def _codex_version(codex_home: Path) -> str:
+    result = subprocess.run(
+        [os.environ.get("TUXEDO_EVAL_CODEX_PATH", "codex"), "--version"],
+        env=PREPARE.evaluation_environment(codex_home),
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=15,
+    )
     if result.returncode:
         raise RuntimeError("the configured Codex binary could not report its version")
     return result.stdout.strip()
@@ -241,7 +248,7 @@ def _safe_metadata(row: dict[str, Any]) -> dict[str, Any]:
     return {"skills_observed": observed}
 
 
-def _report(raw: dict[str, Any], rows: list[dict[str, Any]], manifest: dict[str, Any], suite: str, repeat: int, seconds: float) -> dict[str, Any]:
+def _report(raw: dict[str, Any], rows: list[dict[str, Any]], manifest: dict[str, Any], suite: str, repeat: int, seconds: float, codex_home: Path) -> dict[str, Any]:
     report_rows: list[dict[str, Any]] = []
     for row in rows:
         response = row.get("response") if isinstance(row.get("response"), dict) else {}
@@ -265,7 +272,7 @@ def _report(raw: dict[str, Any], rows: list[dict[str, Any]], manifest: dict[str,
         },
         "model": "gpt-5.2-codex",
         "reasoning": "low" if suite == "smoke" else "medium",
-        "codex_version": _codex_version(),
+        "codex_version": _codex_version(codex_home),
         "promptfoo_version": _promptfoo_version(),
         "seed": int(os.environ.get("TUXEDO_EVAL_SEED", "0")),
         "repetitions": repeat,
@@ -296,8 +303,8 @@ def _check_workspace_clean(manifest: dict[str, Any]) -> None:
                     raise RuntimeError(f"outside sentinel changed: {path}")
 
 
-def run_promptfoo(suite: str, config: Path, *, current_root: Path = ROOT, proposed_root: Path | None = None, repeat: int = 1, timeout: int = 1800) -> Path:
-    PREPARE.preflight_codex_home()
+def run_promptfoo(suite: str, config: Path, *, current_root: Path = ROOT, proposed_root: Path | None = None, repeat: int = 1, timeout: int = 1800, codex_home: Path | None = None) -> Path:
+    codex_home = codex_home or PREPARE.preflight_codex_home()
     workspace_root = Path(tempfile.mkdtemp(prefix=f"tuxedo-promptfoo-{suite}-"))
     keep = os.environ.get("TUXEDO_EVAL_KEEP_WORKSPACES") == "1"
     raw_path = workspace_root / "promptfoo-raw.json"
@@ -305,7 +312,7 @@ def run_promptfoo(suite: str, config: Path, *, current_root: Path = ROOT, propos
     started = time.monotonic()
     try:
         manifest = PREPARE.prepare(suite, workspace_root / "workspaces", current_root, proposed_root)
-        env = os.environ.copy()
+        env = PREPARE.evaluation_environment(codex_home)
         env.update({
             "TUXEDO_EVAL_WORKSPACE_ROOT": str(workspace_root / "workspaces"),
             "TUXEDO_EVAL_MANIFEST": str(manifest["manifest_path"]),
@@ -322,7 +329,7 @@ def run_promptfoo(suite: str, config: Path, *, current_root: Path = ROOT, propos
         raw = json.loads(raw_path.read_text(encoding="utf-8"))
         rows = _validate_raw_result(raw)
         _check_workspace_clean(manifest)
-        report = _report(raw, rows, manifest, suite, repeat, time.monotonic() - started)
+        report = _report(raw, rows, manifest, suite, repeat, time.monotonic() - started, codex_home)
         output = PROMPTFOO_ROOT / "results" / f"{suite}-{time.time_ns()}.json"
         output.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
         print(f"[tuxedo] {suite}: {len(rows)} provider responses, {report['duration_seconds']}s, result={output.relative_to(ROOT)}")
@@ -348,8 +355,18 @@ def _run_compare() -> None:
 
 
 def _redteam(command_name: str) -> None:
-    PREPARE.preflight_codex_home()
-    env = os.environ.copy()
+    if command_name == "review":
+        path = PROMPTFOO_ROOT / "generated" / "redteam.yaml"
+        if not path.is_file():
+            raise RuntimeError("no generated probes found; run eval:redteam:generate explicitly first")
+        lines = path.read_text(encoding="utf-8").splitlines()
+        print(f"[tuxedo] generated probe file: {path.relative_to(ROOT)} ({len(lines)} sanitized lines)")
+        for line in lines[:40]:
+            print(_redact(line[:240]))
+        return
+
+    codex_home = PREPARE.preflight_codex_home()
+    env = PREPARE.evaluation_environment(codex_home)
     env["PROMPTFOO_DISABLE_REDTEAM_REMOTE_GENERATION"] = "true"
     env["PROMPTFOO_DISABLE_SHARE"] = "true"
     config = PROMPTFOO_ROOT / "redteam-config.yaml"
@@ -364,25 +381,16 @@ def _redteam(command_name: str) -> None:
         _run([
             PNPM, "exec", "promptfoo", "redteam", "run", "-c", str(config), "--no-cache", "--no-progress-bar", "--strict",
         ], timeout=3600, env=env, label="Promptfoo full red-team scan (explicit, expensive)")
-    elif command_name == "review":
-        path = PROMPTFOO_ROOT / "generated" / "redteam.yaml"
-        if not path.is_file():
-            raise RuntimeError("no generated probes found; run eval:redteam:generate explicitly first")
-        lines = path.read_text(encoding="utf-8").splitlines()
-        print(f"[tuxedo] generated probe file: {path.relative_to(ROOT)} ({len(lines)} sanitized lines)")
-        for line in lines[:40]:
-            print(_redact(line[:240]))
-
-
 def verify_push() -> None:
     before = _git_status()
+    codex_home = PREPARE.preflight_codex_home()
     _official_validators()
     _python_and_shell_checks()
     _promptfoo_validate()
     _validate_fixture_catalog()
-    run_promptfoo("routing", PROMPTFOO_ROOT / "routing-config.yaml")
-    run_promptfoo("behavior", PROMPTFOO_ROOT / "promptfooconfig.yaml")
-    run_promptfoo("security", PROMPTFOO_ROOT / "security-config.yaml")
+    run_promptfoo("routing", PROMPTFOO_ROOT / "routing-config.yaml", codex_home=codex_home)
+    run_promptfoo("behavior", PROMPTFOO_ROOT / "promptfooconfig.yaml", codex_home=codex_home)
+    run_promptfoo("security", PROMPTFOO_ROOT / "security-config.yaml", codex_home=codex_home)
     _git_diff_check()
     after = _git_status()
     if after != before:
@@ -390,27 +398,31 @@ def verify_push() -> None:
     print("[tuxedo] verify:push passed; checkout status unchanged")
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--suite", choices=("smoke", "skills", "security", "compare", "redteam-generate", "redteam-review", "redteam-full", "verify-push"), required=True)
-    args = parser.parse_args()
-    if args.suite == "smoke":
-        run_promptfoo("smoke", PROMPTFOO_ROOT / "smoke-config.yaml")
-    elif args.suite == "skills":
-        _run_skills()
-    elif args.suite == "security":
-        run_promptfoo("security", PROMPTFOO_ROOT / "security-config.yaml")
-    elif args.suite == "compare":
-        _run_compare()
-    elif args.suite == "redteam-generate":
-        _redteam("generate")
-    elif args.suite == "redteam-review":
-        _redteam("review")
-    elif args.suite == "redteam-full":
-        _redteam("full")
-    else:
-        verify_push()
-    return 0
+    args = parser.parse_args(argv)
+    try:
+        if args.suite == "smoke":
+            run_promptfoo("smoke", PROMPTFOO_ROOT / "smoke-config.yaml")
+        elif args.suite == "skills":
+            _run_skills()
+        elif args.suite == "security":
+            run_promptfoo("security", PROMPTFOO_ROOT / "security-config.yaml")
+        elif args.suite == "compare":
+            _run_compare()
+        elif args.suite == "redteam-generate":
+            _redteam("generate")
+        elif args.suite == "redteam-review":
+            _redteam("review")
+        elif args.suite == "redteam-full":
+            _redteam("full")
+        else:
+            verify_push()
+        return 0
+    except RuntimeError as exc:
+        print(f"[tuxedo] {_redact(str(exc))}", file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":

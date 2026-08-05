@@ -26,11 +26,31 @@ outside synthetic sentinels, current/proposed fingerprints, model, reasoning
 effort, Codex version, Promptfoo version, seed, repetition count, and duration.
 The checkout is not a work directory for the provider.
 
-`TUXEDO_EVAL_CODEX_HOME` must be an existing dedicated authenticated directory
-outside the repository and distinct from personal `CODEX_HOME`. The runner
-does not copy or inspect authentication contents. Use an API key only through
-the process environment or a dedicated home; do not place personal skills,
-memories, sessions, or history in the evaluation home.
+The evaluation home resolves to `$HOME/.codex-tuxedo-evals` by default and may
+be overridden with `TUXEDO_EVAL_CODEX_HOME`. It must be absolute, outside the
+repository, distinct from personal `CODEX_HOME` and `$HOME/.codex`, and safe
+after symlink resolution. Run `pnpm run eval:login` once to execute the
+official `codex login` flow with the ChatGPT/Codex account, then use
+`pnpm run eval:auth:status` to verify it. The runner uses `codex login status`
+as evidence and never copies, reads, or prints `auth.json`. It accepts only
+the status label `Logged in using ChatGPT`; API-key, agent-identity, ambiguous,
+and failed statuses are rejected. Neither `OPENAI_API_KEY` nor
+`CODEX_API_KEY` is a requirement or fallback for this path.
+`TUXEDO_EVAL_CODEX_PATH` can select the Codex executable.
+
+The home may contain operational state created by Codex, including
+authentication, minimal configuration, logs, history, sessions, state
+databases, and shell snapshots. Top-level `skills`, `plugins`, `memories`,
+`rules`, instruction files, and MCP configuration are rejected because they
+can change evaluated behavior. Tuxedo parses `config.toml` fail-closed: only
+`cli_auth_credentials_store` is allowed; `hooks`, `profiles`, `model`,
+`model_provider(s)`, MCP, instruction, policy, and unknown top-level settings
+are rejected. Tuxedo does not validate the semantics of the allowed auth-store
+value, so the maintainer must keep the file minimal; an unrecognized future
+status label also fails closed. Content isolation and authentication reuse are
+separate properties:
+the account session is intentionally reused, while personal behavior-bearing
+content is not.
 
 The official Codex plugin/skill validators are discovered from environment
 configuration or the local Codex installation. If the validator requires

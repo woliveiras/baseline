@@ -58,18 +58,52 @@ The legacy deterministic runner is Codex-first and maintainer-only. It compares 
 Promptfoo and the Codex SDK are development-only dependencies. They are not
 part of the plugin or installed skills. The provider runs in fresh disposable
 workspaces with `network_access_enabled: false`, no Promptfoo sharing, and a
-dedicated authenticated `TUXEDO_EVAL_CODEX_HOME` outside the checkout. The
-runner never copies personal Codex authentication or content.
+dedicated Codex home outside the checkout. The runner never copies personal
+Codex authentication or content and never uses the personal `~/.codex` home.
 
 Use Node `>=22.22.0`, UV for Python, and PNPM for Node. Install Node
 dependencies with `pnpm install --frozen-lockfile`, then run:
 
 ```bash
+pnpm run eval:login
+pnpm run eval:auth:status
 pnpm run eval:smoke
 pnpm run eval:skills
 pnpm run eval:security
 pnpm run verify:push
 ```
+
+`eval:login` is the one-time, explicit maintainer action that runs the official
+`codex login` flow using the ChatGPT/Codex account. It stores and reuses that
+session in `$HOME/.codex-tuxedo-evals` by default. Set
+`TUXEDO_EVAL_CODEX_HOME` to an absolute directory outside this checkout to use
+another dedicated home. The resolver rejects relative paths, the personal
+`CODEX_HOME`, `$HOME/.codex`, and symlinks that resolve to either a personal
+home or this checkout. The executable can be overridden with
+`TUXEDO_EVAL_CODEX_PATH`.
+
+Run `pnpm run eval:auth:status` to obtain operational evidence from
+`codex login status`. It reports the dedicated home and gives the exact login
+command when authentication is absent; it does not inspect or print
+`auth.json`. The preflight accepts only the Codex CLI status label
+`Logged in using ChatGPT`; API-key, agent-identity, ambiguous, and failed
+statuses are rejected. A ChatGPT/Codex login is the canonical local
+authentication path; neither `OPENAI_API_KEY` nor `CODEX_API_KEY` is required
+or accepted as a silent substitute by the evaluation preflight.
+
+The dedicated home may contain Codex operational state such as authentication,
+minimal configuration, logs, history, sessions, state databases, and shell
+snapshots. Top-level `skills`, `plugins`, `memories`, `rules`, instruction
+files, and MCP configuration are rejected because they can change evaluated
+behavior. Tuxedo parses `config.toml` fail-closed: only
+`cli_auth_credentials_store` is allowed; `hooks`, `profiles`, `model`,
+`model_provider(s)`, MCP, instruction, policy, and unknown top-level settings
+are rejected. Tuxedo does not validate the semantics of the allowed auth-store
+value, so keep the file minimal; an unrecognized future status label also
+fails closed. To switch accounts, set a
+different `TUXEDO_EVAL_CODEX_HOME` and run `pnpm run eval:login`; to remove a
+dedicated session, remove that home manually after confirming it is not needed.
+No login secret enters this repository.
 
 `verify:push` executes the official validators, deterministic suites, 34
 routing cases, 40 behavior trials, and 12 security probes. It is expected to

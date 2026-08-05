@@ -6,19 +6,21 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[3]
-import sys
+SCRIPT_DIR = Path(__file__).resolve().parent
 
+sys.path.insert(0, str(SCRIPT_DIR))
 sys.path.insert(0, str(ROOT / "evals"))
+from codex_auth import evaluation_environment, require_authenticated  # noqa: E402
 from run import root_fingerprint, valid_root  # noqa: E402
 from verifiers import snapshot  # noqa: E402
 
@@ -34,33 +36,7 @@ def load_json(path: Path) -> Any:
 
 
 def preflight_codex_home() -> Path:
-    raw = os.environ.get("TUXEDO_EVAL_CODEX_HOME")
-    if not raw:
-        raise RuntimeError(
-            "TUXEDO_EVAL_CODEX_HOME is required; configure a dedicated authenticated Codex home "
-            "without changing the maintainer's personal CODEX_HOME"
-        )
-    path = Path(raw).expanduser()
-    if not path.is_absolute():
-        raise RuntimeError("TUXEDO_EVAL_CODEX_HOME must be an absolute path")
-    resolved = path.resolve()
-    personal = Path(os.environ.get("CODEX_HOME", str(Path.home() / ".codex"))).expanduser().resolve()
-    if resolved == personal:
-        raise RuntimeError("TUXEDO_EVAL_CODEX_HOME must differ from the personal CODEX_HOME")
-    if resolved == ROOT.resolve() or ROOT.resolve() in resolved.parents:
-        raise RuntimeError("TUXEDO_EVAL_CODEX_HOME must not be inside the Tuxedo checkout")
-    if not resolved.is_dir():
-        raise RuntimeError("TUXEDO_EVAL_CODEX_HOME must point to an existing dedicated directory")
-    auth_file = resolved / "auth.json"
-    api_key_present = bool(os.environ.get("OPENAI_API_KEY"))
-    if not auth_file.is_file() and not api_key_present:
-        raise RuntimeError("TUXEDO_EVAL_CODEX_HOME is not authenticated: auth.json is missing")
-    forbidden = {"skills", "plugins", "memories", "sessions", "history"}
-    names = {entry.name for entry in resolved.iterdir()}
-    contamination = sorted(names & forbidden)
-    if contamination:
-        raise RuntimeError("TUXEDO_EVAL_CODEX_HOME contains personal content: " + ", ".join(contamination))
-    return resolved
+    return require_authenticated()
 
 
 def _safe_key(value: str) -> str:

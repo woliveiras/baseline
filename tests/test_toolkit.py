@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib.util
+import io
 import json
 import os
 import re
@@ -10,7 +11,9 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,6 +46,9 @@ PROMPTFOO_ROUTING = load_promptfoo_module(
 )
 PROMPTFOO_SECURITY = load_promptfoo_module(
     "tuxedo_promptfoo_security", ROOT / "evals" / "promptfoo" / "assertions" / "security.py"
+)
+PROMPTFOO_AUTH = load_promptfoo_module(
+    "tuxedo_promptfoo_auth", ROOT / "evals" / "promptfoo" / "scripts" / "codex_auth.py"
 )
 PROMPTFOO_PREPARE = load_promptfoo_module(
     "tuxedo_promptfoo_prepare", ROOT / "evals" / "promptfoo" / "scripts" / "prepare-workspaces.py"
@@ -483,6 +489,276 @@ class HookTests(unittest.TestCase):
 
 
 class EvaluationVerifierTests(unittest.TestCase):
+    def _auth_environment(self, home_root: Path, **values: str):
+        environment = {
+            "HOME": str(home_root),
+            "PATH": os.environ.get("PATH", ""),
+        }
+        environment.update(values)
+        return patch.dict(os.environ, environment, clear=True)
+
+    def test_codex_home_default_and_override_are_absolute_and_dedicated(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home_root = Path(tmp)
+            with self._auth_environment(home_root):
+                self.assertEqual((home_root / ".codex-tuxedo-evals").resolve(), PROMPTFOO_AUTH.resolve_dedicated_home())
+            dedicated = home_root / "dedicated"
+            with self._auth_environment(home_root, TUXEDO_EVAL_CODEX_HOME=str(dedicated)):
+                self.assertEqual(dedicated.resolve(), PROMPTFOO_AUTH.resolve_dedicated_home())
+
+    def test_codex_home_rejects_relative_personal_checkout_and_symlink_paths(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home_root = Path(tmp)
+            cases = [
+                ("relative", {"TUXEDO_EVAL_CODEX_HOME": "relative-evals"}),
+                ("default personal", {"TUXEDO_EVAL_CODEX_HOME": str(home_root / ".codex")}),
+                ("checkout", {"TUXEDO_EVAL_CODEX_HOME": str(ROOT / ".tuxedo-eval-home")}),
+                (
+                    "configured personal",
+                    {
+                        "CODEX_HOME": str(home_root / "personal"),
+                        "TUXEDO_EVAL_CODEX_HOME": str(home_root / "personal"),
+                    },
+                ),
+            ]
+            for label, values in cases:
+                with self.subTest(label=label), self._auth_environment(home_root, **values):
+                    with self.assertRaises(RuntimeError):
+                        PROMPTFOO_AUTH.resolve_dedicated_home()
+
+            personal = home_root / ".codex"
+            personal.mkdir()
+            alias = home_root / "dedicated-alias"
+            try:
+                alias.symlink_to(personal, target_is_directory=True)
+            except OSError as exc:
+                self.skipTest(f"symlinks unavailable: {exc}")
+            with self._auth_environment(home_root, TUXEDO_EVAL_CODEX_HOME=str(alias)):
+                with self.assertRaises(RuntimeError):
+                    PROMPTFOO_AUTH.resolve_dedicated_home()
+
+            checkout_alias = home_root / "checkout-alias"
+            checkout_alias.symlink_to(ROOT, target_is_directory=True)
+            with self._auth_environment(home_root, TUXEDO_EVAL_CODEX_HOME=str(checkout_alias)):
+                with self.assertRaises(RuntimeError):
+                    PROMPTFOO_AUTH.resolve_dedicated_home()
+
+    def test_codex_auth_status_requires_cli_and_does_not_expose_secrets(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home_root = Path(tmp)
+            dedicated = home_root / "dedicated"
+            dedicated.mkdir()
+            secret = "sk-test-secret-do-not-print"
+            result = subprocess.CompletedProcess(
+                ["codex", "login", "status"],
+                1,
+                stdout=f"not logged in token={secret}",
+                stderr=f"auth={secret}",
+            )
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with self._auth_environment(
+                home_root,
+                TUXEDO_EVAL_CODEX_HOME=str(dedicated),
+                OPENAI_API_KEY=secret,
+                CODEX_API_KEY=secret,
+                TUXEDO_EVAL_CODEX_PATH="fake-codex",
+            ), patch.object(PROMPTFOO_AUTH.subprocess, "run", return_value=result) as run, redirect_stdout(stdout), redirect_stderr(stderr):
+                self.assertEqual(1, PROMPTFOO_AUTH.status())
+            message = stderr.getvalue()
+            self.assertEqual("", stdout.getvalue())
+            self.assertIn("Dedicated Codex evaluation home is not authenticated", message)
+            self.assertIn("pnpm run eval:login", message)
+            self.assertEqual(1, message.count(str(dedicated.resolve())))
+            self.assertLess(message.index("Dedicated Codex evaluation home"), message.index("Run: pnpm run eval:login"))
+            self.assertLess(message.index("Run: pnpm run eval:login"), message.index("Home: "))
+            self.assertNotIn(secret, message)
+            self.assertEqual(["fake-codex", "login", "status"], run.call_args.args[0])
+            child_environment = run.call_args.kwargs["env"]
+            self.assertEqual(str(dedicated.resolve()), child_environment["CODEX_HOME"])
+            self.assertNotIn("OPENAI_API_KEY", child_environment)
+            self.assertNotIn("CODEX_API_KEY", child_environment)
+
+    def test_codex_auth_status_success_and_missing_home_are_operational(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home_root = Path(tmp)
+            dedicated = home_root / "dedicated"
+            result = subprocess.CompletedProcess(
+                ["codex", "login", "status"], 0, stdout="Logged in using ChatGPT", stderr=""
+            )
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with self._auth_environment(home_root, TUXEDO_EVAL_CODEX_HOME=str(dedicated)), patch.object(
+                PROMPTFOO_AUTH.subprocess, "run", return_value=result
+            ) as run, redirect_stdout(stdout), redirect_stderr(stderr):
+                self.assertEqual(1, PROMPTFOO_AUTH.status())
+            self.assertFalse(dedicated.exists())
+            self.assertEqual("", stdout.getvalue())
+            self.assertEqual(1, stderr.getvalue().count(str(dedicated.resolve())))
+            run.assert_not_called()
+
+            dedicated.mkdir()
+            stdout = io.StringIO()
+            with self._auth_environment(
+                home_root, TUXEDO_EVAL_CODEX_HOME=str(dedicated), TUXEDO_EVAL_CODEX_PATH="fake-codex"
+            ), patch.object(
+                PROMPTFOO_AUTH.subprocess, "run", return_value=result
+            ) as run, redirect_stdout(stdout):
+                self.assertEqual(0, PROMPTFOO_AUTH.status())
+            self.assertIn("Codex CLI authentication is valid", stdout.getvalue())
+            self.assertEqual(["fake-codex", "login", "status"], run.call_args.args[0])
+
+    def test_codex_login_creates_only_dedicated_home_and_sets_child_codex_home(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home_root = Path(tmp)
+            dedicated = home_root / "dedicated"
+            result = subprocess.CompletedProcess(["fake-codex", "login"], 0, stdout="", stderr="")
+            stdout = io.StringIO()
+            with self._auth_environment(
+                home_root,
+                TUXEDO_EVAL_CODEX_HOME=str(dedicated),
+                OPENAI_API_KEY="sk-never-forward",
+                CODEX_API_KEY="codex-key-never-forward",
+                TUXEDO_EVAL_CODEX_PATH="fake-codex",
+            ), patch.object(PROMPTFOO_AUTH.subprocess, "run", return_value=result) as run, redirect_stdout(stdout):
+                self.assertEqual(0, PROMPTFOO_AUTH.login())
+            self.assertTrue(dedicated.is_dir())
+            self.assertIn(str(dedicated), stdout.getvalue())
+            self.assertEqual(["fake-codex", "login"], run.call_args.args[0])
+            self.assertEqual(str(dedicated.resolve()), run.call_args.kwargs["env"]["CODEX_HOME"])
+            self.assertNotIn("OPENAI_API_KEY", run.call_args.kwargs["env"])
+            self.assertNotIn("CODEX_API_KEY", run.call_args.kwargs["env"])
+
+    def test_codex_preflight_uses_cli_status_api_key_is_not_a_fallback_and_operational_state_is_allowed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home_root = Path(tmp)
+            dedicated = home_root / "dedicated"
+            dedicated.mkdir()
+            api_only = home_root / "api-only"
+            api_only.mkdir()
+            api_key_status = subprocess.CompletedProcess(
+                ["codex", "login", "status"],
+                0,
+                stdout="Logged in using an API key - sk-test-secret",
+                stderr="",
+            )
+            with self._auth_environment(
+                home_root,
+                TUXEDO_EVAL_CODEX_HOME=str(api_only),
+                OPENAI_API_KEY="sk-only",
+                CODEX_API_KEY="codex-only",
+            ), patch.object(PROMPTFOO_AUTH.subprocess, "run", return_value=api_key_status):
+                with self.assertRaisesRegex(RuntimeError, "reported API-key authentication"):
+                    PROMPTFOO_PREPARE.preflight_codex_home()
+
+            for name in ("auth.json", "config.toml", "history.jsonl", "state.sqlite", "shell_snapshots", "sessions", "logs"):
+                entry = dedicated / name
+                if name == "config.toml":
+                    entry.write_text('cli_auth_credentials_store = "file"\n', encoding="utf-8")
+                elif "." in name:
+                    entry.write_text("synthetic", encoding="utf-8")
+                else:
+                    entry.mkdir()
+            result = subprocess.CompletedProcess(
+                ["codex", "login", "status"], 0, stdout="Logged in using ChatGPT", stderr=""
+            )
+            with self._auth_environment(
+                home_root,
+                TUXEDO_EVAL_CODEX_HOME=str(dedicated),
+                OPENAI_API_KEY="sk-not-a-login",
+                CODEX_API_KEY="codex-not-a-login",
+            ), patch.object(PROMPTFOO_AUTH.subprocess, "run", return_value=result) as run:
+                first = PROMPTFOO_PREPARE.preflight_codex_home()
+                second = PROMPTFOO_PREPARE.preflight_codex_home()
+            self.assertEqual(dedicated.resolve(), first)
+            self.assertEqual(first, second)
+            self.assertEqual(2, run.call_count)
+            self.assertTrue(all(call.args[0][1:] == ["login", "status"] for call in run.call_args_list))
+            self.assertTrue(all("OPENAI_API_KEY" not in call.kwargs["env"] for call in run.call_args_list))
+            self.assertTrue(all("CODEX_API_KEY" not in call.kwargs["env"] for call in run.call_args_list))
+
+            with self._auth_environment(
+                home_root,
+                TUXEDO_EVAL_CODEX_HOME=str(dedicated),
+                OPENAI_API_KEY="sk-only",
+                CODEX_API_KEY="codex-only",
+            ), patch.object(
+                PROMPTFOO_AUTH.subprocess,
+                "run",
+                return_value=subprocess.CompletedProcess(["codex", "login", "status"], 1, stdout="", stderr=""),
+            ):
+                with self.assertRaisesRegex(RuntimeError, "Dedicated Codex evaluation home is not authenticated"):
+                    PROMPTFOO_PREPARE.preflight_codex_home()
+
+            with self._auth_environment(home_root, TUXEDO_EVAL_CODEX_HOME=str(dedicated)), patch.object(
+                PROMPTFOO_AUTH.subprocess,
+                "run",
+                return_value=subprocess.CompletedProcess(
+                    ["codex", "login", "status"], 0, stdout="Logged in using an unsupported method", stderr=""
+                ),
+            ):
+                with self.assertRaisesRegex(RuntimeError, "without identifying ChatGPT/Codex"):
+                    PROMPTFOO_PREPARE.preflight_codex_home()
+
+    def test_codex_preflight_rejects_behavior_bearing_personal_surfaces(self):
+        for marker in ("skills", "plugins", "memories", "rules", "instructions", "mcp", "AGENTS.md"):
+            with self.subTest(marker=marker), tempfile.TemporaryDirectory() as tmp:
+                home_root = Path(tmp)
+                dedicated = home_root / "dedicated"
+                dedicated.mkdir()
+                marker_path = dedicated / marker
+                if "." in marker:
+                    marker_path.write_text("personal", encoding="utf-8")
+                else:
+                    marker_path.mkdir()
+                with self._auth_environment(home_root, TUXEDO_EVAL_CODEX_HOME=str(dedicated)), patch.object(
+                    PROMPTFOO_AUTH.subprocess, "run"
+                ) as run:
+                    with self.assertRaisesRegex(RuntimeError, "behavior-bearing personal content"):
+                        PROMPTFOO_PREPARE.preflight_codex_home()
+                run.assert_not_called()
+
+        config_surfaces = {
+            "mcp_servers": "[mcp_servers.personal]\ncommand = 'personal-mcp'\n",
+            "hooks": "[hooks.personal]\ncommand = 'personal-hook'\n",
+            "profiles": "[profiles.personal]\nmodel = 'personal-model'\n",
+            "model": "model = 'personal-model'\n",
+            "model_provider": "model_provider = 'personal-provider'\n",
+            "model_providers": "[model_providers.personal]\nname = 'personal-provider'\n",
+            "unknown": "future_personal_setting = true\n",
+        }
+        for label, config in config_surfaces.items():
+            with self.subTest(config=label), tempfile.TemporaryDirectory() as tmp:
+                home_root = Path(tmp)
+                dedicated = home_root / "dedicated"
+                dedicated.mkdir()
+                (dedicated / "config.toml").write_text(config, encoding="utf-8")
+                with self._auth_environment(home_root, TUXEDO_EVAL_CODEX_HOME=str(dedicated)), patch.object(
+                    PROMPTFOO_AUTH.subprocess, "run"
+                ) as run:
+                    expected_error = (
+                        "behavior-bearing personal settings" if label != "unknown" else "unsupported settings"
+                    )
+                    with self.assertRaisesRegex(RuntimeError, expected_error):
+                        PROMPTFOO_PREPARE.preflight_codex_home()
+                run.assert_not_called()
+
+    def test_codex_preflight_happens_before_workspace_creation_and_login_is_not_implicit(self):
+        with patch.object(PROMPTFOO_RUNNER.PREPARE, "preflight_codex_home", side_effect=RuntimeError("unauthenticated")), patch.object(
+            PROMPTFOO_RUNNER.tempfile, "mkdtemp"
+        ) as make_temp:
+            self.assertEqual(1, PROMPTFOO_RUNNER.main(["--suite", "smoke"]))
+            make_temp.assert_not_called()
+
+    def test_promptfoo_configs_use_the_resolved_dedicated_home(self):
+        configs = sorted((ROOT / "evals" / "promptfoo").glob("*.yaml"))
+        provider_configs = [path for path in configs if "openai:codex-sdk" in path.read_text(encoding="utf-8")]
+        self.assertEqual(6, len(provider_configs))
+        for config in provider_configs:
+            text = config.read_text(encoding="utf-8")
+            self.assertGreaterEqual(text.count("CODEX_HOME: '{{ env.TUXEDO_EVAL_CODEX_HOME }}'"), 1, config)
+            self.assertNotIn("/Users/", text)
+
     def catalog(self) -> dict:
         return json.loads((ROOT / "evals" / "fixtures" / "catalog.json").read_text())
 
@@ -756,7 +1032,8 @@ class EvaluationVerifierTests(unittest.TestCase):
 
     def test_promptfoo_runner_has_no_personal_validator_path_and_rejects_bad_results(self):
         source = (ROOT / "evals" / "promptfoo" / "scripts" / "run-before-push.py").read_text()
-        self.assertNotIn("/Users/william", source)
+        personal_path_marker = "/" + "Users" + "/" + "william"
+        self.assertNotIn(personal_path_marker, source)
         with self.assertRaises(RuntimeError):
             PROMPTFOO_RUNNER._validate_raw_result({"results": [{"response": {"output": ""}}]})
         with self.assertRaises(RuntimeError):

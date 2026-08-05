@@ -9,6 +9,8 @@
   },
   "scripts": {
     "promptfoo:validate": "pnpm exec promptfoo validate -c evals/promptfoo/promptfooconfig.yaml",
+    "eval:login": "uv run python evals/promptfoo/scripts/codex_auth.py login",
+    "eval:auth:status": "uv run python evals/promptfoo/scripts/codex_auth.py status",
     "eval:smoke": "uv run python evals/promptfoo/scripts/run-before-push.py --suite smoke",
     "eval:skills": "uv run python evals/promptfoo/scripts/run-before-push.py --suite skills",
     "eval:security": "uv run python evals/promptfoo/scripts/run-before-push.py --suite security",
