@@ -153,20 +153,11 @@ This decision is implemented when the following checks are evidenced:
 - [x] README and architecture documentation discover this ADR.
 - [ ] Parity with the existing runner is recorded before any reduction of `evals/run.py`.
 
-Historical evidence status on 2026-08-05, before dedicated authentication was
-valid: exact package and lock metadata, six Promptfoo
-configuration validations, the official plugin validator, all 17 official skill
-validators, 38 unit tests, the legacy dry-run, shell syntax, `git diff --check`,
-ignored-path checks, and direct preparation of all 12 security manifests passed.
-The security catalog now gives every probe a distinct fixture stimulus and a
+The security catalog gives every probe a distinct fixture stimulus and a
 legitimate deterministic target-change oracle; trajectory checks inspect only
 structured Codex command/file events and return `needs-review` when that schema
-is absent. A real provider run and `eval:full` were intentionally not marked:
-the dedicated Codex authentication status was not valid, so no provider or
-personal Codex state was used. No security or red-team model run was claimed.
-A local `pnpm audit --prod` found no production dependencies; the full PNPM
-audit reported 14 dev/optional advisory entries (two low, seven moderate, five
-high) and is recorded as upgrade-review risk.
+is absent. Dated deterministic, dependency-audit, and provider run evidence for
+this decision is recorded in [the run log](../evidence/eval-runs.md).
 
 ## Amendment: dedicated Codex CLI authentication
 
@@ -227,12 +218,9 @@ Amendment evidence:
   has passed.
 - [ ] `pnpm run eval:full` has run with maintainer authority.
 
-Earlier observed evidence on 2026-08-05, before the later authorized provider
-run: `pnpm run eval:auth:status` succeeded and the
-real smoke reached the provider with 3 passed, 1 failed, and 0 provider errors
-in 3m59s. The smoke checkbox remains unchecked because the suite did not pass;
-`eval:full` was not run because its 86 provider calls require separate
-maintainer authority.
+The dated smoke result is recorded in [the run log](../evidence/eval-runs.md).
+The smoke checkbox remains unchecked because that suite did not pass, and
+`eval:full` requires separate maintainer authority.
 
 ## Amendment: explicit full evaluation stack
 
@@ -262,19 +250,9 @@ it, the maintainer supplies an isolated interpreter through
 Node/PNPM-managed and the distributed plugin remains free of both Promptfoo
 and the Codex SDK.
 
-Provider evidence collected on 2026-08-05 is not a green full-evaluation
-result: routing completed with 29/34 cases passing and 5 failing; behavior
-reached its 3600-second timeout without an aggregate report; and security
-completed with 0/12 passing. The security run also recorded Promptfoo
-`TraceStore`/`EvaluatorTracing` persistence errors, so it does not establish
-that all 12 agents violated the security boundaries. The dedicated
-authentication status remained valid, and no provider process or repository
-change remained afterward. A later isolated behavior rerun completed in
-1h19m53s with 11/40 passing and 29 failing; the isolated security run completed
-in 17m57s with 0/12 passing. Together with routing at 54m31s, sequential suite
-wall time was about 2h32m21s. Because the old runner discarded raw exports on
-exit 100, the exact five routing case identifiers were not retained; recovering
-them requires a fresh run with the amended checkpoint behavior.
+This full-stack provider evidence was not green. The routing, behavior, and
+security outcomes, the recorded wall times, and the lost routing-identifier
+limitation are recorded in [the run log](../evidence/eval-runs.md).
 
 ## Amendment: durable verdict evidence and bounded sharding
 
@@ -284,8 +262,9 @@ runner treated every nonzero exit as infrastructure failure and deleted the raw
 export before writing sanitized evidence. In addition, security enabled deep
 tracing while passing `--no-write`; trace rows then lacked their required
 persisted parent evaluation and produced `TraceStore`/`EvaluatorTracing`
-errors. A sequential rerun of the three provider suites also measured about
-2h32m in total, beyond the intended two-hour review window.
+errors. A sequential rerun of the three provider suites also measured beyond the
+intended two-hour review window; its timing is recorded in
+[the run log](../evidence/eval-runs.md).
 
 The amended decision distinguishes execution integrity from evaluation
 verdicts. Exit 0 and exit 100 may produce valid evidence; exit 100 always
@@ -339,6 +318,9 @@ Re-evaluate this decision if Promptfoo drops Codex support, the Codex SDK or App
 - [Promptfoo: Red-Team Configuration](https://www.promptfoo.dev/docs/red-team/configuration/)
 - [Codex non-interactive execution](https://developers.openai.com/codex/noninteractive/)
 - [Tuxedo enforcement boundaries](../architecture/enforcement.md)
+- [Tuxedo evaluation architecture](../architecture/evaluations.md)
+- [Tuxedo evaluation isolation model](../architecture/eval-isolation.md)
+- [Tuxedo evaluation run evidence](../evidence/eval-runs.md)
 - [Tuxedo evidence map](../research/evidence-map.md)
 - [`evals/run.py`](../../evals/run.py)
 - [`evals/verifiers.py`](../../evals/verifiers.py)

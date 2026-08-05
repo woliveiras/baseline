@@ -62,7 +62,8 @@ dedicated Codex home outside the checkout. The runner never copies personal
 Codex authentication or content and never uses the personal `~/.codex` home.
 
 Use Node `>=22.22.0`, UV for Python, and PNPM for Node. Install Node
-dependencies with `pnpm install --frozen-lockfile`, then run:
+dependencies with `pnpm install --frozen-lockfile`, then follow
+[the harness guide](docs/guides/using-the-eval-harness.md):
 
 ```bash
 pnpm run eval:login
@@ -73,95 +74,25 @@ pnpm run eval:security
 pnpm run eval:full
 ```
 
-`eval:login` is the one-time, explicit maintainer action that runs the official
-`codex login` flow using the ChatGPT/Codex account. It stores and reuses that
-session in `$HOME/.codex-tuxedo-evals` by default. Set
-`TUXEDO_EVAL_CODEX_HOME` to an absolute directory outside this checkout to use
-another dedicated home. The resolver rejects relative paths, the personal
-`CODEX_HOME`, `$HOME/.codex`, and symlinks that resolve to either a personal
-home or this checkout. The executable can be overridden with
-`TUXEDO_EVAL_CODEX_PATH`.
-
-Run `pnpm run eval:auth:status` to obtain operational evidence from
-`codex login status`. It reports the dedicated home and gives the exact login
-command when authentication is absent; it does not inspect or print
-`auth.json`. The preflight accepts only the Codex CLI status label
-`Logged in using ChatGPT`; API-key, agent-identity, ambiguous, and failed
-statuses are rejected. A ChatGPT/Codex login is the canonical local
-authentication path; neither `OPENAI_API_KEY` nor `CODEX_API_KEY` is required
-or accepted as a silent substitute by the evaluation preflight.
-
-The provider configurations intentionally omit a fixed `model`: the Codex CLI
-selects a model supported by the authenticated ChatGPT/Codex account. Reports
-record this as `codex-cli-default`; a future model pin requires a fresh
-compatibility check against the selected authentication method.
-
-The dedicated home may contain Codex operational state such as authentication,
-minimal configuration, logs, history, sessions, state databases, and shell
-snapshots. Codex-managed `skills/.system`,
-`plugins/cache/openai-curated-remote`, and an empty
-`plugins/.remote-plugin-install-staging` are also allowed because the CLI may
-materialize them during normal operation. Personal or unknown skill/plugin
-namespaces, `memories`, `rules`, instruction files, and MCP configuration are
-rejected because they can change evaluated behavior. Tuxedo parses
-`config.toml` fail-closed: `cli_auth_credentials_store` and Codex project
-`trust_level` metadata are allowed; `hooks`, `profiles`, `model`,
-`model_provider(s)`, MCP, instruction, policy, unknown settings, and other
-project metadata are rejected. This small allowlist recognizes the current
-CLI-managed surfaces; a future surface fails closed and the curated plugin
-cache is trusted only as Codex-managed operational content. Tuxedo does not
-validate the semantics of the allowed auth-store value, so keep the file
-minimal; an unrecognized future status label also fails closed. Allowed managed
-entries are required to be real directories/files rather than symlinks, so a
-personal target cannot hide behind an allowed name. To switch accounts, set a
-different `TUXEDO_EVAL_CODEX_HOME` and run `pnpm run eval:login`; to remove a
-dedicated session, remove that home manually after confirming it is not needed.
-No login secret enters this repository.
-
-The official plugin and skill validators are discovered from the local Codex
-installation or environment configuration. If they need PyYAML, keep it out of
-the repository: create a temporary validator interpreter with UV and provide
-it through `TUXEDO_VALIDATOR_PYTHON`:
-
-```bash
-validator_env_path="$(mktemp -d -t tuxedo-validators.XXXXXX)"
-uv venv "$validator_env_path"
-uv pip install --python "$validator_env_path/bin/python" PyYAML
-TUXEDO_VALIDATOR_PYTHON="$validator_env_path/bin/python" pnpm run eval:full
-```
-
-The temporary environment is only for the official validators; PyYAML is not a
-Tuxedo runtime or maintainer dependency.
+`eval:login` authenticates a dedicated Codex home once; `eval:auth:status`
+verifies it. The harness runs the provider in fresh disposable workspaces and
+isolates the dedicated Codex home, authentication, `config.toml` parsing, and
+Promptfoo state as described in
+[the isolation model](docs/architecture/eval-isolation.md). Full step-by-step
+usage, including the optional `TUXEDO_VALIDATOR_PYTHON` interpreter for the
+official validators, is in
+[the harness guide](docs/guides/using-the-eval-harness.md).
 
 `eval:full` is the explicit maintainer evaluation stack. It executes the
 official validators, deterministic suites, 34 routing cases, 40 behavior
-trials, and 12 security probes. It may make up to 86 provider calls and records
-the measured duration and sanitized evidence in ignored
-`evals/promptfoo/results/*.json`. It is not a pre-push hook, is not invoked by
-installation, and is not a substitute for ordinary deterministic checks.
-Existing reports are preserved, so the stack is repeatable. Run it when
-empirical agent evidence is needed, then decide independently whether the
-change is ready to push. `eval:redteam:generate`, `eval:redteam:review`, and
-`eval:redteam:full` are also explicit maintainer actions.
-
-The full stack splits routing into two shards and behavior into four, with at
-most two shards active at once; each provider process remains internally
-sequential and security remains one suite. Sharding changes elapsed time, not
-the 86-call coverage. Every shard gets a disposable workspace and a disposable
-Promptfoo state database so evaluation rows and deep traces remain linked
-without touching personal Promptfoo state. A completed shard immediately
-writes a sanitized checkpoint report. Promptfoo exit 100 is treated as an
-assertion verdict: the report is retained, remaining suites run, and the
-command writes a full aggregate with total wall duration, then returns one
-aggregate failure after all suite outcomes are available.
-Timeouts, provider errors, incomplete turns, malformed/missing results, and
-other exit codes remain infrastructure errors. Raw model output, prompts,
-traces, and credentials are never copied into the durable report.
-
-The earlier sequential run took about 2h32m. Concurrency two is intended to
-bring the full stack below two hours, but that target remains unconfirmed until
-another explicitly authorized `pnpm run eval:full` records its actual wall
-duration. No coverage or reasoning level is reduced to meet the target.
+trials, and 12 security probes, and may make up to 86 provider calls. It is not
+a pre-push hook, is not invoked by installation, and a passing result does not
+itself authorize a push. Existing sanitized reports under
+`evals/promptfoo/results/` are preserved, so the stack is repeatable. Routing is
+split into two shards and behavior into four, with at most two active at once,
+which changes elapsed time but not the 86-call coverage.
+`eval:redteam:generate`, `eval:redteam:review`, and `eval:redteam:full` are
+separate explicit maintainer actions.
 
 The suites test different properties of the skills:
 
@@ -182,7 +113,9 @@ The suites test different properties of the skills:
 
 `eval:smoke` is the small provider sanity check. `eval:full` is the broadest
 local empirical stack, but its result remains scoped to the recorded Codex
-account, CLI, provider, tasks, fixtures, and dependency versions. See
+account, CLI, provider, tasks, fixtures, and dependency versions. Measured run
+outcomes and open items are recorded in
+[the run log](docs/evidence/eval-runs.md). See
 [the evaluation architecture](docs/architecture/evaluations.md) and
 [ADR 0001](docs/decisions/0001-use-promptfoo-as-evaluation-orchestrator.md)
 for failure semantics, security limits, and authority boundaries.

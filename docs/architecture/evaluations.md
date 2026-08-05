@@ -28,7 +28,7 @@ boundaries.
 | `EV-ISO-01` | Promptfoo evaluation rows and traces use one disposable local state root, never the maintainer's personal Promptfoo state. | Command/environment capture proves `PROMPTFOO_CONFIG_DIR` is under the disposable run root and `--no-write` is absent. | implementation-aware |
 | `EV-SHD-01` | Shards are disjoint, cover every routing/behavior case, run with concurrency at most two, and retain completed shard reports if a peer fails. | Range and checkpoint tests cover the fixed shard catalog and a peer infrastructure error. | spec-derived |
 | `EV-PRV-01` | Persist only sanitized verdict evidence, never model output, prompts, traces, credentials, or raw responses. | A synthetic secret in provider output is absent from the persisted report while the assertion reason remains. | independent |
-| `EV-TIM-01` | Record actual suite wall time and do not claim the two-hour target until measured by a fresh full provider run. | Aggregate reports record wall duration; empirical confirmation remains pending. | external |
+| `EV-TIM-01` | Record actual suite wall time and do not claim the two-hour target until measured by a fresh full provider run. | Aggregate reports record the measured wall duration for each run. | external |
 
 ## Isolation and repeatability
 
@@ -46,48 +46,11 @@ state root is removed afterward. This is why provider runs do not use
 same disposable database. The durable report contains only sanitized verdict
 fields and never raw model output or trace payloads.
 
-The evaluation home resolves to `$HOME/.codex-tuxedo-evals` by default and may
-be overridden with `TUXEDO_EVAL_CODEX_HOME`. It must be absolute, outside the
-repository, distinct from personal `CODEX_HOME` and `$HOME/.codex`, and safe
-after symlink resolution. Run `pnpm run eval:login` once to execute the
-official `codex login` flow with the ChatGPT/Codex account, then use
-`pnpm run eval:auth:status` to verify it. The runner uses `codex login status`
-as evidence and never copies, reads, or prints `auth.json`. It accepts only
-the status label `Logged in using ChatGPT`; API-key, agent-identity, ambiguous,
-and failed statuses are rejected. Neither `OPENAI_API_KEY` nor
-`CODEX_API_KEY` is a requirement or fallback for this path.
-`TUXEDO_EVAL_CODEX_PATH` can select the Codex executable.
-Provider configurations omit a fixed `model` so the Codex CLI selects a model
-supported by the authenticated ChatGPT/Codex account; result metadata records
-`codex-cli-default`. A future model pin requires a fresh compatibility check
-against the selected authentication method.
-
-The home may contain operational state created by Codex, including
-authentication, minimal configuration, logs, history, sessions, state
-databases, and shell snapshots. Codex-managed `skills/.system`,
-`plugins/cache/openai-curated-remote`, and an empty
-`plugins/.remote-plugin-install-staging` are also allowed because the CLI may
-materialize them during normal operation. Personal or unknown skill/plugin
-namespaces, `memories`, `rules`, instruction files, and MCP configuration are
-rejected because they can change evaluated behavior. Tuxedo parses
-`config.toml` fail-closed: `cli_auth_credentials_store` and Codex project
-`trust_level` metadata are allowed; `hooks`, `profiles`, `model`,
-`model_provider(s)`, MCP, instruction, policy, unknown settings, and other
-project metadata are rejected. This small allowlist recognizes the current
-CLI-managed surfaces; a future surface fails closed and the curated plugin
-cache is trusted only as Codex-managed operational content. Tuxedo does not
-validate the semantics of the allowed auth-store value, so the maintainer must
-keep the file minimal; an unrecognized future status label also fails closed.
-Allowed managed entries are required to be real directories/files rather than
-symlinks, so a personal target cannot hide behind an allowed name.
-Content isolation and authentication reuse are separate properties:
-the account session is intentionally reused, while personal behavior-bearing
-content is not.
-
-The official Codex plugin/skill validators are discovered from environment
-configuration or the local Codex installation. If the validator requires
-PyYAML, provide an isolated interpreter through `TUXEDO_VALIDATOR_PYTHON`; it
-is deliberately not a Tuxedo runtime dependency.
+The dedicated Codex home, authentication reuse, `config.toml` fail-closed
+parsing, model selection, and the isolated `TUXEDO_VALIDATOR_PYTHON` interpreter
+are specified in [the isolation model](eval-isolation.md). Content isolation and
+authentication reuse are separate properties: the account session is
+intentionally reused, while personal behavior-bearing content is not.
 
 Ignored `generated/` and `results/` have different responsibilities. Generated
 red-team probes are review inputs and may persist. JSON result reports are
@@ -141,10 +104,10 @@ review.
 The 86 provider calls remain the expected upper bound for one non-repeated
 run; sharding changes scheduling, not coverage. Authoritative wall duration
 and per-row evidence are recorded in ignored JSON reports under
-`evals/promptfoo/results/`. The previous sequential evidence took about 2h32m;
-the sub-two-hour target for concurrency two is a hypothesis until a fresh
-authorized full run measures it. `eval:full` is not invoked by installation,
-hooks, or Git push, and a passing result does not itself authorize a push.
+`evals/promptfoo/results/`, and dated run outcomes with the open sub-two-hour
+target are recorded in [the run log](../evidence/eval-runs.md). `eval:full` is
+not invoked by installation, hooks, or Git push, and a passing result does not
+itself authorize a push.
 
 The evidence chain answers three different questions:
 
