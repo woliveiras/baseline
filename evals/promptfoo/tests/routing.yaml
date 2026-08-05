@@ -3,7 +3,7 @@
     "id": "positive-refine",
     "kind": "positive",
     "skill": "refine",
-    "request": "Use the refine workflow to resolve the one material ambiguity in this request, state the smallest decision needed, and keep the scope proportional.",
+    "request": "Use the refine workflow to resolve the one material ambiguity in this request, state the smallest decision needed, and keep the scope proportional. Before answering, read and follow .agents/skills/refine/SKILL.md from the assigned workspace; do not infer the workflow from the request alone.",
     "workspace_key": "routing-positive-refine"
   },
   {

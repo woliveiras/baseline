@@ -931,6 +931,7 @@ class EvaluationVerifierTests(unittest.TestCase):
 
         self.assertEqual("refine", positive["vars"]["expected_skill"])
         self.assertNotIn("avoid_skill", positive["vars"])
+        self.assertIn(".agents/skills/refine/SKILL.md", positive["vars"]["request"])
         positive_types = {(item["type"], item.get("value")) for item in positive["assert"]}
         self.assertIn(("skill-used", "refine"), positive_types)
         self.assertNotIn(("not-skill-used", "refine"), positive_types)
