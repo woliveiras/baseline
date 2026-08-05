@@ -15,7 +15,7 @@ boundaries.
 | Routing positive/negative cases | Tuxedo catalog plus Promptfoo skill assertions | `tests/routing.yaml`, `tests.py`, `assertions/routing.py`; metadata remains heuristic |
 | Variant comparisons | Tuxedo workspace preparation | baseline/core/focal/broad/current/proposed roots and distinct fingerprints |
 | Security regression probes | Tuxedo fixtures and assertions | every frozen probe has a distinct stimulus, a legitimate `src/app.py` oracle, and outside-canary checks |
-| Red-team generation and review | Promptfoo, explicitly invoked | `eval:redteam:generate`, `eval:redteam:review`; never part of `verify:push` |
+| Red-team generation and review | Promptfoo, explicitly invoked | `eval:redteam:generate`, `eval:redteam:review`; never part of `eval:full` |
 | Authority and privacy | Tuxedo runner and provider config | dedicated `TUXEDO_EVAL_CODEX_HOME`, no cloud share, no remote red-team generation, no external operations |
 
 ## Isolation and repeatability
@@ -71,7 +71,7 @@ is deliberately not a Tuxedo runtime dependency.
 
 Ignored `generated/` and `results/` have different responsibilities. Generated
 red-team probes are review inputs and may persist. JSON result reports are
-append-only local evidence and may persist across runs. The pre-push gate
+append-only local evidence and may persist across runs. The evaluation runner
 validates their shape without deleting either kind of evidence.
 
 ## Failure semantics
@@ -94,10 +94,10 @@ contents. A trace schema without inspectable events is recorded as
 
 ## Suites and authority
 
-The normal pre-push sequence is:
+The full empirical evaluation is an explicit maintainer action:
 
 ```bash
-pnpm run verify:push
+pnpm run eval:full
 ```
 
 This runs the official validators, Python and shell checks, all six Promptfoo
@@ -106,7 +106,29 @@ trials, and 12 security probes, then checks that Git status is unchanged. It
 requires an authenticated dedicated evaluation home and consumes model quota.
 The 86 provider calls are an expected upper bound for one non-repeated run;
 the authoritative duration and per-row evidence are recorded in ignored JSON
-reports under `evals/promptfoo/results/`.
+reports under `evals/promptfoo/results/`. It is not invoked by installation,
+hooks, or Git push, and a passing result does not itself authorize a push.
+
+The evidence chain answers three different questions:
+
+1. Routing: does the agent route positive requests to the named skill and avoid
+   unrelated skills? The assertion uses structured Codex provider metadata for
+   observed skill-file reads. This is a routing/invocation signal, not proof of
+   full skill adherence.
+2. Behavior: does the skill change the assigned workspace as required across
+   controlled baseline/core/focal/broad/current conditions? Fresh workspaces,
+   protected hashes, hidden deterministic oracles, completed-turn checks, and
+   no-op rejection make a refusal or “done” response insufficient.
+3. Security: does the agent complete the legitimate local task while resisting
+   the distinct adversarial stimulus? Each frozen probe has a target-change
+   oracle plus protected, outside-sentinel, canary, and structured trajectory
+   checks. Missing inspectable trajectory data remains a review limitation; it
+   is not inferred from output text or fixture contents.
+
+`eval:smoke` is the narrow provider sanity check. `eval:skills` runs routing
+and behavior, and `eval:security` runs the frozen security probes. The ordinary
+deterministic checks remain the fast local feedback path; the provider suites
+are explicit empirical evidence and are not a pre-push gate.
 
 Use the narrower commands when the full gate is disproportionate:
 
@@ -120,7 +142,7 @@ pnpm run eval:redteam:review
 ```
 
 `pnpm run eval:redteam:full` is intentionally explicit and expensive. No
-red-team command is implied by ordinary validation or `verify:push`.
+red-team command is implied by ordinary validation or `eval:full`.
 
 ## Residual limitations
 

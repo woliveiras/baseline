@@ -54,7 +54,7 @@ PROMPTFOO_PREPARE = load_promptfoo_module(
     "tuxedo_promptfoo_prepare", ROOT / "evals" / "promptfoo" / "scripts" / "prepare-workspaces.py"
 )
 PROMPTFOO_RUNNER = load_promptfoo_module(
-    "tuxedo_promptfoo_runner", ROOT / "evals" / "promptfoo" / "scripts" / "run-before-push.py"
+    "tuxedo_promptfoo_runner", ROOT / "evals" / "promptfoo" / "scripts" / "run-evaluations.py"
 )
 
 
@@ -72,6 +72,15 @@ def hash_file(path: Path) -> str:
 
 
 class ToolkitStructureTests(unittest.TestCase):
+    def test_full_evaluation_is_explicit_and_not_a_push_gate(self):
+        package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
+        scripts = package["scripts"]
+        self.assertIn("eval:full", scripts)
+        self.assertNotIn("verify:push", scripts)
+        self.assertIn("--suite full", scripts["eval:full"])
+        self.assertTrue((ROOT / "evals" / "promptfoo" / "scripts" / "run-evaluations.py").is_file())
+        self.assertFalse((ROOT / "evals" / "promptfoo" / "scripts" / "run-before-push.py").exists())
+
     def test_manifest_and_distributed_inventory(self):
         manifest = json.loads((ROOT / ".codex-plugin" / "plugin.json").read_text())
         self.assertEqual("tuxedo", manifest["name"])
@@ -1105,7 +1114,7 @@ class EvaluationVerifierTests(unittest.TestCase):
             self.assertTrue(report.is_file())
 
     def test_repository_has_no_personal_absolute_paths_and_rejects_bad_results(self):
-        source = (ROOT / "evals" / "promptfoo" / "scripts" / "run-before-push.py").read_text()
+        source = (ROOT / "evals" / "promptfoo" / "scripts" / "run-evaluations.py").read_text()
         personal_home_pattern = re.compile(r"(?<![A-Za-z0-9_])/(?:Users|home)/[^\s\"'`]+")
         self.assertIsNone(personal_home_pattern.search(source))
         tracked = subprocess.run(

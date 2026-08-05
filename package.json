@@ -11,14 +11,14 @@
     "promptfoo:validate": "pnpm exec promptfoo validate -c evals/promptfoo/promptfooconfig.yaml",
     "eval:login": "uv run python evals/promptfoo/scripts/codex_auth.py login",
     "eval:auth:status": "uv run python evals/promptfoo/scripts/codex_auth.py status",
-    "eval:smoke": "uv run python evals/promptfoo/scripts/run-before-push.py --suite smoke",
-    "eval:skills": "uv run python evals/promptfoo/scripts/run-before-push.py --suite skills",
-    "eval:security": "uv run python evals/promptfoo/scripts/run-before-push.py --suite security",
-    "eval:compare": "uv run python evals/promptfoo/scripts/run-before-push.py --suite compare",
-    "eval:redteam:generate": "uv run python evals/promptfoo/scripts/run-before-push.py --suite redteam-generate",
-    "eval:redteam:review": "uv run python evals/promptfoo/scripts/run-before-push.py --suite redteam-review",
-    "eval:redteam:full": "uv run python evals/promptfoo/scripts/run-before-push.py --suite redteam-full",
-    "verify:push": "uv run python evals/promptfoo/scripts/run-before-push.py --suite verify-push"
+    "eval:smoke": "uv run python evals/promptfoo/scripts/run-evaluations.py --suite smoke",
+    "eval:skills": "uv run python evals/promptfoo/scripts/run-evaluations.py --suite skills",
+    "eval:security": "uv run python evals/promptfoo/scripts/run-evaluations.py --suite security",
+    "eval:compare": "uv run python evals/promptfoo/scripts/run-evaluations.py --suite compare",
+    "eval:redteam:generate": "uv run python evals/promptfoo/scripts/run-evaluations.py --suite redteam-generate",
+    "eval:redteam:review": "uv run python evals/promptfoo/scripts/run-evaluations.py --suite redteam-review",
+    "eval:redteam:full": "uv run python evals/promptfoo/scripts/run-evaluations.py --suite redteam-full",
+    "eval:full": "uv run python evals/promptfoo/scripts/run-evaluations.py --suite full"
   },
   "devDependencies": {
     "@openai/codex-sdk": "0.146.0",

@@ -146,21 +146,22 @@ This decision is implemented when the following checks are evidenced:
 - [x] Every write-capable trial uses a fresh disposable workspace.
 - [x] Positive and negative routing cases exist for every distributed skill.
 - [ ] Approved frozen security probes run locally without remote generation.
-- [ ] `pnpm run verify:push` fails for provider, deterministic, routing, security, incomplete-turn, and result-validation failures.
+- [ ] `pnpm run eval:full` fails for provider, deterministic, routing, security, incomplete-turn, and result-validation failures.
 - [x] Empty processes cannot produce a pass and deterministic failures take precedence.
-- [ ] Red-team generation is not part of pre-push.
+- [ ] Red-team generation is not part of `eval:full`.
 - [x] Results, caches, workspaces, and evaluation Codex homes remain ignored.
 - [x] README and architecture documentation discover this ADR.
 - [ ] Parity with the existing runner is recorded before any reduction of `evals/run.py`.
 
-Evidence status for 2026-08-05: exact package and lock metadata, six Promptfoo
+Historical evidence status on 2026-08-05, before dedicated authentication was
+valid: exact package and lock metadata, six Promptfoo
 configuration validations, the official plugin validator, all 17 official skill
 validators, 38 unit tests, the legacy dry-run, shell syntax, `git diff --check`,
 ignored-path checks, and direct preparation of all 12 security manifests passed.
 The security catalog now gives every probe a distinct fixture stimulus and a
 legitimate deterministic target-change oracle; trajectory checks inspect only
 structured Codex command/file events and return `needs-review` when that schema
-is absent. A real provider run and `verify:push` were intentionally not marked:
+is absent. A real provider run and `eval:full` were intentionally not marked:
 the dedicated Codex authentication status was not valid, so no provider or
 personal Codex state was used. No security or red-team model run was claimed.
 A local `pnpm audit --prod` found no production dependencies; the full PNPM
@@ -224,15 +225,53 @@ Amendment evidence:
   non-implicit login.
 - [ ] The dedicated home is authenticated and the official provider smoke run
   has passed.
-- [ ] `pnpm run verify:push` has run with maintainer authority.
+- [ ] `pnpm run eval:full` has run with maintainer authority.
 
-Observed evidence on 2026-08-05: `pnpm run eval:auth:status` succeeded and the
+Earlier observed evidence on 2026-08-05, before the later authorized provider
+run: `pnpm run eval:auth:status` succeeded and the
 real smoke reached the provider with 3 passed, 1 failed, and 0 provider errors
 in 3m59s. The smoke checkbox remains unchecked because the suite did not pass;
-`verify:push` was not run because its 86 provider calls require separate
+`eval:full` was not run because its 86 provider calls require separate
 maintainer authority.
 
-Re-evaluate this decision if Promptfoo drops Codex support, the Codex SDK or App Server changes materially, Promptfoo requires cloud sharing, adapters duplicate more logic than they remove, hidden oracles cannot be integrated, workspace or credential isolation weakens, cost or duration makes pre-push impractical, another framework provides superior integration with less evidence loss, or `evals/run.py` becomes demonstrably redundant.
+## Amendment: explicit full evaluation stack
+
+The maintainer provider suites are exposed through `pnpm run eval:full`. This
+command is an explicit empirical evaluation stack, not a pre-push hook and not
+an automatic Git gate. It runs the official validators, deterministic checks,
+Promptfoo configuration validation, fixture checks, 34 routing cases, 40
+behavior trials, and 12 frozen security probes before checking that the Git
+status is unchanged. The expected upper bound is 86 provider calls; local JSON
+reports under `evals/promptfoo/results/` preserve per-row evidence without
+entering the repository.
+
+The evidence has three distinct meanings. Routing checks positive and negative
+requests for every distributed skill and uses structured provider metadata for
+observed skill-file reads; this indicates routing/invocation, not complete
+instruction adherence. Behavior trials use fresh workspaces, controlled
+variants, protected hashes, hidden deterministic oracles, completed-turn
+checks, and no-op rejection to verify that a legitimate task was actually
+performed. Security probes combine a distinct adversarial fixture stimulus
+with the legitimate `src/app.py` target-change oracle, protected paths, outside
+sentinels, canary checks, and structured trajectory events when available.
+Unavailable trajectory data remains a review limitation rather than a pass.
+
+PyYAML is not a Tuxedo dependency. When the official local validators require
+it, the maintainer supplies an isolated interpreter through
+`TUXEDO_VALIDATOR_PYTHON`, created with UV. The provider stack itself remains
+Node/PNPM-managed and the distributed plugin remains free of both Promptfoo
+and the Codex SDK.
+
+Provider evidence collected on 2026-08-05 is not a green full-evaluation
+result: routing completed with 29/34 cases passing and 5 failing; behavior
+reached its 3600-second timeout without an aggregate report; and security
+completed with 0/12 passing. The security run also recorded Promptfoo
+`TraceStore`/`EvaluatorTracing` persistence errors, so it does not establish
+that all 12 agents violated the security boundaries. The dedicated
+authentication status remained valid, and no provider process or repository
+change remained afterward.
+
+Re-evaluate this decision if Promptfoo drops Codex support, the Codex SDK or App Server changes materially, Promptfoo requires cloud sharing, adapters duplicate more logic than they remove, hidden oracles cannot be integrated, workspace or credential isolation weakens, the full evaluation becomes impractical for empirical review, another framework provides superior integration with less evidence loss, or `evals/run.py` becomes demonstrably redundant.
 
 ## More Information
 

@@ -70,7 +70,7 @@ pnpm run eval:auth:status
 pnpm run eval:smoke
 pnpm run eval:skills
 pnpm run eval:security
-pnpm run verify:push
+pnpm run eval:full
 ```
 
 `eval:login` is the one-time, explicit maintainer action that runs the official
@@ -118,14 +118,54 @@ different `TUXEDO_EVAL_CODEX_HOME` and run `pnpm run eval:login`; to remove a
 dedicated session, remove that home manually after confirming it is not needed.
 No login secret enters this repository.
 
-`verify:push` executes the official validators, deterministic suites, 34
-routing cases, 40 behavior trials, and 12 security probes. It is expected to
-make 86 provider calls and records the measured duration and sanitized evidence
-in ignored `evals/promptfoo/results/*.json`. Existing reports are preserved, so
-the gate is repeatable. `eval:redteam:generate`, `eval:redteam:review`, and
-`eval:redteam:full` are explicit maintainer actions; full red teaming is not a
-pre-push check. See [the evaluation architecture](docs/architecture/evaluations.md)
-and [ADR 0001](docs/decisions/0001-use-promptfoo-as-evaluation-orchestrator.md)
+The official plugin and skill validators are discovered from the local Codex
+installation or environment configuration. If they need PyYAML, keep it out of
+the repository: create a temporary validator interpreter with UV and provide
+it through `TUXEDO_VALIDATOR_PYTHON`:
+
+```bash
+validator_env_path="$(mktemp -d -t tuxedo-validators.XXXXXX)"
+uv venv "$validator_env_path"
+uv pip install --python "$validator_env_path/bin/python" PyYAML
+TUXEDO_VALIDATOR_PYTHON="$validator_env_path/bin/python" pnpm run eval:full
+```
+
+The temporary environment is only for the official validators; PyYAML is not a
+Tuxedo runtime or maintainer dependency.
+
+`eval:full` is the explicit maintainer evaluation stack. It executes the
+official validators, deterministic suites, 34 routing cases, 40 behavior
+trials, and 12 security probes. It may make up to 86 provider calls and records
+the measured duration and sanitized evidence in ignored
+`evals/promptfoo/results/*.json`. It is not a pre-push hook, is not invoked by
+installation, and is not a substitute for ordinary deterministic checks.
+Existing reports are preserved, so the stack is repeatable. Run it when
+empirical agent evidence is needed, then decide independently whether the
+change is ready to push. `eval:redteam:generate`, `eval:redteam:review`, and
+`eval:redteam:full` are also explicit maintainer actions.
+
+The suites test different properties of the skills:
+
+- `eval:skills` runs positive and negative routing cases for every distributed
+  skill. A positive case asks for a named workflow and checks structured
+  provider metadata for an observed skill-file read; a negative case checks
+  that an unrelated skill was not observed. This is evidence of routing and
+  invocation, not proof that every instruction in a skill was obeyed.
+- Behavior trials give the agent a legitimate task in a fresh workspace across
+  baseline/core/focal/broad/current conditions. Hidden deterministic oracles
+  verify required file changes, protected paths, no-op rejection, regression
+  behavior, and completed turns; a response saying “done” is insufficient.
+- Security probes pair a distinct adversarial fixture stimulus with the same
+  legitimate `src/app.py` oracle. Assertions inspect workspace snapshots,
+  protected hashes, outside sentinels, canary exposure, and structured command
+  or file events when the provider exposes them. They do not certify universal
+  security or silent reads when trajectory evidence is unavailable.
+
+`eval:smoke` is the small provider sanity check. `eval:full` is the broadest
+local empirical stack, but its result remains scoped to the recorded Codex
+account, CLI, provider, tasks, fixtures, and dependency versions. See
+[the evaluation architecture](docs/architecture/evaluations.md) and
+[ADR 0001](docs/decisions/0001-use-promptfoo-as-evaluation-orchestrator.md)
 for failure semantics, security limits, and authority boundaries.
 
 ## Provenance and influences

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Maintainer-only Promptfoo orchestration and the canonical pre-push gate."""
+"""Maintainer-only Promptfoo orchestration and explicit evaluation suites."""
 
 from __future__ import annotations
 
@@ -381,7 +381,7 @@ def _redteam(command_name: str) -> None:
         _run([
             PNPM, "exec", "promptfoo", "redteam", "run", "-c", str(config), "--no-cache", "--no-progress-bar", "--strict",
         ], timeout=3600, env=env, label="Promptfoo full red-team scan (explicit, expensive)")
-def verify_push() -> None:
+def run_full_evaluation() -> None:
     before = _git_status()
     codex_home = PREPARE.preflight_codex_home()
     _official_validators()
@@ -395,12 +395,12 @@ def verify_push() -> None:
     after = _git_status()
     if after != before:
         raise RuntimeError("evaluation modified the checkout; before/after git status differ")
-    print("[tuxedo] verify:push passed; checkout status unchanged")
+    print("[tuxedo] eval:full passed; checkout status unchanged")
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--suite", choices=("smoke", "skills", "security", "compare", "redteam-generate", "redteam-review", "redteam-full", "verify-push"), required=True)
+    parser.add_argument("--suite", choices=("smoke", "skills", "security", "compare", "redteam-generate", "redteam-review", "redteam-full", "full"), required=True)
     args = parser.parse_args(argv)
     try:
         if args.suite == "smoke":
@@ -418,7 +418,7 @@ def main(argv: list[str] | None = None) -> int:
         elif args.suite == "redteam-full":
             _redteam("full")
         else:
-            verify_push()
+            run_full_evaluation()
         return 0
     except RuntimeError as exc:
         print(f"[tuxedo] {_redact(str(exc))}", file=sys.stderr)
