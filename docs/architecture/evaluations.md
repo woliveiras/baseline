@@ -24,11 +24,12 @@ boundaries.
 | --- | --- | --- | --- |
 | `EV-RPT-01` | Promptfoo exit 100 is an assertion verdict; preserve a failed local report before returning failure. | Mocked exit 100 plus a completed failing result produces a `fail` outcome and JSON report. | spec-derived |
 | `EV-RPT-02` | Provider errors, empty output, incomplete turns, missing result files, and exit codes other than 0/100 remain infrastructure failures. | Unit tests exercise malformed provider results; the runner accepts only 0 and 100 for `promptfoo eval`. | spec-derived |
-| `EV-AGG-01` | Assertion failures do not suppress later authorized suites; the aggregate command fails after collecting their outcomes. | A mocked full run invokes routing, behavior, and security before raising one summarized verdict. | independent |
+| `EV-AGG-01` | Assertion failures do not suppress later authorized suites; the full summary is durable before the command reports assertion failure or checkout drift. | Mocked full runs invoke routing, behavior, and security, write the summary, then raise the applicable summarized verdict. | independent |
 | `EV-ISO-01` | Promptfoo evaluation rows and traces use one disposable local state root, never the maintainer's personal Promptfoo state. | Command/environment capture proves `PROMPTFOO_CONFIG_DIR` is under the disposable run root and `--no-write` is absent. | implementation-aware |
 | `EV-SHD-01` | Shards are disjoint, cover every routing/behavior case, run with concurrency at most two, and retain completed shard reports if a peer fails. | Range and checkpoint tests cover the fixed shard catalog and a peer infrastructure error. | spec-derived |
 | `EV-PRV-01` | Persist only sanitized verdict evidence, never model output, prompts, traces, credentials, or raw responses. | A synthetic secret in provider output is absent from the persisted report while the assertion reason remains. | independent |
-| `EV-TIM-01` | Record actual suite wall time and do not claim the two-hour target until measured by a fresh full provider run. | Aggregate reports record the measured wall duration for each run. | external |
+| `EV-SEC-01` | Normalize bridge-provided path lists before applying security change oracles. | Unit tests pass both native lists and JSON-serialized lists and require the declared allowed change to pass. | independent |
+| `EV-TIM-01` | Record actual suite wall time and verify the two-hour scheduling target without reducing coverage. | The 2026-08-05 full provider run recorded 85m22.245s across routing, behavior, and security. | external |
 
 ## Isolation and repeatability
 
@@ -98,14 +99,14 @@ Each completed shard writes a checkpoint report, and a successful set of
 shards writes a suite aggregate. Thus a later assertion failure or peer
 infrastructure failure does not erase already completed evidence. After all
 three suite outcomes exist, `eval:full` writes a full aggregate with total wall
-duration and returns one aggregate failure if any outcome failed or needs
-review.
+duration before checking final assertion verdicts or concurrent checkout drift.
+It then returns one aggregate failure if any outcome failed or needs review.
 
 The 86 provider calls remain the expected upper bound for one non-repeated
 run; sharding changes scheduling, not coverage. Authoritative wall duration
 and per-row evidence are recorded in ignored JSON reports under
-`evals/promptfoo/results/`, and dated run outcomes with the open sub-two-hour
-target are recorded in [the run log](../evidence/eval-runs.md). `eval:full` is
+`evals/promptfoo/results/`, and dated run outcomes are recorded in
+[the run log](../evidence/eval-runs.md). `eval:full` is
 not invoked by installation, hooks, or Git push, and a passing result does not
 itself authorize a push.
 

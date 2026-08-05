@@ -298,12 +298,16 @@ Deterministic evidence executed for this amendment proves:
 - [x] all routing, behavior, and security suite outcomes precede the aggregate assertion failure;
 - [x] shard ranges are disjoint and complete, concurrency is bounded at two, and a completed checkpoint survives a peer error;
 - [x] Promptfoo state is disposable and tracing no longer combines with `--no-write`.
-- [ ] a fresh authorized `pnpm run eval:full` confirms trace persistence with the real provider and measures wall time below two hours;
+- [x] a fresh authorized `pnpm run eval:full` confirms trace persistence with the real provider and measures wall time below two hours;
 - [ ] routing, behavior, and security verdicts are green.
 
-The two-hour objective is not yet an empirical claim. The amended scheduling
-is expected to improve wall time without weakening coverage, but only a fresh
-authorized full run can confirm it and replace the prior non-green evidence.
+The 2026-08-05 provider phases completed in 85m22.245s without reducing the 86
+calls or reasoning settings, and no `TraceStore` or `EvaluatorTracing` error
+was observed. The run remained non-green because of assertion failures. A
+concurrent documentation change also triggered the checkout-drift guard before
+the old ordering could write the full aggregate; the runner now writes that
+summary before its final drift check. Per-shard and per-suite reports survived,
+and the exact outcomes are recorded in [the run log](../evidence/eval-runs.md).
 
 Re-evaluate this decision if Promptfoo drops Codex support, the Codex SDK or App Server changes materially, Promptfoo requires cloud sharing, adapters duplicate more logic than they remove, hidden oracles cannot be integrated, workspace or credential isolation weakens, the full evaluation becomes impractical for empirical review, another framework provides superior integration with less evidence loss, or `evals/run.py` becomes demonstrably redundant.
 

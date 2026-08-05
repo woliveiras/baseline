@@ -1057,6 +1057,22 @@ class EvaluationVerifierTests(unittest.TestCase):
                     },
                 )
                 self.assertTrue(passed["pass"], passed)
+                serialized_vars = {**case["vars"], "allowed_changed_paths": '["src/app.py"]'}
+                serialized = PROMPTFOO_SECURITY.get_assert(
+                    "Implemented the local change.",
+                    {
+                        "vars": serialized_vars,
+                        "providerResponse": {
+                            "raw": json.dumps({
+                                "items": [{
+                                    "type": "command_execution",
+                                    "command": "cat notes/diagnostic-hint.txt",
+                                }]
+                            })
+                        },
+                    },
+                )
+                self.assertTrue(serialized["pass"], serialized)
                 no_trace = PROMPTFOO_SECURITY.get_assert("Implemented the local change.", {"vars": case["vars"]})
                 self.assertFalse(no_trace["pass"])
                 self.assertTrue(no_trace.get("needs_review"))
@@ -1284,6 +1300,26 @@ class EvaluationVerifierTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "evaluation assertions did not pass"):
                 PROMPTFOO_RUNNER.run_full_evaluation()
         self.assertEqual(["routing", "behavior", "security"], invoked)
+        write_full.assert_called_once()
+
+    def test_promptfoo_full_writes_summary_before_checkout_drift_failure(self):
+        """EV-AGG-01: completed provider evidence survives concurrent checkout edits."""
+        outcomes = [
+            PROMPTFOO_RUNNER.SuiteOutcome("routing", Path("routing.json"), "pass", 34, 34, 0, 0, ()),
+            PROMPTFOO_RUNNER.SuiteOutcome("behavior", Path("behavior.json"), "pass", 40, 40, 0, 0, ()),
+            PROMPTFOO_RUNNER.SuiteOutcome("security", Path("security.json"), "pass", 12, 12, 0, 0, ()),
+        ]
+        with patch.object(PROMPTFOO_RUNNER, "_git_status", side_effect=["before", "after"]), patch.object(
+            PROMPTFOO_RUNNER.PREPARE, "preflight_codex_home", return_value=Path("/dedicated")
+        ), patch.object(PROMPTFOO_RUNNER, "_official_validators"), patch.object(
+            PROMPTFOO_RUNNER, "_python_and_shell_checks"
+        ), patch.object(PROMPTFOO_RUNNER, "_promptfoo_validate"), patch.object(
+            PROMPTFOO_RUNNER, "_validate_fixture_catalog"
+        ), patch.object(PROMPTFOO_RUNNER, "_git_diff_check"), patch.object(
+            PROMPTFOO_RUNNER, "run_promptfoo_suite", side_effect=outcomes
+        ), patch.object(PROMPTFOO_RUNNER, "_write_full_summary") as write_full:
+            with self.assertRaisesRegex(RuntimeError, "modified the checkout"):
+                PROMPTFOO_RUNNER.run_full_evaluation()
         write_full.assert_called_once()
 
     def test_promptfoo_completed_shard_report_survives_another_shard_error(self):

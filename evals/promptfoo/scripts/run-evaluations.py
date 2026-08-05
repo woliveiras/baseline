@@ -737,11 +737,11 @@ def run_full_evaluation() -> None:
         run_promptfoo_suite("behavior", PROMPTFOO_ROOT / "promptfooconfig.yaml", codex_home=codex_home),
         run_promptfoo_suite("security", PROMPTFOO_ROOT / "security-config.yaml", codex_home=codex_home),
     ]
+    _write_full_summary(outcomes, time.monotonic() - started)
     _git_diff_check()
     after = _git_status()
     if after != before:
         raise RuntimeError("evaluation modified the checkout; before/after git status differ")
-    _write_full_summary(outcomes, time.monotonic() - started)
     _require_passing_outcomes(outcomes)
     print("[tuxedo] eval:full passed; checkout status unchanged")
 
