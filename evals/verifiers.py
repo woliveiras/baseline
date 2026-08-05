@@ -19,7 +19,14 @@ def snapshot(workspace: Path) -> dict[str, str]:
     values: dict[str, str] = {}
     for path in sorted(item for item in workspace.rglob("*") if item.is_file()):
         relative = path.relative_to(workspace).as_posix()
-        if relative in IGNORED_OUTPUTS:
+        if (
+            relative in IGNORED_OUTPUTS
+            or relative == ".git"
+            or relative.startswith(".git/")
+            or relative.startswith("__pycache__/")
+            or relative.endswith(".pyc")
+            or relative.startswith(".pytest_cache/")
+        ):
             continue
         values[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
     return values

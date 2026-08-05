@@ -1,0 +1,257 @@
+[
+  {
+    "id": "positive-refine",
+    "kind": "positive",
+    "skill": "refine",
+    "request": "Use the refine workflow to resolve the one material ambiguity in this request, state the smallest decision needed, and keep the scope proportional.",
+    "workspace_key": "routing-positive-refine"
+  },
+  {
+    "id": "positive-brainstorming",
+    "kind": "positive",
+    "skill": "brainstorming",
+    "request": "Use the brainstorming workflow to explore several plausible directions for this open-ended product problem before selecting one.",
+    "workspace_key": "routing-positive-brainstorming"
+  },
+  {
+    "id": "positive-spec",
+    "kind": "positive",
+    "skill": "spec",
+    "request": "Use the spec workflow to turn this request into an active specification with stable acceptance criteria, exclusions, and observable oracles.",
+    "workspace_key": "routing-positive-spec"
+  },
+  {
+    "id": "positive-tdd",
+    "kind": "positive",
+    "skill": "tdd",
+    "request": "Use the TDD workflow to implement this approved behavior from a fail-first test and an independent behavioral oracle.",
+    "workspace_key": "routing-positive-tdd"
+  },
+  {
+    "id": "positive-bugfix",
+    "kind": "positive",
+    "skill": "bugfix",
+    "request": "Use the bugfix workflow to reproduce this regression, repair the defect, and add a regression test that proves the boundary.",
+    "workspace_key": "routing-positive-bugfix"
+  },
+  {
+    "id": "positive-verify",
+    "kind": "positive",
+    "skill": "verify",
+    "request": "Use the verify workflow to review this completed change through the isolated spec, test, and code review phases and fresh evidence.",
+    "workspace_key": "routing-positive-verify"
+  },
+  {
+    "id": "positive-docs",
+    "kind": "positive",
+    "skill": "docs",
+    "request": "Use the docs workflow to update the smallest durable project documentation surface for this completed behavior change.",
+    "workspace_key": "routing-positive-docs"
+  },
+  {
+    "id": "positive-git-commit",
+    "kind": "positive",
+    "skill": "git-commit",
+    "request": "Use the git-commit workflow to prepare one atomic local Conventional Commit for the already verified task-owned changes.",
+    "workspace_key": "routing-positive-git-commit"
+  },
+  {
+    "id": "positive-ci-workflow",
+    "kind": "positive",
+    "skill": "ci-workflow",
+    "request": "Use the ci-workflow skill to design a safe evidence-producing CI workflow for these checks and its failure paths.",
+    "workspace_key": "routing-positive-ci-workflow"
+  },
+  {
+    "id": "positive-shape-domain",
+    "kind": "positive",
+    "skill": "shape-domain",
+    "request": "Use the shape-domain workflow to reconcile the domain language, invariants, bounded contexts, and code names in this model.",
+    "workspace_key": "routing-positive-shape-domain"
+  },
+  {
+    "id": "positive-design-deep-modules",
+    "kind": "positive",
+    "skill": "design-deep-modules",
+    "request": "Use the design-deep-modules workflow to compare interfaces and information-hiding seams for this multi-module design.",
+    "workspace_key": "routing-positive-design-deep-modules"
+  },
+  {
+    "id": "positive-improve-architecture",
+    "kind": "positive",
+    "skill": "improve-architecture",
+    "request": "Use the improve-architecture workflow to audit this architecture for evidence-backed improvements without changing it yet.",
+    "workspace_key": "routing-positive-improve-architecture"
+  },
+  {
+    "id": "positive-decision-framework",
+    "kind": "positive",
+    "skill": "decision-framework",
+    "request": "Use the decision-framework workflow to compare these options with explicit evidence, trade-offs, reversibility, and a recommendation.",
+    "workspace_key": "routing-positive-decision-framework"
+  },
+  {
+    "id": "positive-premortem",
+    "kind": "positive",
+    "skill": "premortem",
+    "request": "Use the premortem workflow to anticipate plausible failure modes before we commit to this change and identify mitigations.",
+    "workspace_key": "routing-positive-premortem"
+  },
+  {
+    "id": "positive-session-bridge",
+    "kind": "positive",
+    "skill": "session-bridge",
+    "request": "Use the session-bridge workflow to write a truthful resumable handoff for another session, including current state, evidence, and next steps.",
+    "workspace_key": "routing-positive-session-bridge"
+  },
+  {
+    "id": "positive-technical-research",
+    "kind": "positive",
+    "skill": "technical-research",
+    "request": "Use the technical-research workflow to investigate this current API question with primary official sources, versioned evidence, and limitations.",
+    "workspace_key": "routing-positive-technical-research"
+  },
+  {
+    "id": "positive-security-review",
+    "kind": "positive",
+    "skill": "security-review",
+    "request": "Use the security-review workflow to analyze the technology-neutral threats, trust boundaries, mitigations, and residual risk in this change.",
+    "workspace_key": "routing-positive-security-review"
+  },
+  {
+    "id": "negative-refine",
+    "kind": "negative",
+    "avoid_skill": "refine",
+    "expected_skill": "brainstorming",
+    "request": "Explore many possible directions for this open-ended idea without narrowing to one material decision yet.",
+    "workspace_key": "routing-negative-refine"
+  },
+  {
+    "id": "negative-brainstorming",
+    "kind": "negative",
+    "avoid_skill": "brainstorming",
+    "expected_skill": "refine",
+    "request": "Resolve this single concrete ambiguity proportionally and state the smallest decision needed to continue.",
+    "workspace_key": "routing-negative-brainstorming"
+  },
+  {
+    "id": "negative-spec",
+    "kind": "negative",
+    "avoid_skill": "spec",
+    "expected_skill": "tdd",
+    "request": "Implement the already approved acceptance criteria from a fail-first test and verify the behavior.",
+    "workspace_key": "routing-negative-spec"
+  },
+  {
+    "id": "negative-tdd",
+    "kind": "negative",
+    "avoid_skill": "tdd",
+    "expected_skill": "bugfix",
+    "request": "Reproduce this existing regression first, then repair the defect and add a regression test.",
+    "workspace_key": "routing-negative-tdd"
+  },
+  {
+    "id": "negative-bugfix",
+    "kind": "negative",
+    "avoid_skill": "bugfix",
+    "expected_skill": "tdd",
+    "request": "Implement this new approved behavior from an independent oracle and a fail-first test; there is no reported defect.",
+    "workspace_key": "routing-negative-bugfix"
+  },
+  {
+    "id": "negative-verify",
+    "kind": "negative",
+    "avoid_skill": "verify",
+    "expected_skill": "security-review",
+    "request": "Review this change for general security risks, trust boundaries, and residual exposure.",
+    "workspace_key": "routing-negative-verify"
+  },
+  {
+    "id": "negative-docs",
+    "kind": "negative",
+    "avoid_skill": "docs",
+    "expected_skill": "technical-research",
+    "request": "Investigate the current official API documentation and report versioned primary-source evidence; do not edit project docs.",
+    "workspace_key": "routing-negative-docs"
+  },
+  {
+    "id": "negative-git-commit",
+    "kind": "negative",
+    "avoid_skill": "git-commit",
+    "expected_skill": "verify",
+    "request": "Verify this completed change against its approved specification, tests, evidence, and review contract; do not create a commit.",
+    "workspace_key": "routing-negative-git-commit"
+  },
+  {
+    "id": "negative-ci-workflow",
+    "kind": "negative",
+    "avoid_skill": "ci-workflow",
+    "expected_skill": "bugfix",
+    "request": "Reproduce and fix the application regression locally with a focused test; do not design CI automation.",
+    "workspace_key": "routing-negative-ci-workflow"
+  },
+  {
+    "id": "negative-shape-domain",
+    "kind": "negative",
+    "avoid_skill": "shape-domain",
+    "expected_skill": "design-deep-modules",
+    "request": "Compare the interfaces and information-hiding boundaries of these modules without reconciling domain vocabulary.",
+    "workspace_key": "routing-negative-shape-domain"
+  },
+  {
+    "id": "negative-design-deep-modules",
+    "kind": "negative",
+    "avoid_skill": "design-deep-modules",
+    "expected_skill": "improve-architecture",
+    "request": "Audit the existing architecture for evidence-backed improvements without designing a new module boundary yet.",
+    "workspace_key": "routing-negative-design-deep-modules"
+  },
+  {
+    "id": "negative-improve-architecture",
+    "kind": "negative",
+    "avoid_skill": "improve-architecture",
+    "expected_skill": "design-deep-modules",
+    "request": "Design the interfaces and information-hiding seams for these modules; do not audit the whole architecture.",
+    "workspace_key": "routing-negative-improve-architecture"
+  },
+  {
+    "id": "negative-decision-framework",
+    "kind": "negative",
+    "avoid_skill": "decision-framework",
+    "expected_skill": "refine",
+    "request": "Resolve one material ambiguity in this request proportionally; do not compare a broad set of options.",
+    "workspace_key": "routing-negative-decision-framework"
+  },
+  {
+    "id": "negative-premortem",
+    "kind": "negative",
+    "avoid_skill": "premortem",
+    "expected_skill": "security-review",
+    "request": "Review the security threats and mitigations in this change; do not conduct a general pre-commit failure forecast.",
+    "workspace_key": "routing-negative-premortem"
+  },
+  {
+    "id": "negative-session-bridge",
+    "kind": "negative",
+    "avoid_skill": "session-bridge",
+    "expected_skill": "verify",
+    "request": "Verify this normal in-session change against its specification and evidence; no handoff or session transition is needed.",
+    "workspace_key": "routing-negative-session-bridge"
+  },
+  {
+    "id": "negative-technical-research",
+    "kind": "negative",
+    "avoid_skill": "technical-research",
+    "expected_skill": null,
+    "request": "Discuss the historical interpretation of this academic theory from memory; no current technical source or engineering decision is needed.",
+    "workspace_key": "routing-negative-technical-research"
+  },
+  {
+    "id": "negative-security-review",
+    "kind": "negative",
+    "avoid_skill": "security-review",
+    "expected_skill": "verify",
+    "request": "Verify the completed change against the approved specification, test evidence, and review phases; security analysis is not requested.",
+    "workspace_key": "routing-negative-security-review"
+  }
+]

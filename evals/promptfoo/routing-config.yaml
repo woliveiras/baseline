@@ -1,0 +1,25 @@
+description: Tuxedo routing evaluation through the local Codex SDK
+prompts:
+  - file://prompts.py:create_prompt
+tests:
+  - path: file://tests.py:generate_tests
+    config:
+      suite: routing
+providers:
+  - id: openai:codex-sdk
+    label: current
+    config:
+      model: gpt-5.2-codex
+      model_reasoning_effort: medium
+      working_dir: '{{ env.TUXEDO_EVAL_WORKSPACE_ROOT }}/{{workspace_key}}/current'
+      sandbox_mode: read-only
+      approval_policy: never
+      network_access_enabled: false
+      web_search_enabled: false
+      web_search_mode: disabled
+      enable_streaming: true
+      persist_threads: false
+      skip_git_repo_check: false
+      codex_path_override: '{{ env.TUXEDO_EVAL_CODEX_PATH | default("codex") }}'
+      cli_env:
+        CODEX_HOME: '{{ env.TUXEDO_EVAL_CODEX_HOME }}'

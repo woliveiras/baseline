@@ -27,6 +27,7 @@ This maintainer-only map separates empirical results from engineering heuristics
 | Specs remain active through review and maintenance. | Prevent silent drift between intent, tests, and code. | transversal `AGENTS.md`, templates, skill contracts, evals |
 | Native Codex Rules handle command authority; hooks enforce only workflow integrity facts. | Shell parsing and semantic judgments should not be reimplemented as lifecycle interlocks. | Codex Rules plus artifact, tree, documentation, and review hashes |
 | Evals remain Codex-first and maintainer-only. | Codex is the initial evaluation client, not a conceptual dependency of portable skills. | `evals/`, excluded from plugin manifest |
+| Promptfoo orchestrates provider trials while Tuxedo retains deterministic oracles and workspace authority. | Generic provider/repetition/reporting maintenance is separated from Tuxedo-specific evidence. | `docs/decisions/0001-use-promptfoo-as-evaluation-orchestrator.md`, `docs/architecture/evaluations.md` |
 | Stack-specific security and technology skills are deferred. | Avoid unsupported synthesis and keep v0.1 technology-neutral. | migration map and routing descriptions |
 
 ## Community inspiration

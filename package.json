@@ -1,0 +1,24 @@
+{
+  "name": "tuxedo-maintainer-evals",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Maintainer-only evaluation tooling for Tuxedo",
+  "engines": {
+    "node": ">=22.22.0"
+  },
+  "scripts": {
+    "promptfoo:validate": "promptfoo validate -c evals/promptfoo/promptfooconfig.yaml",
+    "eval:smoke": "python3 evals/promptfoo/scripts/run-before-push.py --suite smoke",
+    "eval:skills": "python3 evals/promptfoo/scripts/run-before-push.py --suite skills",
+    "eval:security": "python3 evals/promptfoo/scripts/run-before-push.py --suite security",
+    "eval:compare": "python3 evals/promptfoo/scripts/run-before-push.py --suite compare",
+    "eval:redteam:generate": "python3 evals/promptfoo/scripts/run-before-push.py --suite redteam-generate",
+    "eval:redteam:review": "python3 evals/promptfoo/scripts/run-before-push.py --suite redteam-review",
+    "eval:redteam:full": "python3 evals/promptfoo/scripts/run-before-push.py --suite redteam-full",
+    "verify:push": "python3 evals/promptfoo/scripts/run-before-push.py --suite verify-push"
+  },
+  "devDependencies": {
+    "@openai/codex-sdk": "0.146.0",
+    "promptfoo": "0.122.0"
+  }
+}

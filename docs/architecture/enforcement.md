@@ -7,6 +7,10 @@ Tuxedo separates two kinds of executable reinforcement:
 
 Neither mechanism decides whether a specification, test, architecture, or documentation change is semantically good.
 
+The maintainer-only Promptfoo evaluation boundary is documented separately in
+[the evaluation architecture](evaluations.md) and [ADR 0001](../decisions/0001-use-promptfoo-as-evaluation-orchestrator.md).
+Promptfoo does not replace these rules, hooks, or deterministic verifiers.
+
 ## Codex Rules
 
 Tuxedo ships `templates/codex/tuxedo.rules` as an opt-in project template. Copy it to `.codex/rules/tuxedo.rules` in a trusted project and restart Codex.

@@ -53,6 +53,33 @@ python3 evals/run.py --dry-run
 
 The evaluation harness is Codex-first and maintainer-only. It compares baseline, minimal core, focal skill, broad configuration, and distinct current-versus-proposed roots with seeded ordering and repeated trials. Executable fixture tasks use deterministic hidden oracles. Architectural and intent-sensitive tasks remain `needs-review` until the secondary rubric is applied; response keywords never establish a pass. The runner never executes model calls unless a maintainer passes `--execute`.
 
+## Maintainer-only Promptfoo evaluations
+
+Promptfoo and the Codex SDK are development-only dependencies. They are not
+part of the plugin or installed skills. The provider runs in fresh disposable
+workspaces with `network_access_enabled: false`, no Promptfoo sharing, and a
+dedicated authenticated `TUXEDO_EVAL_CODEX_HOME` outside the checkout. The
+runner never copies personal Codex authentication or content.
+
+Install with Node `>=22.22.0` and run `npm ci`. Then use:
+
+```bash
+npm run eval:smoke
+npm run eval:skills
+npm run eval:security
+npm run verify:push
+```
+
+`verify:push` executes the official validators, deterministic suites, 34
+routing cases, 40 behavior trials, and 12 security probes. It is expected to
+make 86 provider calls and records the measured duration and sanitized evidence
+in ignored `evals/promptfoo/results/*.json`. Existing reports are preserved, so
+the gate is repeatable. `eval:redteam:generate`, `eval:redteam:review`, and
+`eval:redteam:full` are explicit maintainer actions; full red teaming is not a
+pre-push check. See [the evaluation architecture](docs/architecture/evaluations.md)
+and [ADR 0001](docs/decisions/0001-use-promptfoo-as-evaluation-orchestrator.md)
+for failure semantics, security limits, and authority boundaries.
+
 ## Provenance and influences
 
 Tuxedo selectively adapts content from Geremmyas, which is MIT-licensed and owned by the same author. It preserves that project's spec-driven purpose without carrying over its CLI or distribution architecture.

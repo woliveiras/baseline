@@ -1,5 +1,16 @@
 evals/results/*
 !evals/results/.gitkeep
+node_modules/
+evals/promptfoo/results/*
+!evals/promptfoo/results/.gitkeep
+evals/promptfoo/generated/*
+!evals/promptfoo/generated/.gitkeep
+evals/promptfoo/workspaces/
+evals/promptfoo/cache/
+evals/promptfoo/caches/
+evals/promptfoo/.cache/
+evals/promptfoo/codex-home/
+evals/promptfoo/*-codex-home/
 __pycache__/
 *.pyc
 tmp/
