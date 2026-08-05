@@ -345,6 +345,29 @@ for this amendment until separately authorized evidence is recorded, and the
 earlier sub-two-hour measurement does not establish the duration of this
 larger stack.
 
+## Amendment: independent write-capable repetitions
+
+A focused stability diagnostic exposed that Promptfoo process-level repetition
+reuses the prepared coding-agent workspace. A later repetition can therefore
+observe or overwrite files from an earlier trial, so those rows are not
+independent evidence. This contradicts Tuxedo's fresh-workspace invariant even
+when ordinary full suites use one repetition.
+
+Tuxedo now rejects `repeat != 1` at the single-process adapter boundary. Commands
+that require repeated evidence, currently `eval:compare`, launch independent
+single-repetition Promptfoo processes. Each process prepares fresh fixtures,
+current/proposed workspaces, snapshots, and disposable Promptfoo state. Only the
+sanitized reports are combined, with an explicit repetition number and a check
+that current/proposed fingerprints did not drift between runs.
+
+Amendment evidence:
+
+- [x] process-level repetition fails before authentication preflight or workspace creation;
+- [x] compare launches three single-repetition processes with the same dedicated authentication boundary;
+- [x] independent reports retain repetition identity in the aggregate;
+- [x] fingerprint drift prevents aggregation;
+- [ ] a real repeated compare run has been executed with a distinct proposed root.
+
 Re-evaluate this decision if Promptfoo drops Codex support, the Codex SDK or App Server changes materially, Promptfoo requires cloud sharing, adapters duplicate more logic than they remove, hidden oracles cannot be integrated, workspace or credential isolation weakens, the full evaluation becomes impractical for empirical review, another framework provides superior integration with less evidence loss, or `evals/run.py` becomes demonstrably redundant.
 
 ## More Information

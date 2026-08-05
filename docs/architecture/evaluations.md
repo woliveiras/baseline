@@ -37,6 +37,7 @@ boundaries.
 | `EV-AUT-01` | Governing task inputs remain unchanged unless the task explicitly authorizes editing them. | Contract and fixture tests require immutable input plus a separate writable design artifact. | spec-derived |
 | `EV-JDG-01` | Semantic behavior cases receive a secondary rubric through the dedicated ChatGPT/Codex login; its result matters only when deterministic checks pass. | Generated-test inspection proves only semantic tasks attach an explicit read-only, no-network `openai:codex-sdk` grader with dedicated `CODEX_HOME` and an empty isolated working directory. | implementation-aware |
 | `EV-DLV-01` | When an isolated semantic judge can inspect only the final response, the task must state which decisions from its durable design artifact the completion report must summarize. | The multi-module task requires the same boundary, translation, trade-off, reversibility, and implementation-status evidence in `DESIGN.md` and the final response; the rubric remains unchanged. | spec-derived |
+| `EV-REP-01` | Every write-capable repetition starts from a fresh fixture and workspace; no Promptfoo process-level repeat may reuse mutated state. | The runner rejects `repeat != 1`, and compare executes three independent single-repetition processes before aggregating their sanitized reports. | independent |
 
 ## Isolation and repeatability
 
@@ -45,6 +46,11 @@ a fresh temporary root. The runner records before-snapshots, protected hashes,
 outside synthetic sentinels, current/proposed fingerprints, model, reasoning
 effort, Codex version, Promptfoo version, seed, repetition count, and duration.
 The checkout is not a work directory for the provider.
+
+Promptfoo's process-level `--repeat` is not used for write-capable trials because
+it reuses the prepared workspace. Repeated comparisons are three independent
+single-repetition processes, each with new fixtures, workspaces, Promptfoo state,
+and snapshots; only their sanitized reports are aggregated.
 
 Every Promptfoo provider or red-team process also receives a
 `PROMPTFOO_CONFIG_DIR` below a temporary root. Promptfoo may write its

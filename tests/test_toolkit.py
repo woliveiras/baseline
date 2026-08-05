@@ -1356,6 +1356,93 @@ class EvaluationVerifierTests(unittest.TestCase):
             PROMPTFOO_RUNNER._validate_local_outputs(generated, results)
             self.assertTrue(report.is_file())
 
+    def test_promptfoo_rejects_process_level_repetition_before_preflight(self):
+        with patch.object(PROMPTFOO_RUNNER.PREPARE, "preflight_codex_home") as preflight:
+            with self.assertRaisesRegex(RuntimeError, "cannot repeat a write-capable trial safely"):
+                PROMPTFOO_RUNNER.run_promptfoo(
+                    "security",
+                    ROOT / "evals" / "promptfoo" / "security-config.yaml",
+                    repeat=2,
+                )
+        preflight.assert_not_called()
+
+    def test_promptfoo_aggregates_only_independent_repetition_reports(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            promptfoo_root = Path(tmp) / "promptfoo"
+            (promptfoo_root / "results").mkdir(parents=True)
+            outcomes = []
+            for repetition in (1, 2):
+                report_path = promptfoo_root / "results" / f"compare-{repetition}.json"
+                report_path.write_text(json.dumps({
+                    "suite": "compare",
+                    "condition_fingerprints": {"current": "current", "proposed": "proposed"},
+                    "model": "codex-cli-default",
+                    "reasoning": "medium",
+                    "codex_version": "codex-test",
+                    "promptfoo_version": "promptfoo-test",
+                    "seed": 0,
+                    "repetitions": 1,
+                    "limitations": ["test limitation"],
+                    "runs": [{
+                        "test_id": "case",
+                        "provider": "current",
+                        "status": "pass",
+                        "reason": "pass",
+                    }],
+                }), encoding="utf-8")
+                outcomes.append(PROMPTFOO_RUNNER.SuiteOutcome(
+                    "compare", report_path, "pass", 1, 1, 0, 0, ()
+                ))
+            with patch.object(PROMPTFOO_RUNNER, "PROMPTFOO_ROOT", promptfoo_root):
+                aggregate = PROMPTFOO_RUNNER._aggregate_repetitions("compare", outcomes, 2.5)
+            payload = json.loads(aggregate.report_path.read_text(encoding="utf-8"))
+            self.assertEqual(2, payload["repetitions"])
+            self.assertEqual([1, 2], [run["repetition"] for run in payload["runs"]])
+            self.assertEqual(2, payload["summary"]["provider_responses"])
+
+    def test_promptfoo_repetition_aggregate_rejects_state_or_fingerprint_ambiguity(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            outcomes = []
+            for name, repetitions, current in (("a", 1, "current"), ("b", 2, "drifted")):
+                report = root / f"{name}.json"
+                report.write_text(json.dumps({
+                    "repetitions": repetitions,
+                    "condition_fingerprints": {"current": current, "proposed": "proposed"},
+                    "runs": [],
+                    "limitations": [],
+                }), encoding="utf-8")
+                outcomes.append(PROMPTFOO_RUNNER.SuiteOutcome(
+                    "compare", report, "pass", 0, 0, 0, 0, ()
+                ))
+            with self.assertRaisesRegex(RuntimeError, "single-repetition source reports"):
+                PROMPTFOO_RUNNER._aggregate_repetitions("compare", outcomes, 1.0)
+            payload = json.loads(outcomes[1].report_path.read_text(encoding="utf-8"))
+            payload["repetitions"] = 1
+            outcomes[1].report_path.write_text(json.dumps(payload), encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError, "fingerprints changed"):
+                PROMPTFOO_RUNNER._aggregate_repetitions("compare", outcomes, 1.0)
+
+    def test_compare_uses_three_fresh_single_repetition_processes(self):
+        passing = PROMPTFOO_RUNNER.SuiteOutcome(
+            "compare", Path("compare.json"), "pass", 16, 16, 0, 0, ()
+        )
+        dedicated = Path("/dedicated-eval-home")
+        with patch.dict(os.environ, {"TUXEDO_EVAL_PROPOSED_ROOT": "/proposed"}), patch.object(
+            PROMPTFOO_RUNNER.PREPARE, "preflight_codex_home", return_value=dedicated
+        ), patch.object(
+            PROMPTFOO_RUNNER, "run_promptfoo", return_value=passing
+        ) as run, patch.object(
+            PROMPTFOO_RUNNER, "_aggregate_repetitions", return_value=passing
+        ) as aggregate:
+            PROMPTFOO_RUNNER._run_compare()
+        self.assertEqual(3, run.call_count)
+        for call in run.call_args_list:
+            self.assertEqual(1, call.kwargs["repeat"])
+            self.assertEqual(dedicated, call.kwargs["codex_home"])
+            self.assertEqual(Path("/proposed"), call.kwargs["proposed_root"])
+        aggregate.assert_called_once()
+
     def test_promptfoo_exit_100_persists_a_sanitized_failed_report(self):
         """EV-RPT-01/EV-PRV-01: assertion failure is evidence, not infrastructure loss."""
         with tempfile.TemporaryDirectory() as tmp:

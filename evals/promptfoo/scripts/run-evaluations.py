@@ -509,6 +509,11 @@ def run_promptfoo(
     codex_home: Path | None = None,
     shard: Shard | None = None,
 ) -> SuiteOutcome:
+    if repeat != 1:
+        raise RuntimeError(
+            "one Promptfoo process cannot repeat a write-capable trial safely; "
+            "run independent single-repetition processes instead"
+        )
     codex_home = codex_home or PREPARE.preflight_codex_home()
     codex_version = _codex_version(codex_home)
     promptfoo_version = _promptfoo_version()
@@ -621,6 +626,58 @@ def _aggregate_shards(suite: str, outcomes: list[SuiteOutcome], duration_seconds
     return result
 
 
+def _aggregate_repetitions(suite: str, outcomes: list[SuiteOutcome], duration_seconds: float) -> SuiteOutcome:
+    reports = [json.loads(outcome.report_path.read_text(encoding="utf-8")) for outcome in outcomes]
+    if not reports:
+        raise RuntimeError(f"cannot aggregate zero independent {suite} repetitions")
+    if any(report.get("repetitions") != 1 for report in reports):
+        raise RuntimeError(f"{suite} aggregate requires single-repetition source reports")
+    fingerprints = reports[0].get("condition_fingerprints")
+    if any(report.get("condition_fingerprints") != fingerprints for report in reports[1:]):
+        raise RuntimeError(f"{suite} fingerprints changed between independent repetitions")
+    runs = [
+        {**run, "repetition": repetition}
+        for repetition, report in enumerate(reports, start=1)
+        for run in report["runs"]
+    ]
+    passed = sum(outcome.passed for outcome in outcomes)
+    failed = sum(outcome.failed for outcome in outcomes)
+    needs_review = sum(outcome.needs_review for outcome in outcomes)
+    aggregate = {
+        "version": 2,
+        "suite": suite,
+        "condition_fingerprints": fingerprints,
+        "model": reports[0].get("model"),
+        "reasoning": reports[0].get("reasoning"),
+        "codex_version": reports[0].get("codex_version"),
+        "promptfoo_version": reports[0].get("promptfoo_version"),
+        "seed": reports[0].get("seed"),
+        "repetitions": len(outcomes),
+        "independent_runs": [
+            {"repetition": repetition, "report": _display_path(outcome.report_path)}
+            for repetition, outcome in enumerate(outcomes, start=1)
+        ],
+        "duration_seconds": round(duration_seconds, 3),
+        "privacy": {"shared": False, "remote_redteam_generation": False, "raw_responses_saved": False},
+        "summary": {
+            "provider_responses": sum(outcome.provider_responses for outcome in outcomes),
+            "passed": passed,
+            "failed": failed,
+            "needs_review": needs_review,
+            "status": _outcomes_status(outcomes),
+        },
+        "runs": runs,
+        "limitations": reports[0]["limitations"],
+    }
+    output = _write_report(aggregate, suite, "-aggregate")
+    result = _outcome(aggregate, output)
+    print(
+        f"[tuxedo] {suite} independent repetitions: "
+        f"{passed}/{result.provider_responses} passed, result={_display_path(output)}"
+    )
+    return result
+
+
 def run_promptfoo_suite(
     suite: str,
     config: Path,
@@ -716,7 +773,19 @@ def _run_compare() -> None:
     raw = os.environ.get("TUXEDO_EVAL_PROPOSED_ROOT")
     if not raw:
         raise RuntimeError("TUXEDO_EVAL_PROPOSED_ROOT is required for eval:compare")
-    outcome = run_promptfoo("compare", PROMPTFOO_ROOT / "compare-config.yaml", proposed_root=Path(raw), repeat=3)
+    started = time.monotonic()
+    codex_home = PREPARE.preflight_codex_home()
+    outcomes = [
+        run_promptfoo(
+            "compare",
+            PROMPTFOO_ROOT / "compare-config.yaml",
+            proposed_root=Path(raw),
+            repeat=1,
+            codex_home=codex_home,
+        )
+        for _ in range(3)
+    ]
+    outcome = _aggregate_repetitions("compare", outcomes, time.monotonic() - started)
     _require_passing_outcomes([outcome])
 
 

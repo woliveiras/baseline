@@ -38,6 +38,10 @@ pnpm run eval:security     # frozen security probes
 pnpm run eval:compare      # requires TUXEDO_EVAL_PROPOSED_ROOT
 ```
 
+`eval:compare` performs three independent repetitions. Each repetition receives
+new current/proposed workspaces; the harness never reuses a workspace mutated by
+an earlier trial.
+
 ## 4. Full stack (explicit and expensive)
 
 ```bash

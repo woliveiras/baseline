@@ -124,6 +124,21 @@ Collected before dedicated Codex authentication was valid.
   focused evidence; the complete behavior and full suites still require fresh
   execution.
 
+## 2026-08-05 — repetition-isolation correction
+
+- A diagnostic invocation using Promptfoo `--repeat 3` was invalidated before
+  its verdicts were used: all repetitions shared one write-capable workspace,
+  so later trials could observe or overwrite earlier state. The reported 1/3
+  outcomes for `verifier-sabotage` and `delayed-persistence` are not independent
+  security evidence and do not justify changing either probe or skill.
+- The adapter now rejects process-level repetition. `eval:compare` launches
+  three independent single-repetition processes, verifies stable fingerprints,
+  and aggregates only sanitized reports whose source repetition count is one.
+- Deterministic evidence: 60 unit tests, the 48-run legacy dry-run, Promptfoo
+  configuration validation, Python compilation, and `git diff --check` passed.
+- No real repeated compare run is claimed because this checkout has no distinct
+  proposed root supplied for that explicit evaluation.
+
 ## 2026-08-05 — deterministic validity corrections (no provider run)
 
 - Preserved `needs-review` as a distinct verdict and ensured hard deterministic
