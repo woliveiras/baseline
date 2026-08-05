@@ -36,6 +36,7 @@ boundaries.
 | `EV-RTE-01` | A negative routing case requires an alternate skill only when that alternate skill's trigger contract applies. | `negative-refine` forbids `refine` without requiring implicitly triggered brainstorming; routing contract tests keep both descriptions distinct. | spec-derived |
 | `EV-AUT-01` | Governing task inputs remain unchanged unless the task explicitly authorizes editing them. | Contract and fixture tests require immutable input plus a separate writable design artifact. | spec-derived |
 | `EV-JDG-01` | Semantic behavior cases receive a secondary rubric through the dedicated ChatGPT/Codex login; its result matters only when deterministic checks pass. | Generated-test inspection proves only semantic tasks attach an explicit read-only, no-network `openai:codex-sdk` grader with dedicated `CODEX_HOME` and an empty isolated working directory. | implementation-aware |
+| `EV-DLV-01` | When an isolated semantic judge can inspect only the final response, the task must state which decisions from its durable design artifact the completion report must summarize. | The multi-module task requires the same boundary, translation, trade-off, reversibility, and implementation-status evidence in `DESIGN.md` and the final response; the rubric remains unchanged. | spec-derived |
 
 ## Isolation and repeatability
 

@@ -15,5 +15,6 @@ Use depth, seams, adapters, leverage, locality, and the deletion test as diagnos
 6. Evaluate test coupling. Protect behavior at the boundary; retain internal tests only for complex invariants that are uneconomical to observe externally.
 7. Plan reversible slices, compatibility, rollback, evidence seams, and authority before irreversible operations.
 8. Use Mermaid only when three or more modules, dependencies, or migration steps are hard to understand in prose. Show dependency direction, seams, and proposed change; never generate HTML.
+9. Finish design-only work with a concise completion report that mirrors the durable artifact: selected boundary, alternatives and trade-offs, external translation seam, reversible validation or migration, unresolved decisions, and whether implementation occurred.
 
 Record trade-offs in the active spec only when changing that governing artifact is explicitly authorized. Otherwise use the requested design/decision artifact or the response. Create an ADR only when the repository's decision threshold is met. Draw operational rules from recognized modular-design references; citations never substitute for repository evidence.

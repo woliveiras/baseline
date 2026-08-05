@@ -996,6 +996,23 @@ class EvaluationVerifierTests(unittest.TestCase):
         task = json.loads((ROOT / "evals" / "tasks" / "multi-module-change.json").read_text(encoding="utf-8"))
         self.assertIn("Keep SPEC.md unchanged", task["prompt"])
 
+    def test_multi_module_task_requires_a_complete_design_handoff(self):
+        task = self.task("multi-module-change")
+        prompt = task["prompt"]
+        for required in (
+            "final response",
+            "PaymentIntent",
+            "VendorRequest translation",
+            "options and trade-offs",
+            "reversible validation and migration",
+            "no implementation",
+        ):
+            self.assertIn(required, prompt)
+        skill = (ROOT / "skills" / "design-deep-modules" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("completion report that mirrors the durable artifact", skill)
+        self.assertIn("alternatives and trade-offs", skill)
+        self.assertIn("reversible validation or migration", skill)
+
     def test_process_checks_require_answer_and_completed_codex_turn(self):
         verification = {"status": "pass", "checks": []}
         count, usage, completed_turn = parse_events("")

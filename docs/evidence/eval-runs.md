@@ -102,6 +102,28 @@ Collected before dedicated Codex authentication was valid.
   823.554 seconds. This is focused evidence only; it does not make the complete
   behavior or full suite green.
 
+## 2026-08-05 — focused semantic-delivery correction
+
+- Reproduction without implementation changes passed `real-ambiguity` and
+  `spec-inconsistent` 10/10, `post-hoc-contamination` 5/5, and the two previously
+  failing security probes 2/2. Those failures were not repeatable, so their
+  skills, fixtures, and oracles were not relaxed.
+- `multi-module-change` reproduced a consistent delivery gap: all five durable
+  `DESIGN.md` artifacts contained the required architecture analysis, but four
+  final responses omitted different decisions that the isolated semantic judge
+  cannot read from the workspace. The task now makes the completion-report
+  contract explicit, and `design-deep-modules` requires that design-only reports
+  mirror the selected boundary, alternatives, translation seam, reversible plan,
+  unresolved decisions, and implementation status. The secondary rubric is
+  unchanged.
+- Deterministic evidence: 56 unit tests, the 48-run legacy dry-run, Promptfoo
+  configuration validation, JSON parsing, `git diff --check`, and the official
+  `design-deep-modules` skill validator passed.
+- Focused provider evidence: `multi-module-change` improved from 1/5 immediately
+  before the correction to 5/5 afterward in 925.598 seconds. This remains
+  focused evidence; the complete behavior and full suites still require fresh
+  execution.
+
 ## 2026-08-05 — deterministic validity corrections (no provider run)
 
 - Preserved `needs-review` as a distinct verdict and ensured hard deterministic
