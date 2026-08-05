@@ -1,6 +1,6 @@
 ---
 name: design-deep-modules
-description: Design or review high-leverage modules with small stable interfaces, hidden complexity, explicit seams, adapters, locality, and reversible migration. Use when module boundaries materially affect behavior or change cost; do not use for cosmetic restructuring.
+description: Design or compare concrete high-leverage module boundaries with small stable interfaces, hidden complexity, explicit seams, adapters, locality, and reversible migration. Use when the request asks for boundary or interface design; not for whole-architecture audits or requests that explicitly defer new module-boundary design.
 ---
 
 # Design Deep Modules
@@ -16,4 +16,4 @@ Use depth, seams, adapters, leverage, locality, and the deletion test as diagnos
 7. Plan reversible slices, compatibility, rollback, evidence seams, and authority before irreversible operations.
 8. Use Mermaid only when three or more modules, dependencies, or migration steps are hard to understand in prose. Show dependency direction, seams, and proposed change; never generate HTML.
 
-Record trade-offs in the active spec and an ADR only when the repository's decision threshold is met. Draw operational rules from recognized modular-design references; citations never substitute for repository evidence.
+Record trade-offs in the active spec only when changing that governing artifact is explicitly authorized. Otherwise use the requested design/decision artifact or the response. Create an ADR only when the repository's decision threshold is met. Draw operational rules from recognized modular-design references; citations never substitute for repository evidence.

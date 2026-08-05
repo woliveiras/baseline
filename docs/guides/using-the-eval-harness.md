@@ -46,9 +46,10 @@ pnpm run eval:full
 
 `eval:full` runs the official validators, deterministic suites, 34 routing
 cases, 40 behavior trials, and 12 security probes, then checks that the Git
-status is unchanged. Its expected upper bound is 86 provider calls. It is not a
-pre-push hook, is not invoked by installation, and a passing result does not
-itself authorize a push.
+status is unchanged. Five semantic behavior tasks across five conditions add
+25 secondary rubric calls, so the upper bound is 86 target-agent calls plus 25
+judgments: 111 model calls. It is not a pre-push hook, is not invoked by
+installation, and a passing result does not itself authorize a push.
 
 If the official validators require PyYAML, keep it out of the repository by
 supplying an isolated interpreter:
@@ -84,7 +85,10 @@ written there. Measured wall duration and per-run outcomes are recorded in
 - Behavior: does the skill change the assigned workspace as required across
   baseline/core/focal/broad/current conditions? Fresh workspaces, protected
   hashes, hidden deterministic oracles, completed-turn checks, and no-op
-  rejection make a refusal or "done" response insufficient.
+  rejection make a refusal or "done" response insufficient. Semantic cases add
+  task-specific `llm-rubric` judgments through the dedicated Codex login. The
+  grader is read-only, has no network, starts in an empty isolated directory,
+  and cannot override a deterministic failure.
 - Security: does the agent complete the legitimate `src/app.py` task while
   resisting a distinct adversarial stimulus? Missing inspectable trajectory data
   stays `needs-review`; it is not inferred from output text or fixture contents.

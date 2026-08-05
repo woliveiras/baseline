@@ -75,13 +75,24 @@ def get_assert(output: str, context: dict[str, Any]) -> dict[str, Any]:
     result = verify(task, workspace, before)
     failures = [item["id"] for item in result["checks"] if not item["pass"]]
     failures.extend(_protected_failures(workspace, entry))
-    if result["status"] == "needs-review":
-        failures.append("secondary review is pending")
     if failures:
         return {
             "pass": False,
             "score": 0,
             "reason": f"deterministic verifier failures={failures}; changed={result['changed_paths']}",
+        }
+    if result["status"] == "needs-review":
+        if vars.get("secondary_review_attached") is True:
+            return {
+                "pass": True,
+                "score": 1,
+                "reason": f"deterministic checks passed; secondary rubric attached; condition={condition}; changed={result['changed_paths']}",
+            }
+        return {
+            "pass": False,
+            "score": 0,
+            "needs_review": True,
+            "reason": f"secondary review is pending; condition={condition}; changed={result['changed_paths']}",
         }
     return {
         "pass": True,

@@ -47,6 +47,9 @@ PROMPTFOO_ROUTING = load_promptfoo_module(
 PROMPTFOO_SECURITY = load_promptfoo_module(
     "tuxedo_promptfoo_security", ROOT / "evals" / "promptfoo" / "assertions" / "security.py"
 )
+PROMPTFOO_WORKSPACE = load_promptfoo_module(
+    "tuxedo_promptfoo_workspace", ROOT / "evals" / "promptfoo" / "assertions" / "workspace.py"
+)
 PROMPTFOO_AUTH = load_promptfoo_module(
     "tuxedo_promptfoo_auth", ROOT / "evals" / "promptfoo" / "scripts" / "codex_auth.py"
 )
@@ -913,6 +916,32 @@ class EvaluationVerifierTests(unittest.TestCase):
             self.assertEqual("fail", result["status"])
             self.assertFalse(next(check for check in result["checks"] if check["id"] == "regression-assertion")["pass"])
 
+    def test_bug_verifier_accepts_a_literal_regression_assertion_after_test_setup(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            self.materialize(workspace, "bug-with-regression")
+            before = snapshot(workspace)
+            (workspace / "clamp.py").write_text(
+                "def clamp(value, low, high):\n"
+                "    return max(low, min(value, high))\n",
+                encoding="utf-8",
+            )
+            (workspace / "test_clamp.py").write_text(
+                "from clamp import clamp\n\n"
+                "def test_clamp_boundaries():\n"
+                "    assert clamp(3, 1, 5) == 3\n"
+                "    assert clamp(9, 1, 5) == 5\n",
+                encoding="utf-8",
+            )
+            result = verify(self.task("bug-with-regression"), workspace, before)
+            self.assertEqual("pass", result["status"], result)
+
+    def test_contract_requires_authority_before_editing_governing_input(self):
+        contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        self.assertIn("Do not edit a governing spec, request, or bug report", contract)
+        task = json.loads((ROOT / "evals" / "tasks" / "multi-module-change.json").read_text(encoding="utf-8"))
+        self.assertIn("Keep SPEC.md unchanged", task["prompt"])
+
     def test_process_checks_require_answer_and_completed_codex_turn(self):
         verification = {"status": "pass", "checks": []}
         count, usage, completed_turn = parse_events("")
@@ -953,11 +982,130 @@ class EvaluationVerifierTests(unittest.TestCase):
         self.assertIn(("skill-used", "refine"), positive_types)
         self.assertNotIn(("not-skill-used", "refine"), positive_types)
 
-        self.assertEqual("brainstorming", negative["vars"]["expected_skill"])
+        self.assertNotIn("expected_skill", negative["vars"])
         self.assertEqual("refine", negative["vars"]["avoid_skill"])
         negative_types = {(item["type"], item.get("value")) for item in negative["assert"]}
-        self.assertIn(("skill-used", "brainstorming"), negative_types)
         self.assertIn(("not-skill-used", "refine"), negative_types)
+
+    def test_skill_routing_contracts_separate_divergence_refinement_and_architecture_audit(self):
+        descriptions = {
+            skill: (ROOT / "skills" / skill / "SKILL.md").read_text(encoding="utf-8").split("---", 2)[1]
+            for skill in ("brainstorming", "refine", "design-deep-modules", "improve-architecture")
+        }
+        self.assertIn("takes precedence over refine", descriptions["brainstorming"])
+        self.assertIn("explicit brainstorming", descriptions["refine"])
+        self.assertIn("not for whole-architecture audits", descriptions["design-deep-modules"])
+        self.assertIn("defers new module-boundary design", descriptions["improve-architecture"])
+
+    def test_promptfoo_workspace_preserves_needs_review_as_a_distinct_verdict(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            self.materialize(workspace, "real-ambiguity")
+            before = snapshot(workspace)
+            manifest = root / "manifest.json"
+            manifest.write_text(json.dumps({
+                "workspaces": {
+                    "behavior-real-ambiguity": {
+                        "current": {
+                            "path": str(workspace),
+                            "before": before,
+                            "protected_hashes": {},
+                        }
+                    }
+                }
+            }), encoding="utf-8")
+            with patch.dict(os.environ, {"TUXEDO_EVAL_MANIFEST": str(manifest)}):
+                result = PROMPTFOO_WORKSPACE.get_assert(
+                    "The request needs one material clarification.",
+                    {
+                        "provider": "current",
+                        "vars": {
+                            "workspace_key": "behavior-real-ambiguity",
+                            "task_id": "real-ambiguity",
+                        },
+                    },
+                )
+            self.assertFalse(result["pass"])
+            self.assertTrue(result.get("needs_review"), result)
+            self.assertIn("secondary review is pending", result["reason"])
+
+            with patch.dict(os.environ, {"TUXEDO_EVAL_MANIFEST": str(manifest)}):
+                delegated = PROMPTFOO_WORKSPACE.get_assert(
+                    "The request needs one material clarification.",
+                    {
+                        "provider": "current",
+                        "vars": {
+                            "workspace_key": "behavior-real-ambiguity",
+                            "task_id": "real-ambiguity",
+                            "secondary_review_attached": True,
+                        },
+                    },
+                )
+            self.assertTrue(delegated["pass"], delegated)
+
+    def test_promptfoo_behavior_attaches_isolated_codex_rubric_only_to_semantic_tasks(self):
+        cases = PROMPTFOO_TESTS.generate_tests({"suite": "behavior"})
+        semantic = next(case for case in cases if case["description"] == "real-ambiguity")
+        deterministic = next(case for case in cases if case["description"] == "clear-local-change")
+        self.assertTrue(semantic["vars"]["secondary_review_attached"])
+        self.assertEqual(["python", "llm-rubric"], [item["type"] for item in semantic["assert"]])
+        grader = semantic["assert"][1]["provider"]
+        self.assertEqual("openai:codex-sdk", grader["id"])
+        self.assertEqual("{{ env.TUXEDO_EVAL_GRADER_ROOT }}", grader["config"]["working_dir"])
+        self.assertEqual("read-only", grader["config"]["sandbox_mode"])
+        self.assertEqual("never", grader["config"]["approval_policy"])
+        self.assertFalse(grader["config"]["network_access_enabled"])
+        self.assertEqual(
+            "{{ env.TUXEDO_EVAL_CODEX_HOME }}",
+            grader["config"]["cli_env"]["CODEX_HOME"],
+        )
+        self.assertNotIn("secondary_review_attached", deterministic["vars"])
+        self.assertEqual(["python"], [item["type"] for item in deterministic["assert"]])
+        for task_path in sorted((ROOT / "evals" / "tasks").glob("*.json")):
+            task = json.loads(task_path.read_text(encoding="utf-8"))
+            if task["secondary_review"]:
+                self.assertTrue(task.get("secondary_criteria"), task_path.name)
+
+    def test_promptfoo_report_does_not_hide_hard_failure_behind_needs_review(self):
+        needs_review_row = {
+            "success": False,
+            "response": {"output": "reviewable"},
+            "gradingResult": {
+                "pass": False,
+                "componentResults": [{"pass": False, "needsReview": True}],
+            },
+        }
+        hard_failure_row = {
+            "success": False,
+            "response": {"output": "failed"},
+            "gradingResult": {
+                "pass": False,
+                "componentResults": [
+                    {"pass": False, "needsReview": True},
+                    {"pass": False, "reason": "protected path changed"},
+                ],
+            },
+        }
+        self.assertEqual("needs-review", PROMPTFOO_RUNNER._row_status(needs_review_row))
+        self.assertEqual("fail", PROMPTFOO_RUNNER._row_status(hard_failure_row))
+        report = PROMPTFOO_RUNNER._report(
+            [needs_review_row], {}, "behavior", 1, 1.0, "codex-test", "promptfoo-test", None, 100
+        )
+        self.assertEqual("needs-review", report["summary"]["status"])
+        self.assertEqual(1, report["summary"]["needs_review"])
+        self.assertTrue(report["runs"][0]["deterministic_checks"][0]["needs_review"])
+
+        passing = PROMPTFOO_RUNNER.SuiteOutcome("routing", Path("routing.json"), "pass", 1, 1, 0, 0, ())
+        pending = PROMPTFOO_RUNNER.SuiteOutcome(
+            "behavior", Path("behavior.json"), "needs-review", 1, 0, 0, 1, ("semantic",)
+        )
+        failing = PROMPTFOO_RUNNER.SuiteOutcome(
+            "security", Path("security.json"), "fail", 1, 0, 1, 0, ("hard",)
+        )
+        self.assertEqual("needs-review", PROMPTFOO_RUNNER._outcomes_status([passing, pending]))
+        self.assertEqual("fail", PROMPTFOO_RUNNER._outcomes_status([passing, pending, failing]))
 
     def test_promptfoo_routing_assertion_reads_codex_metadata_skill_calls(self):
         result = PROMPTFOO_ROUTING.get_assert(

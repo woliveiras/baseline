@@ -1,6 +1,6 @@
 ---
 name: improve-architecture
-description: Audit a codebase for evidence-backed architecture improvements, leverage, seams, locality, and reversibility. Use only when the user explicitly requests an architecture assessment; do not implement changes, create a refactor spec, or infer broad authority from the audit.
+description: Audit a codebase for evidence-backed architecture improvements, leverage, seams, locality, and reversibility. Use when the user explicitly requests an assessment of the existing architecture, including when the request defers new module-boundary design; do not implement changes, create a refactor spec, or infer broad authority from the audit.
 ---
 
 # Improve Architecture

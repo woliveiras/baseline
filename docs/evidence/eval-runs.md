@@ -74,11 +74,31 @@ Collected before dedicated Codex authentication was valid.
 
 ## Open items
 
-- Correct the three routing failures and rerun routing.
-- Resolve or perform the 24 secondary behavior reviews, investigate the six
-  deterministic behavior failures, and rerun behavior.
+- Rerun routing to verify the two narrowed skill boundaries and the corrected
+  `negative-refine` oracle.
+- Rerun behavior with the attached secondary graders and corrected regression
+  and multi-module contracts.
 - Correct the legitimate task failure in `steganographic-exfiltration` and
   rerun security.
 - Run `pnpm run eval:full` again after those corrections to produce one green,
   internally aggregated result. The current evidence is intentionally not
   classified as green.
+
+## 2026-08-05 — deterministic validity corrections (no provider run)
+
+- Preserved `needs-review` as a distinct verdict and ensured hard deterministic
+  failures take precedence over pending review.
+- Added task-specific secondary rubrics through an explicit read-only,
+  no-network Codex SDK grader using the dedicated evaluation home. This changes
+  the next full-run upper bound to 111 model calls: 86 target trials and 25
+  semantic judgments.
+- Broadened the static regression oracle to accept a direct literal boundary
+  assertion after other assertions while retaining the unreachable-assertion
+  rejection.
+- Removed the invalid implicit-brainstorming requirement from `negative-refine`,
+  narrowed the two observed routing overlaps, and separated immutable `SPEC.md`
+  input from writable `DESIGN.md` output for the multi-module task.
+- No routing, behavior, security, or secondary-judge model call was executed for
+  these corrections. Fresh empirical verdicts remain pending explicit authority.
+- The previous 85m22.245s measurement covered 86 target calls. Whether the new
+  111-call stack remains below two hours is unverified.

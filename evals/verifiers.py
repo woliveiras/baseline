@@ -172,7 +172,7 @@ def behavior_checks(workspace: Path, task: dict[str, Any]) -> list[dict[str, Any
         results.append(check(
             "regression-assertion",
             has_collected_upper_bound_assertion(workspace),
-            "requires a reachable first assertion in a collected test function for value > high",
+            "requires a direct literal assertion in a collected test function for value > high",
         ))
         return results
     if verifier == "no-change":
@@ -236,7 +236,7 @@ def has_collected_upper_bound_assertion(workspace: Path) -> bool:
                 and isinstance(body[0].value.value, str)
             ):
                 body = body[1:]
-            if body and is_upper_bound_assertion(body[0]):
+            if any(is_upper_bound_assertion(statement) for statement in body):
                 return True
     return False
 

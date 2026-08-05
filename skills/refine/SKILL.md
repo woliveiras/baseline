@@ -1,6 +1,6 @@
 ---
 name: refine
-description: Resolve material ambiguity in a software request with a proportional decision tree. Use before specification or implementation when objective, behavior, scope, authority, or risk decisions are genuinely unresolved; do not use when repository evidence already makes the path clear.
+description: Resolve material ambiguity in a software request with a proportional decision tree. Use before specification or implementation when objective, behavior, scope, authority, or risk decisions are genuinely unresolved; do not replace explicit brainstorming while the user still requests divergent exploration, and do not use when repository evidence already makes the path clear.
 ---
 
 # Refine

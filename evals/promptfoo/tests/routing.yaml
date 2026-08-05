@@ -122,7 +122,6 @@
     "id": "negative-refine",
     "kind": "negative",
     "avoid_skill": "refine",
-    "expected_skill": "brainstorming",
     "request": "Explore many possible directions for this open-ended idea without narrowing to one material decision yet.",
     "workspace_key": "routing-negative-refine"
   },

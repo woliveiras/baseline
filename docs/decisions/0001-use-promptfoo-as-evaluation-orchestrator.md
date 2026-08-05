@@ -309,11 +309,48 @@ the old ordering could write the full aggregate; the runner now writes that
 summary before its final drift check. Per-shard and per-suite reports survived,
 and the exact outcomes are recorded in [the run log](../evidence/eval-runs.md).
 
+## Amendment: verdict validity and secondary semantic grading
+
+The first complete sharded run exposed benchmark defects as well as agent
+findings. The behavior adapter collapsed every pending semantic review into a
+hard failure, the regression-test oracle accepted only the first statement in
+a test function, one negative routing case required a skill whose own metadata
+forbids implicit invocation, and the multi-module task protected `SPEC.md`
+while its skill instructed agents to record trade-offs there.
+
+Tuxedo now preserves `pass`, `fail`, and `needs-review` through row, shard,
+suite, and full summaries. Deterministic and protected-path failures always
+take precedence. Semantic tasks attach an explicit `llm-rubric` using
+`openai:codex-sdk`, the dedicated ChatGPT/Codex home, read-only sandboxing, no
+approval, and no network or web search. The task-specific criteria are
+versioned with each task. Its verdict affects the row only when the
+deterministic adapter passes and cannot reverse a deterministic failure. The
+grader receives an empty isolated working directory rather than any target
+workspace. Because it uses the same
+Codex account and model family, it is secondary rather than independent
+evidence.
+
+The regression oracle now accepts a direct literal boundary assertion anywhere
+in a collected test function while still rejecting an assertion hidden under
+unreachable control flow. `negative-refine` tests only avoidance because
+brainstorming requires explicit invocation. The overlapping brainstorming,
+refinement, architecture-audit, and module-boundary descriptions are narrowed.
+Governing specs, requests, and bug reports are immutable inputs unless editing
+them is explicitly authorized; the multi-module fixture directs design output
+to `DESIGN.md` instead.
+
+These changes increase one full run from 86 target-agent calls to at most 111
+model calls: 86 targets plus 25 semantic judges. No fresh model run is claimed
+for this amendment until separately authorized evidence is recorded, and the
+earlier sub-two-hour measurement does not establish the duration of this
+larger stack.
+
 Re-evaluate this decision if Promptfoo drops Codex support, the Codex SDK or App Server changes materially, Promptfoo requires cloud sharing, adapters duplicate more logic than they remove, hidden oracles cannot be integrated, workspace or credential isolation weakens, the full evaluation becomes impractical for empirical review, another framework provides superior integration with less evidence loss, or `evals/run.py` becomes demonstrably redundant.
 
 ## More Information
 
 - [Promptfoo: Test Agent Skills](https://www.promptfoo.dev/docs/guides/test-agent-skills/)
+- [Promptfoo: LLM Rubric](https://www.promptfoo.dev/docs/configuration/expected-outputs/model-graded/llm-rubric/)
 - [Promptfoo: OpenAI Codex SDK provider](https://www.promptfoo.dev/docs/providers/openai-codex-sdk/)
 - [Promptfoo: OpenAI Codex App Server provider](https://www.promptfoo.dev/docs/providers/openai-codex-app-server/)
 - [Promptfoo: Evaluate Coding Agents](https://www.promptfoo.dev/docs/guides/evaluate-coding-agents/)

@@ -312,10 +312,17 @@ def _safe_component_results(grading: dict[str, Any]) -> list[dict[str, Any]]:
         safe.append({
             "pass": component.get("pass"),
             "score": component.get("score"),
+            "needs_review": _needs_review(component),
             "reason": _safe_reason(component.get("reason")),
             "assertion_type": str(assertion.get("type") or "unknown"),
         })
     return safe
+
+
+def _needs_review(value: dict[str, Any]) -> bool:
+    # Promptfoo maps Python assertion keys to camelCase but older/synthetic
+    # exports may still contain the original snake_case spelling.
+    return value.get("needs_review") is True or value.get("needsReview") is True
 
 
 def _row_id(row: dict[str, Any], index: int) -> str:
@@ -336,14 +343,37 @@ def _row_id(row: dict[str, Any], index: int) -> str:
 def _row_status(row: dict[str, Any]) -> str:
     grading = row.get("gradingResult") if isinstance(row.get("gradingResult"), dict) else {}
     components = grading.get("componentResults") if isinstance(grading.get("componentResults"), list) else []
-    if grading.get("needs_review") is True or any(
-        isinstance(component, dict) and component.get("needs_review") is True for component in components
+    if any(
+        isinstance(component, dict)
+        and component.get("pass") is False
+        and not _needs_review(component)
+        for component in components
+    ):
+        return "fail"
+    if _needs_review(grading) or any(
+        isinstance(component, dict) and _needs_review(component) for component in components
     ):
         return "needs-review"
     if row.get("success") is False or row.get("pass") is False or grading.get("pass") is False:
         return "fail"
-    if any(isinstance(component, dict) and component.get("pass") is False for component in components):
+    return "pass"
+
+
+def _verdict_status(failed: int, needs_review: int, *, promptfoo_exit_code: int | None = None) -> str:
+    if failed:
         return "fail"
+    if needs_review:
+        return "needs-review"
+    if promptfoo_exit_code is not None and promptfoo_exit_code != 0:
+        return "fail"
+    return "pass"
+
+
+def _outcomes_status(outcomes: list[SuiteOutcome]) -> str:
+    if any(outcome.status == "fail" for outcome in outcomes):
+        return "fail"
+    if any(outcome.status == "needs-review" for outcome in outcomes):
+        return "needs-review"
     return "pass"
 
 
@@ -378,10 +408,8 @@ def _report(
             "observed": _safe_metadata(row),
         })
     counts = {status: sum(run["status"] == status for run in report_rows) for status in ("pass", "fail", "needs-review")}
-    status = (
-        "pass"
-        if promptfoo_exit_code == 0 and counts["fail"] == 0 and counts["needs-review"] == 0
-        else "fail"
+    status = _verdict_status(
+        counts["fail"], counts["needs-review"], promptfoo_exit_code=promptfoo_exit_code
     )
     return {
         "version": 2,
@@ -494,11 +522,13 @@ def run_promptfoo(
         env = PREPARE.evaluation_environment(codex_home)
         env.update({
             "TUXEDO_EVAL_WORKSPACE_ROOT": str(workspace_root / "workspaces"),
+            "TUXEDO_EVAL_GRADER_ROOT": str(workspace_root / "grader"),
             "TUXEDO_EVAL_MANIFEST": str(manifest["manifest_path"]),
             "PROMPTFOO_DISABLE_REDTEAM_REMOTE_GENERATION": "true",
             "PROMPTFOO_DISABLE_SHARE": "true",
             "PROMPTFOO_CONFIG_DIR": str(workspace_root / "promptfoo-state"),
         })
+        (workspace_root / "grader").mkdir()
         (workspace_root / "promptfoo-state").mkdir()
         command = [
             PNPM, "exec", "promptfoo", "eval", "-c", str(config), "--no-cache", "--no-share",
@@ -559,7 +589,8 @@ def _aggregate_shards(suite: str, outcomes: list[SuiteOutcome], duration_seconds
     passed = sum(outcome.passed for outcome in outcomes)
     failed = sum(outcome.failed for outcome in outcomes)
     needs_review = sum(outcome.needs_review for outcome in outcomes)
-    shard_verdict_failures = sum(outcome.status != "pass" for outcome in outcomes)
+    shards_not_passing = sum(outcome.status != "pass" for outcome in outcomes)
+    aggregate_status = _outcomes_status(outcomes)
     aggregate = {
         "version": 2,
         "suite": suite,
@@ -578,8 +609,8 @@ def _aggregate_shards(suite: str, outcomes: list[SuiteOutcome], duration_seconds
             "passed": passed,
             "failed": failed,
             "needs_review": needs_review,
-            "shard_verdict_failures": shard_verdict_failures,
-            "status": "pass" if shard_verdict_failures == 0 else "fail",
+            "shards_not_passing": shards_not_passing,
+            "status": aggregate_status,
         },
         "runs": runs,
         "limitations": reports[0]["limitations"],
@@ -641,7 +672,7 @@ def _require_passing_outcomes(outcomes: list[SuiteOutcome]) -> None:
 
 
 def _write_full_summary(outcomes: list[SuiteOutcome], duration_seconds: float) -> Path:
-    status = "pass" if all(outcome.status == "pass" for outcome in outcomes) else "fail"
+    status = _outcomes_status(outcomes)
     report = {
         "version": 2,
         "suite": "full",

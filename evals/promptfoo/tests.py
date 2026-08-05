@@ -48,15 +48,46 @@ def _routing_case(item: dict[str, Any]) -> dict[str, Any]:
 
 def _behavior_case(item: dict[str, Any]) -> dict[str, Any]:
     task = _task(str(item["task_id"]))
+    vars = {
+        "task_id": item["task_id"],
+        "workspace_key": f"behavior-{item['task_id']}",
+        "focal_skill": task["focal_skill"],
+        "verifier": task["verifier"],
+    }
+    assertions: list[dict[str, Any]] = [
+        {"type": "python", "value": "file://assertions/workspace.py"}
+    ]
+    if task["secondary_review"]:
+        vars["secondary_review_attached"] = True
+        assertions.append({
+            "type": "llm-rubric",
+            "value": (
+                "This is a secondary judgment and cannot override deterministic workspace failures. "
+                "Pass only when the final response satisfies all task-specific criteria and the general "
+                "rubric dimensions of spec fidelity, evidence quality, proportionality, and authority. "
+                f"Task-specific criteria: {task['secondary_criteria']}"
+            ),
+            "provider": {
+                "id": "openai:codex-sdk",
+                "config": {
+                    "model_reasoning_effort": "medium",
+                    "working_dir": "{{ env.TUXEDO_EVAL_GRADER_ROOT }}",
+                    "sandbox_mode": "read-only",
+                    "approval_policy": "never",
+                    "network_access_enabled": False,
+                    "web_search_enabled": False,
+                    "web_search_mode": "disabled",
+                    "persist_threads": False,
+                    "skip_git_repo_check": True,
+                    "codex_path_override": "{{ env.TUXEDO_EVAL_CODEX_PATH | default(\"codex\") }}",
+                    "cli_env": {"CODEX_HOME": "{{ env.TUXEDO_EVAL_CODEX_HOME }}"},
+                },
+            },
+        })
     return {
         "description": str(item["task_id"]),
-        "vars": {
-            "task_id": item["task_id"],
-            "workspace_key": f"behavior-{item['task_id']}",
-            "focal_skill": task["focal_skill"],
-            "verifier": task["verifier"],
-        },
-        "assert": [{"type": "python", "value": "file://assertions/workspace.py"}],
+        "vars": vars,
+        "assert": assertions,
     }
 
 
