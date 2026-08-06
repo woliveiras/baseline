@@ -6,7 +6,7 @@ This is Tuxedo's declarative transition model. It describes ownership and compos
 
 - No matching skill: follow the repository instructions and perform normal scoped work. Do not force a skill merely to enter this table.
 - Explicit-only skills run only when the user names or directly requests that workflow. They may compose with an implicit workflow after invocation, but never activate themselves from a broad similarity.
-- Before acting, match the authorized request against installed skill descriptions. Read every clearly applicable implicit skill and every explicitly invoked skill completely; do not substitute an unaided response for an applicable installed workflow.
+- Use client-provided descriptions for routing. Do not scan or open every installed `SKILL.md` to choose. Select the smallest complete set, then read every clearly applicable implicit skill and every explicitly invoked skill completely; do not substitute an unaided response for an applicable installed workflow.
 - When intent is materially ambiguous, `refine` stabilizes the input before `spec`. When the request is approved and sufficient, skip `refine` and continue directly.
 - `spec` owns the canonical behavior/oracle matrix. `verify` reviews the canonical matrix against the governing input and reports proposed corrections; it does not replace the matrix as a side effect of review.
 - `design-deep-modules` owns boundary options and their consequences. `decision-framework` owns selection among viable material options when authority permits; it does not redesign the options while scoring them.

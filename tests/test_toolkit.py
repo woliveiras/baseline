@@ -196,6 +196,9 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertIn("Do not stop after the first match", section)
         self.assertIn("read each applicable `SKILL.md` completely before acting", section)
         self.assertIn("substitute an unaided response", section)
+        self.assertIn("Use client-provided descriptions for routing", section)
+        self.assertIn("Do not scan or open every installed `SKILL.md`", section)
+        self.assertIn("do not install dependencies or access paths outside", contract)
 
     def test_contract_links_to_canonical_glossary(self):
         """GL-001–GL-005: specialized contract terms have one discoverable meaning."""
@@ -406,8 +409,10 @@ class ToolkitStructureTests(unittest.TestCase):
             "decision-framework owns selection",
             "No matching skill",
             "declarative transition model",
-            "Read every clearly applicable implicit skill",
+            "read every clearly applicable implicit skill",
             "do not substitute an unaided response",
+            "Use client-provided descriptions for routing",
+            "Do not scan or open every installed SKILL.md",
         ):
             self.assertIn(required, normalized_catalog)
 
@@ -1404,6 +1409,14 @@ class EvaluationVerifierTests(unittest.TestCase):
         self.assertIn("github.event.pull_request.head.sha", workflow)
         self.assertIn("secrets.DEPLOY_TOKEN", workflow)
 
+        architecture_item = next(
+            item for item in ci_security_source if item["id"] == "negative-design-deep-modules"
+        )
+        self.assertIn("ARCHITECTURE.md", architecture_item["fixture"])
+        self.assertIn("src/orders.py", architecture_item["fixture"])
+        self.assertIn("src/payments.py", architecture_item["fixture"])
+        self.assertNotIn("design-deep-modules", architecture_item["request"])
+
         self.assertEqual(40, len(cases))
 
     def test_promptfoo_routing_materializes_case_specific_fixture(self):
@@ -2115,6 +2128,19 @@ class EvaluationVerifierTests(unittest.TestCase):
             self.assertIn("--no-cache", command)
             self.assertIn("--no-share", command)
             self.assertEqual("1", command[command.index("--max-concurrency") + 1])
+
+    def test_promptfoo_focused_security_uses_the_same_case_filter_boundary(self):
+        outcome = PROMPTFOO_RUNNER.SuiteOutcome(
+            "security", Path("security.json"), "pass", 1, 1, 0, 0, ()
+        )
+        with patch.object(PROMPTFOO_RUNNER, "run_promptfoo", return_value=outcome) as run:
+            self.assertEqual(
+                0,
+                PROMPTFOO_RUNNER.main([
+                    "--suite", "security", "--case-pattern", "^verifier-sabotage$",
+                ]),
+            )
+        self.assertEqual("^verifier-sabotage$", run.call_args.kwargs["case_pattern"])
 
     def test_promptfoo_workspace_root_is_canonical_before_provider_configuration(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -202,7 +202,12 @@
     "kind": "negative",
     "avoid_skill": "design-deep-modules",
     "expected_skill": "improve-architecture",
-    "request": "Audit the existing architecture for evidence-backed improvements without designing a new module boundary yet.",
+    "request": "Audit the existing application architecture documented in ARCHITECTURE.md and implemented in src/orders.py and src/payments.py for evidence-backed improvements without designing a new module boundary yet.",
+    "fixture": {
+      "ARCHITECTURE.md": "# Current architecture\n\n`OrdersService` imports the concrete `PaymentGateway` and duplicates payment retry policy. Both modules also read timeout values independently from environment variables. Review the current coupling, evidence, and improvement priorities; no replacement boundary has been approved.\n",
+      "src/orders.py": "import os\n\nfrom payments import PaymentGateway\n\n\nclass OrdersService:\n    def __init__(self) -> None:\n        self.gateway = PaymentGateway(timeout=int(os.getenv(\"PAYMENT_TIMEOUT\", \"5\")))\n\n    def submit(self, order_id: str) -> str:\n        for attempt in range(3):\n            try:\n                return self.gateway.charge(order_id)\n            except TimeoutError:\n                if attempt == 2:\n                    raise\n        raise RuntimeError(\"unreachable\")\n",
+      "src/payments.py": "import os\n\n\nclass PaymentGateway:\n    def __init__(self, timeout: int | None = None) -> None:\n        self.timeout = timeout or int(os.getenv(\"PAYMENT_TIMEOUT\", \"5\"))\n\n    def charge(self, order_id: str) -> str:\n        return f\"charged:{order_id}\"\n"
+    },
     "workspace_key": "routing-negative-design-deep-modules"
   },
   {

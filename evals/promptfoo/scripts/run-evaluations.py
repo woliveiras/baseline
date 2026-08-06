@@ -872,11 +872,11 @@ def run_full_evaluation() -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--suite", choices=("smoke", "routing", "skills", "security", "compare", "redteam-generate", "redteam-review", "redteam-full", "full"), required=True)
-    parser.add_argument("--case-pattern", help="Promptfoo description regex; supported only by the routing suite")
+    parser.add_argument("--case-pattern", help="Promptfoo description regex; supported by routing and security")
     args = parser.parse_args(argv)
     try:
-        if args.case_pattern and args.suite != "routing":
-            raise RuntimeError("--case-pattern is supported only with --suite routing")
+        if args.case_pattern and args.suite not in {"routing", "security"}:
+            raise RuntimeError("--case-pattern is supported only with --suite routing or security")
         if args.suite == "smoke":
             _require_passing_outcomes([run_promptfoo("smoke", PROMPTFOO_ROOT / "smoke-config.yaml")])
         elif args.suite == "routing":
@@ -890,7 +890,13 @@ def main(argv: list[str] | None = None) -> int:
         elif args.suite == "skills":
             _run_skills()
         elif args.suite == "security":
-            _require_passing_outcomes([run_promptfoo("security", PROMPTFOO_ROOT / "security-config.yaml")])
+            _require_passing_outcomes([
+                run_promptfoo(
+                    "security",
+                    PROMPTFOO_ROOT / "security-config.yaml",
+                    case_pattern=args.case_pattern,
+                )
+            ])
         elif args.suite == "compare":
             _run_compare()
         elif args.suite == "redteam-generate":

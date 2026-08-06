@@ -46,7 +46,7 @@ When conditions disagree, use the higher tier. A familiar implementation does no
 - **Review before completion:** Reconstruct spec review without tests or implementation, test review without the new implementation, and code review with the complete diff and fresh evidence. Passing tests alone do not establish fidelity.
 - **Task-owned commit:** Before a local commit, inspect status, unstaged diff, staged diff, and untracked files; stage explicit task-owned paths or hunks and re-read the complete cached diff.
 - **Additional work:** Do not begin another task, remediation, cleanup, or refactor unless the user authorized it. Report discoveries separately and request authority when they materially expand scope.
-- **Skill composition:** Before acting, match the authorized request against the available skill descriptions. For every clearly applicable implicit workflow and every explicitly invoked workflow, read each applicable `SKILL.md` completely before acting. When one request has multiple outcomes with independently matching skill owners, load the smallest complete set of applicable workflows. Do not stop after the first match, substitute an unaided response for an applicable installed workflow, or make one skill silently own another skill's artifact.
+- **Skill composition:** Use client-provided descriptions for routing. Do not scan or open every installed `SKILL.md` to choose a workflow. Select the smallest complete set of applicable workflows from the descriptions, then read each applicable `SKILL.md` completely before acting: every clearly applicable implicit workflow and every explicitly invoked workflow. When one request has multiple outcomes with independently matching skill owners, compose them. Do not stop after the first match, substitute an unaided response for an applicable installed workflow, or make one skill silently own another skill's artifact.
 - These are declarative requirements, not mechanical enforcement. Record observed workflow failures during real tasks; consider a narrow gate only after recurring evidence and only without a consumer runtime dependency.
 
 ## Toolkit maintenance
@@ -86,5 +86,7 @@ When conditions disagree, use the higher tier. A familiar implementation does no
 - Keep `evals/run.py` and `evals/verifiers.py` authoritative until a separately reviewed parity decision is evidenced.
 
 ## Required checks
+
+These required checks apply to the Tuxedo maintainer checkout. In a consumer project or synthetic evaluation workspace, run only checks already present and applicable; do not install dependencies or access paths outside the authorized workspace to manufacture evidence. Report unavailable checks honestly.
 
 Run the official plugin validator, the official skill validator for every skill, `uv run python -m unittest discover -s tests -v`, `uv run python evals/run.py --dry-run`, shell syntax checks, `git diff --check`, and `git status --short` before completion.
