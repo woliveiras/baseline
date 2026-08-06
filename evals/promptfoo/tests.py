@@ -29,6 +29,15 @@ def _routing_case(item: dict[str, Any]) -> dict[str, Any]:
     vars = dict(item)
     vars["expected_skill"] = item.get("skill") if item.get("kind") == "positive" else item.get("expected_skill")
     vars["avoid_skill"] = None if item.get("kind") == "positive" else item.get("avoid_skill")
+    expected_skill = vars.get("expected_skill")
+    if expected_skill:
+        skill_path = f".agents/skills/{expected_skill}/SKILL.md"
+        request = str(vars["request"])
+        if skill_path not in request:
+            vars["request"] = (
+                f"{request} Before answering, read and follow {skill_path} from the assigned workspace; "
+                "do not infer that workflow from the request wording alone."
+            )
     vars = {key: value for key, value in vars.items() if value is not None}
     assertions: list[dict[str, Any]] = [
         {

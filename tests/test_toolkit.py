@@ -1078,6 +1078,17 @@ class EvaluationVerifierTests(unittest.TestCase):
         negative_types = {(item["type"], item.get("value")) for item in negative["assert"]}
         self.assertIn(("not-skill-used", "refine"), negative_types)
 
+        for case in cases:
+            expected_skill = case["vars"].get("expected_skill")
+            if expected_skill:
+                self.assertIn(
+                    f".agents/skills/{expected_skill}/SKILL.md",
+                    case["vars"]["request"],
+                    case["description"],
+                )
+            if case["description"] == "negative-refine":
+                self.assertNotIn(".agents/skills/", case["vars"]["request"])
+
     def test_skill_routing_contracts_separate_divergence_refinement_and_architecture_audit(self):
         descriptions = {
             skill: (ROOT / "skills" / skill / "SKILL.md").read_text(encoding="utf-8").split("---", 2)[1]
