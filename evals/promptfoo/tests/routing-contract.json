@@ -1,0 +1,4 @@
+{
+  "expected_skill_suffix": "Before answering, read and follow .agents/skills/{skill}/SKILL.md from the assigned workspace; do not infer that workflow from the request wording alone.",
+  "avoided_skill_suffix": "Do not open or read .agents/skills/{skill}/SKILL.md; that workflow is intentionally outside this case."
+}

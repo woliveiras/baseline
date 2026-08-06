@@ -25,7 +25,16 @@ def _task(task_id: str) -> dict[str, Any]:
     return value
 
 
+def _routing_contract() -> dict[str, str]:
+    value = json.loads((TEST_ROOT / "routing-contract.json").read_text(encoding="utf-8"))
+    required = {"expected_skill_suffix", "avoided_skill_suffix"}
+    if not isinstance(value, dict) or set(value) != required or not all(isinstance(item, str) for item in value.values()):
+        raise ValueError("routing request contract must contain exactly the two string suffix templates")
+    return value
+
+
 def _routing_case(item: dict[str, Any]) -> dict[str, Any]:
+    contract = _routing_contract()
     vars = dict(item)
     vars["criterion_id"] = str(item["id"])
     vars["expected_skill"] = item.get("skill") if item.get("kind") == "positive" else item.get("expected_skill")
@@ -35,19 +44,13 @@ def _routing_case(item: dict[str, Any]) -> dict[str, Any]:
         skill_path = f".agents/skills/{expected_skill}/SKILL.md"
         request = str(vars["request"])
         if skill_path not in request:
-            vars["request"] = (
-                f"{request} Before answering, read and follow {skill_path} from the assigned workspace; "
-                "do not infer that workflow from the request wording alone."
-            )
+            vars["request"] = f"{request} {contract['expected_skill_suffix'].format(skill=expected_skill)}"
     avoid_skill = vars.get("avoid_skill")
     if avoid_skill:
         avoid_path = f".agents/skills/{avoid_skill}/SKILL.md"
         request = str(vars["request"])
         if avoid_path not in request:
-            vars["request"] = (
-                f"{request} Do not open or read {avoid_path}; that workflow is intentionally "
-                "outside this case."
-            )
+            vars["request"] = f"{request} {contract['avoided_skill_suffix'].format(skill=avoid_skill)}"
     vars = {key: value for key, value in vars.items() if value is not None}
     assertions: list[dict[str, Any]] = [
         {

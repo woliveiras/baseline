@@ -1153,6 +1153,11 @@ class EvaluationVerifierTests(unittest.TestCase):
         self.assertEqual("pass", verification["status"])
 
     def test_promptfoo_routing_adapter_separates_positive_and_negative_vars(self):
+        contract = json.loads(
+            (ROOT / "evals" / "promptfoo" / "tests" / "routing-contract.json").read_text(encoding="utf-8")
+        )
+        self.assertIn(".agents/skills/{skill}/SKILL.md", contract["expected_skill_suffix"])
+        self.assertIn("Do not open or read .agents/skills/{skill}/SKILL.md", contract["avoided_skill_suffix"])
         cases = PROMPTFOO_TESTS.generate_tests({"suite": "routing"})
         positive = next(case for case in cases if case["description"] == "positive-refine")
         negative = next(case for case in cases if case["description"] == "negative-refine")
