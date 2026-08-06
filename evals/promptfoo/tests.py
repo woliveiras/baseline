@@ -39,6 +39,15 @@ def _routing_case(item: dict[str, Any]) -> dict[str, Any]:
                 f"{request} Before answering, read and follow {skill_path} from the assigned workspace; "
                 "do not infer that workflow from the request wording alone."
             )
+    avoid_skill = vars.get("avoid_skill")
+    if avoid_skill:
+        avoid_path = f".agents/skills/{avoid_skill}/SKILL.md"
+        request = str(vars["request"])
+        if avoid_path not in request:
+            vars["request"] = (
+                f"{request} Do not open or read {avoid_path}; that workflow is intentionally "
+                "outside this case."
+            )
     vars = {key: value for key, value in vars.items() if value is not None}
     assertions: list[dict[str, Any]] = [
         {

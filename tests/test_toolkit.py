@@ -1165,8 +1165,13 @@ class EvaluationVerifierTests(unittest.TestCase):
             avoid_skill = case["vars"].get("avoid_skill")
             if avoid_skill:
                 self.assertIn(("not-skill-used", avoid_skill), assertions, case["description"])
+                self.assertIn(
+                    f"Do not open or read .agents/skills/{avoid_skill}/SKILL.md",
+                    case["vars"]["request"],
+                    case["description"],
+                )
             if case["description"] == "negative-refine":
-                self.assertNotIn(".agents/skills/", case["vars"]["request"])
+                self.assertNotIn(".agents/skills/brainstorming/", case["vars"]["request"])
 
     def test_skill_routing_contracts_separate_divergence_refinement_and_architecture_audit(self):
         descriptions = {
