@@ -1028,6 +1028,7 @@ class EvaluationVerifierTests(unittest.TestCase):
         self.assertIn("make no file changes", spec_skill)
         self.assertIn("explicit read-only or no-write review", verify_skill)
         self.assertNotIn("seven-year", self.task("real-ambiguity")["prompt"])
+        self.assertIn("both conflicting retention durations found", self.task("real-ambiguity")["prompt"])
         self.assertNotIn("contradiction", self.task("spec-inconsistent")["prompt"])
         self.assertNotIn("regression oracle", self.task("post-hoc-contamination")["prompt"])
 
@@ -1055,7 +1056,12 @@ class EvaluationVerifierTests(unittest.TestCase):
                 "secondary_review_attached": True,
             }
 
-            def assertion(command: str | None, *, output_text: str = ""):
+            valid_response = (
+                "The requested 30-day retention conflicts with the seven-year policy for immutable audit records. "
+                "Which record category should the 30-day retention apply to?"
+            )
+
+            def assertion(command: str | None, *, output_text: str = "", response: str = valid_response):
                 context = {"provider": "current", "vars": vars}
                 if command is not None:
                     context["providerResponse"] = {
@@ -1068,7 +1074,7 @@ class EvaluationVerifierTests(unittest.TestCase):
                         })
                     }
                 with patch.dict(os.environ, {"TUXEDO_EVAL_MANIFEST": str(manifest)}):
-                    return PROMPTFOO_WORKSPACE.get_assert("Review complete.", context)
+                    return PROMPTFOO_WORKSPACE.get_assert(response, context)
 
             allowed = assertion("zsh -lc 'cat REQUEST.md'", output_text="python -m unittest")
             self.assertTrue(allowed["pass"], allowed)
@@ -1110,6 +1116,18 @@ class EvaluationVerifierTests(unittest.TestCase):
             missing = assertion(None)
             self.assertFalse(missing["pass"])
             self.assertTrue(missing.get("needs_review"), missing)
+            for response, expected_reason in (
+                ("Which records should use 30-day retention?", "missing existing seven-year policy"),
+                ("Audit records have seven-year retention. Which records change?", "missing requested 30-day retention"),
+                ("Audit records conflict: 30-day versus seven-year retention.", "exactly one question"),
+                (
+                    "Audit records conflict: 30-day versus seven-year retention. What should change?",
+                    "question does not resolve the record scope",
+                ),
+            ):
+                rejected = assertion("cat REQUEST.md", response=response)
+                self.assertFalse(rejected["pass"], rejected)
+                self.assertIn(expected_reason, rejected["reason"])
 
     def test_multi_module_task_requires_a_complete_design_handoff(self):
         task = self.task("multi-module-change")
@@ -1246,7 +1264,7 @@ class EvaluationVerifierTests(unittest.TestCase):
             }
             with patch.dict(os.environ, {"TUXEDO_EVAL_MANIFEST": str(manifest)}):
                 result = PROMPTFOO_WORKSPACE.get_assert(
-                    "The request needs one material clarification.",
+                    "Audit records have a seven-year policy, conflicting with the requested 30-day retention. Which record category should change?",
                     {
                         "provider": "current",
                         "vars": {
@@ -1262,7 +1280,7 @@ class EvaluationVerifierTests(unittest.TestCase):
 
             with patch.dict(os.environ, {"TUXEDO_EVAL_MANIFEST": str(manifest)}):
                 delegated = PROMPTFOO_WORKSPACE.get_assert(
-                    "The request needs one material clarification.",
+                    "Audit records have a seven-year policy, conflicting with the requested 30-day retention. Which record category should change?",
                     {
                         "provider": "current",
                         "vars": {
