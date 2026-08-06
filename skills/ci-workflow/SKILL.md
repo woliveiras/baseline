@@ -1,9 +1,11 @@
 ---
 name: ci-workflow
-description: Create, review, or repair a CI workflow that produces traceable quality evidence with least privilege. Use for test, lint, build, artifact, release, or deploy automation; do not use for general infrastructure design or to bypass protected production authority.
+description: Create, review, or repair CI pipelines and workflows, including GitHub Actions, that produce traceable quality evidence with least privilege. Use for test, lint, build, cache, artifact, release, deploy, fork, secret, or workflow-permission automation; compose with security-review for untrusted input or sensitive authority boundaries, and do not bypass protected production authority.
 ---
 
 # CI Workflow
+
+When the target is GitHub Actions, load [the GitHub Actions reference](./references/github-actions.md). Do not apply platform-specific commands to another CI system.
 
 1. Read the governing spec, criterion IDs, repository scripts, existing workflows, trust boundaries, and required evidence.
 2. Define event triggers, path filters, concurrency, cancellation, permissions, and untrusted-input boundaries before jobs.

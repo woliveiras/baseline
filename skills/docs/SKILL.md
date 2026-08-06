@@ -13,6 +13,7 @@ Route the request without loading every reference.
 | Vocabulary, conflicting terms, bounded contexts | Use `shape-domain`; update the project's chosen glossary/context artifact |
 | Accepted hard-to-reverse decision | [decision record](./references/decision-record.md) |
 | Unresolved material proposal | [proposal](./references/proposal.md) |
+| Incident learning and corrective actions | [postmortem guidance](./references/postmortem.md) |
 
 1. Read the full governing spec, implemented behavior, existing docs, and repository convention.
 2. Select one mode by default and update the smallest relevant surface.
@@ -21,3 +22,10 @@ Route the request without loading every reference.
 5. Validate filenames, indexes, local links, commands, examples, and version-sensitive claims.
 
 Report the mode, inspected evidence, updated claims, and checks. Match the repository's voice and avoid unsupported significance claims.
+
+When the repository has no stronger template, copy the matching asset rather than recreating its structure:
+
+- [MADR decision record](./assets/adr-madr-template.md)
+- [C4 project architecture](./assets/project-c4-template.md)
+- [RFC proposal](./assets/rfc-template.md)
+- [blameless postmortem](./assets/postmortem-template.md)
