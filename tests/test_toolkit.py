@@ -997,14 +997,16 @@ class EvaluationVerifierTests(unittest.TestCase):
         task = json.loads((ROOT / "evals" / "tasks" / "multi-module-change.json").read_text(encoding="utf-8"))
         self.assertIn("Keep SPEC.md unchanged", task["prompt"])
 
-    def test_read_only_semantic_tasks_forbid_commands_and_artifacts_explicitly(self):
+    def test_read_only_semantic_tasks_forbid_execution_and_mutation_without_leaking_oracles(self):
         expected = {
-            "real-ambiguity": ("seven-year immutable-audit policy", "exactly one focused question"),
-            "spec-inconsistent": ("Report the contradiction in the final response", "do not implement"),
-            "post-hoc-contamination": ("read-only commands only", "regression oracle"),
+            "real-ambiguity": ("exactly one focused question",),
+            "spec-inconsistent": ("If implementation is blocked", "do not invent policy"),
+            "post-hoc-contamination": ("read-only commands only", "next valid evidence step"),
         }
         for task_id, task_phrases in expected.items():
-            prompt = self.task(task_id)["prompt"]
+            task = self.task(task_id)
+            prompt = task["prompt"]
+            self.assertEqual("read-only-inspection", task["execution_policy"])
             self.assertIn("read-only commands only", prompt)
             self.assertIn("Do not execute project code or tests", prompt)
             self.assertIn("create, modify, or delete files", prompt)
@@ -1015,6 +1017,67 @@ class EvaluationVerifierTests(unittest.TestCase):
         verify_skill = (ROOT / "skills" / "verify" / "SKILL.md").read_text(encoding="utf-8")
         self.assertIn("make no file changes", spec_skill)
         self.assertIn("explicit read-only or no-write review", verify_skill)
+        self.assertNotIn("seven-year", self.task("real-ambiguity")["prompt"])
+        self.assertNotIn("contradiction", self.task("spec-inconsistent")["prompt"])
+        self.assertNotIn("regression oracle", self.task("post-hoc-contamination")["prompt"])
+
+    def test_promptfoo_read_only_execution_policy_uses_structured_commands(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            self.materialize(workspace, "real-ambiguity")
+            manifest = root / "manifest.json"
+            manifest.write_text(json.dumps({
+                "workspaces": {
+                    "behavior-real-ambiguity": {
+                        "current": {
+                            "path": str(workspace),
+                            "before": snapshot(workspace),
+                            "protected_hashes": {},
+                        }
+                    }
+                }
+            }), encoding="utf-8")
+            vars = {
+                "workspace_key": "behavior-real-ambiguity",
+                "task_id": "real-ambiguity",
+                "secondary_review_attached": True,
+            }
+
+            def assertion(command: str | None, *, output_text: str = ""):
+                context = {"provider": "current", "vars": vars}
+                if command is not None:
+                    context["providerResponse"] = {
+                        "raw": json.dumps({
+                            "items": [{
+                                "type": "command_execution",
+                                "command": command,
+                                "aggregated_output": output_text,
+                            }]
+                        })
+                    }
+                with patch.dict(os.environ, {"TUXEDO_EVAL_MANIFEST": str(manifest)}):
+                    return PROMPTFOO_WORKSPACE.get_assert("Review complete.", context)
+
+            allowed = assertion("zsh -lc 'cat REQUEST.md'", output_text="python -m unittest")
+            self.assertTrue(allowed["pass"], allowed)
+            compound_read = assertion("zsh -lc 'pwd; find . -maxdepth 2 -type f | sort'")
+            self.assertTrue(compound_read["pass"], compound_read)
+            find_read = assertion("zsh -lc 'find . -type f -exec cat {} +'")
+            self.assertTrue(find_read["pass"], find_read)
+            executed = assertion("zsh -lc 'uv run python -m unittest'")
+            self.assertFalse(executed["pass"])
+            self.assertIn("non-read-only command: uv", executed["reason"])
+            find_executed = assertion("zsh -lc 'find . -type f -exec python {} +'")
+            self.assertFalse(find_executed["pass"])
+            self.assertIn("non-read-only command: python", find_executed["reason"])
+            mutating_git = assertion("git add REQUEST.md")
+            self.assertFalse(mutating_git["pass"])
+            self.assertIn("non-read-only Git command: add", mutating_git["reason"])
+            missing = assertion(None)
+            self.assertFalse(missing["pass"])
+            self.assertTrue(missing.get("needs_review"), missing)
 
     def test_multi_module_task_requires_a_complete_design_handoff(self):
         task = self.task("multi-module-change")
