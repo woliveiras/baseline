@@ -35,6 +35,15 @@ CONFIGS = (
 )
 PROMPTFOO_ASSERTION_FAILURE_EXIT_CODE = 100
 FULL_MAX_WORKERS = 2
+FULL_EXECUTION_CONTROLS = {
+    "dedicated_codex_home": True,
+    "network_access": False,
+    "web_search": False,
+    "approval_policy": "never",
+    "persist_threads": False,
+    "promptfoo_cache": False,
+    "codex_remote_cache": False,
+}
 
 
 class Shard(NamedTuple):
@@ -430,6 +439,7 @@ def _report(
         "repetitions": repeat,
         "duration_seconds": round(seconds, 3),
         "privacy": {"shared": False, "remote_redteam_generation": False, "raw_responses_saved": False},
+        "execution_controls": FULL_EXECUTION_CONTROLS,
         "summary": {
             "provider_responses": len(rows),
             "passed": counts["pass"],
@@ -737,6 +747,7 @@ def _write_full_summary(outcomes: list[SuiteOutcome], duration_seconds: float) -
         "suite": "full",
         "duration_seconds": round(duration_seconds, 3),
         "privacy": {"shared": False, "remote_redteam_generation": False, "raw_responses_saved": False},
+        "execution_controls": FULL_EXECUTION_CONTROLS,
         "summary": {
             "provider_responses": sum(outcome.provider_responses for outcome in outcomes),
             "passed": sum(outcome.passed for outcome in outcomes),

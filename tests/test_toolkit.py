@@ -1860,6 +1860,21 @@ class EvaluationVerifierTests(unittest.TestCase):
                 PROMPTFOO_RUNNER.run_full_evaluation()
         write_full.assert_called_once()
 
+    def test_promptfoo_full_summary_records_sanitized_execution_controls(self):
+        outcomes = [
+            PROMPTFOO_RUNNER.SuiteOutcome("routing", Path("routing.json"), "pass", 34, 34, 0, 0, ()),
+            PROMPTFOO_RUNNER.SuiteOutcome("behavior", Path("behavior.json"), "pass", 40, 40, 0, 0, ()),
+            PROMPTFOO_RUNNER.SuiteOutcome("security", Path("security.json"), "pass", 12, 12, 0, 0, ()),
+        ]
+        with tempfile.TemporaryDirectory() as tmp, patch.object(
+            PROMPTFOO_RUNNER, "PROMPTFOO_ROOT", Path(tmp)
+        ):
+            (Path(tmp) / "results").mkdir()
+            report_path = PROMPTFOO_RUNNER._write_full_summary(outcomes, 12.5)
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+        self.assertEqual(PROMPTFOO_RUNNER.FULL_EXECUTION_CONTROLS, report["execution_controls"])
+        self.assertNotIn("path", json.dumps(report["execution_controls"]).lower())
+
     def test_promptfoo_completed_shard_report_survives_another_shard_error(self):
         """EV-SHD-01: checkpoints survive an infrastructure failure in a peer shard."""
         with tempfile.TemporaryDirectory() as tmp:
