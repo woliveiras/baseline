@@ -6,7 +6,7 @@ Estado: **completa para o snapshot local auditado, com limitações empíricas e
 
 Decisão geral: **Not ready**
 
-Reconciliação atual: `HEAD` `b46f37643adfa83897427cb2be3c7f383f3b35d9`; **29 findings abertos, 0 parciais e 0 corrigidos**. Consulte [a reconciliação de 2026-08-06](09-reconciliation-2026-08-06.md). O snapshot abaixo permanece como registro histórico da auditoria original.
+Reconciliação mais recente: `HEAD` `8776a6a`; **22 findings abertos e 7 encerrados por remoção de escopo**. Consulte [a reconciliação após remoção do lifecycle enforcement](10-reconciliation-after-lifecycle-removal.md). A [reconciliação anterior](09-reconciliation-2026-08-06.md) e o snapshot abaixo permanecem como registros históricos.
 
 ## Índice
 
@@ -21,6 +21,7 @@ Reconciliação atual: `HEAD` `b46f37643adfa83897427cb2be3c7f383f3b35d9`; **29 f
 9. [Matriz de rastreabilidade](appendix-traceability-matrix.md)
 10. [Evidência de comandos](appendix-command-evidence.md)
 11. [Reconciliação com o HEAD atual](09-reconciliation-2026-08-06.md)
+12. [Reconciliação após remoção do lifecycle enforcement](10-reconciliation-after-lifecycle-removal.md)
 
 ## Snapshot auditado
 

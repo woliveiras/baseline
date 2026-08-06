@@ -6,6 +6,8 @@ Estado: **29 findings abertos; 0 parciais; 0 corrigidos**
 
 Decisão geral: **Not ready**
 
+> Este checkpoint foi sucedido pela [reconciliação após remoção do lifecycle enforcement](10-reconciliation-after-lifecycle-removal.md).
+
 ## Escopo e regra de classificação
 
 A auditoria original avaliou o checkout em `797d72cde47f7b94354af5ed49ede4eeb0ea5fdc`, com três mudanças locais então preexistentes. Esta reconciliação compara cada critério de aceitação de `TUX-AUD-001` a `TUX-AUD-029` com o `HEAD` `b46f37643adfa83897427cb2be3c7f383f3b35d9`.

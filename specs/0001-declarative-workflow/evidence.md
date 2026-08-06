@@ -15,8 +15,11 @@
 | DW-001/DW-002 | Official plugin validator plus official skill validator for every skill, using temporary PyYAML through UV | Plugin valid; 17/17 skills valid | external |
 | DW-002/DW-004 | `uv run python evals/run.py --dry-run` | 48 runs; current fingerprint `4268cf00971d61b58c59fb31b133f61c85525faa3742e48f8e331d7b9d72fd4a` | implementation-aware |
 | DW-004 | `pnpm run promptfoo:validate` | Configuration valid | external |
+| DW-004/DW-005 | Repository Markdown link checker | 73 files; 112 local links; 0 broken | independent |
+| DW-001 | Tracked shell inventory | 0 shell scripts remain; shell syntax check not applicable | diagnostic-probe |
+| DW-001–DW-006 | `git diff --check` | Passed before the evidence commit | implementation-aware |
 
-Link checks and final Git checks remain pending until the audit reconciliation is complete.
+Final staged-diff and clean-worktree checks remain pending until the evidence commit is created.
 
 ## Documentation decision
 

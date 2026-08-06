@@ -187,3 +187,9 @@ Checkpoint: 2026-08-06; `HEAD` `b46f37643adfa83897427cb2be3c7f383f3b35d9`.
 | `pnpm outdated --format json` | SDK direto 0.146.0 → 0.146.1 | Drift observado; nenhuma dependência foi alterada. |
 
 A reconciliação completa e sua revisão Spec/Standards/Risk estão em [09 — Reconciliação](09-reconciliation-2026-08-06.md).
+
+## Remoção posterior do lifecycle enforcement
+
+No `HEAD` `8776a6a`, SPEC-0001 e ADR 0002 removeram hooks, launcher Python, policies, completion receipts, review JSONs e seus testes/fixtures. A suíte determinística passou 63/63, o dry-run manteve 48 runs, Promptfoo validou a configuração, e os validators oficiais aprovaram o plugin e 17/17 skills. O novo fingerprint foi `4268cf00971d61b58c59fb31b133f61c85525faa3742e48f8e331d7b9d72fd4a`.
+
+Nenhum provider/model call foi executado. O estado atualizado dos findings está em [10 — Reconciliação após remoção](10-reconciliation-after-lifecycle-removal.md).

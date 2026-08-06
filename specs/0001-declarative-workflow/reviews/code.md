@@ -16,4 +16,4 @@ No actionable in-scope finding. Residual risk is explicit: declarative complianc
 
 ## Decision
 
-Approved for the implementation commit. Audit reconciliation, repository-wide link checks, final deterministic checks, and final task-owned cached-diff inspection remain required before delivery.
+Approved. Audit reconciliation, repository-wide link checks, and final deterministic checks passed. Final task-owned cached-diff inspection and clean-worktree verification remain required before delivery.

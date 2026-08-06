@@ -267,3 +267,18 @@ Collected before dedicated Codex authentication was valid.
   invocation/avoidance, not physical proof of non-reading; behavior covers
   seven of 17 distributed skills; security proves only the 12 controlled frozen
   probes; and the same Codex model family supplies secondary semantic grading.
+
+## 2026-08-06 — declarative workflow decision invalidates current-stack status
+
+- SPEC-0001 and ADR 0002 removed the distributed lifecycle hooks, policy and
+  receipt machinery, and changed `AGENTS.md`, `verify`, `git-commit`, and
+  `ci-workflow`.
+- The previous 86/86 report remains immutable historical evidence for its
+  executed snapshot. It is not evidence that the new declarative contract is
+  empirically green.
+- Deterministic checks pass with 63 unit tests and 48 dry-run configurations;
+  the current dry-run fingerprint is
+  `4268cf00971d61b58c59fb31b133f61c85525faa3742e48f8e331d7b9d72fd4a`.
+- No provider/model call was authorized or executed for this decision. Real-task
+  observations belong in
+  [the declarative workflow trial log](declarative-workflow-trials.md).

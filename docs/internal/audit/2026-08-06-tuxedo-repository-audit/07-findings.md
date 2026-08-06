@@ -1,6 +1,6 @@
 # 07 — Findings
 
-> Estado reconciliado em 2026-08-06 contra `b46f37643adfa83897427cb2be3c7f383f3b35d9`: 29 abertos, 0 parciais e 0 corrigidos. Os detalhes abaixo preservam a evidência do snapshot original; veja [09 — Reconciliação](09-reconciliation-2026-08-06.md) para a verificação individual atual.
+> Estado mais recente em `8776a6a`: 22 abertos e 7 encerrados por remoção de escopo. Os detalhes abaixo preservam a evidência do snapshot original; veja [10 — Reconciliação após remoção](10-reconciliation-after-lifecycle-removal.md) para o estado atual e [09](09-reconciliation-2026-08-06.md) para o checkpoint anterior.
 
 Ordem: severidade, dependência e potencial de invalidar outras evidências. “Pode ser isolado” descreve implementação, não autorização para mudar o repositório.
 

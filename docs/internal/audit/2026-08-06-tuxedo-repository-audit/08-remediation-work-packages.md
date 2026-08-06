@@ -4,7 +4,7 @@ Estas são unidades técnicas para agentes posteriores, não tickets nem mudanç
 
 ## Estado reconciliado
 
-Em `b46f37643adfa83897427cb2be3c7f383f3b35d9`, `WP-01` a `WP-11` permanecem pendentes. Nenhum pacote satisfaz integralmente sua aceitação; a execução autorizada 86/86 é evidência do catálogo configurado, não fechamento de `WP-05` a `WP-08`. O estado finding a finding está em [09 — Reconciliação](09-reconciliation-2026-08-06.md).
+Em `8776a6a`, os itens exclusivamente ligados a hook/policy/receipt em `WP-02`–`WP-04` foram retirados por ADR 0002; `TUX-AUD-020` mantém a parte de Rules aberta. `WP-01` tem progresso apenas para SPEC-0001, e `WP-05`–`WP-11` continuam pendentes. Veja [10 — Reconciliação após remoção](10-reconciliation-after-lifecycle-removal.md).
 
 ## Sequência e paralelismo
 

@@ -1,6 +1,6 @@
 # Apêndice — Matriz de rastreabilidade
 
-> Esta matriz preserva o snapshot original. A situação de cada divergência no `HEAD` `b46f37643adfa83897427cb2be3c7f383f3b35d9` está em [09 — Reconciliação](09-reconciliation-2026-08-06.md); nenhuma das 29 divergências atende atualmente seu critério de aceitação.
+> Esta matriz preserva o snapshot original. O overlay mais recente está em [10 — Reconciliação após remoção](10-reconciliation-after-lifecycle-removal.md); o checkpoint intermediário permanece em [09](09-reconciliation-2026-08-06.md).
 
 `—` significa ausência observada, não “fora de escopo”. Classificação segue o contrato Tuxedo.
 
