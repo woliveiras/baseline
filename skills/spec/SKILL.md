@@ -8,7 +8,7 @@ description: Create or reconcile an active software specification with routing m
 Make the spec the active source of intended behavior across implementation, verification, review, maintenance, and resumption.
 
 1. Read the complete governing objective, domain vocabulary, prior specs, contracts, and relevant observed behavior. Metadata never replaces reading the full spec.
-2. Resolve or expose contradictions before implementation. Correct the spec explicitly when evidence invalidates an assumption; never let tests or code silently become the new intent.
+2. Resolve or expose contradictions before implementation. Correct the spec explicitly when evidence invalidates an assumption; never let tests or code silently become the new intent. If changing the governing input or creating a reconciliation artifact is not authorized, make no file changes and report the proposed correction in the final response.
 3. Write compact routing metadata using [metadata](./references/metadata.md). Follow the project's artifact location; use [the bundled spec template](./assets/spec-template.md) only when no stronger convention exists.
 4. Give acceptance criteria stable IDs. Record normal, edge, invalid, compatibility, and recovery behavior plus invariants and explicit exclusions.
 5. Build the [behavior and oracle matrix](./references/behavior-matrix.md) as a separate artifact, using [its template](./assets/behavior-matrix-template.md) when needed. Define observable oracles before the new implementation is shown to the reviewer.

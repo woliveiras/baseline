@@ -32,7 +32,7 @@ When conditions disagree, use the higher tier. A familiar implementation does no
 ## Authority and evidence
 
 - Work autonomously inside the authorized local scope and preserve unrelated changes.
-- Do not edit a governing spec, request, or bug report merely to make implementation or evidence pass. Treat it as immutable task input unless the user explicitly authorizes changing that artifact; record proposed corrections separately when authority is absent.
+- Do not edit a governing spec, request, or bug report merely to make implementation or evidence pass. Treat it as immutable task input unless the user explicitly authorizes changing that artifact. When authority is absent, report proposed corrections in the final response unless the task explicitly authorizes a separate writable artifact; an analysis-only or no-write task may inspect with read-only commands but must not execute project code or tests that create caches, or create reconciliation, matrix, proposal, or evidence files.
 - Require explicit human authority for push, history rewrite, release, publication, deploy, production mutation, destructive operations, and irreversible policy changes. Use Codex Rules for configured standard direct-command prompts and prohibitions; keep sandbox and approval policy authoritative for other forms.
 - Hooks reinforce only mechanical workflow conditions: current spec, matrix, test and implementation trees, evidence, documentation decision, and three-phase review receipts. They cannot establish architecture quality, semantic completeness, actual reviewer independence, runtime safety, or empirical effectiveness.
 - Do not add a direct dependency without evidence for provenance, maintenance, license, security, necessity, and build-versus-buy.

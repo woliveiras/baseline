@@ -993,8 +993,28 @@ class EvaluationVerifierTests(unittest.TestCase):
     def test_contract_requires_authority_before_editing_governing_input(self):
         contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
         self.assertIn("Do not edit a governing spec, request, or bug report", contract)
+        self.assertIn("an analysis-only or no-write task may inspect with read-only commands", contract)
         task = json.loads((ROOT / "evals" / "tasks" / "multi-module-change.json").read_text(encoding="utf-8"))
         self.assertIn("Keep SPEC.md unchanged", task["prompt"])
+
+    def test_read_only_semantic_tasks_forbid_commands_and_artifacts_explicitly(self):
+        expected = {
+            "real-ambiguity": ("seven-year immutable-audit policy", "exactly one focused question"),
+            "spec-inconsistent": ("Report the contradiction in the final response", "do not implement"),
+            "post-hoc-contamination": ("read-only commands only", "regression oracle"),
+        }
+        for task_id, task_phrases in expected.items():
+            prompt = self.task(task_id)["prompt"]
+            self.assertIn("read-only commands only", prompt)
+            self.assertIn("Do not execute project code or tests", prompt)
+            self.assertIn("create, modify, or delete files", prompt)
+            for phrase in task_phrases:
+                self.assertIn(phrase, prompt)
+
+        spec_skill = (ROOT / "skills" / "spec" / "SKILL.md").read_text(encoding="utf-8")
+        verify_skill = (ROOT / "skills" / "verify" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("make no file changes", spec_skill)
+        self.assertIn("explicit read-only or no-write review", verify_skill)
 
     def test_multi_module_task_requires_a_complete_design_handoff(self):
         task = self.task("multi-module-change")

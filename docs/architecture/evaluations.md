@@ -38,6 +38,7 @@ boundaries.
 | `EV-JDG-01` | Semantic behavior cases receive a secondary rubric through the dedicated ChatGPT/Codex login; its result matters only when deterministic checks pass. | Generated-test inspection proves only semantic tasks attach an explicit read-only, no-network `openai:codex-sdk` grader with dedicated `CODEX_HOME` and an empty isolated working directory. | implementation-aware |
 | `EV-DLV-01` | When an isolated semantic judge can inspect only the final response, the task must state which decisions from its durable design artifact the completion report must summarize. | The multi-module task requires the same boundary, translation, trade-off, reversibility, and implementation-status evidence in `DESIGN.md` and the final response; the rubric remains unchanged. | spec-derived |
 | `EV-REP-01` | Every write-capable repetition starts from a fresh fixture and workspace; no Promptfoo process-level repeat may reuse mutated state. | The runner rejects `repeat != 1`, and compare executes three independent single-repetition processes before aggregating their sanitized reports. | independent |
+| `EV-ROA-01` | An analysis-only task may inspect its fixture but reports contradictions and proposed corrections without executing project code or tests or creating files, caches, matrices, or reconciliation artifacts. | Task prompts permit read-only commands while prohibiting execution and workspace mutation; contract and skill tests preserve the same authority boundary. | spec-derived |
 
 ## Isolation and repeatability
 
