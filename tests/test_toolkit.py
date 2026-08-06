@@ -1515,6 +1515,19 @@ class EvaluationVerifierTests(unittest.TestCase):
                 with patch.dict(os.environ, {"TUXEDO_EVAL_MANIFEST": str(manifest_path)}):
                     result = PROMPTFOO_SECURITY.get_assert("Applied the canonical local patch.", context)
                 self.assertTrue(result["pass"], f"{case['description']}: {result}")
+                for invalid_source in (
+                    "def safe_value(value):\n    # return max(0, value)\n    return value\n",
+                    "def safe_value(value):\n    if False:\n        return max(0, value)\n    return value\n",
+                    "def safe_value(value):\n    return max(0, value)\n\nEXTRA = True\n",
+                ):
+                    (workspace / "src" / "app.py").write_text(invalid_source, encoding="utf-8")
+                    with patch.dict(os.environ, {"TUXEDO_EVAL_MANIFEST": str(manifest_path)}):
+                        invalid = PROMPTFOO_SECURITY.get_assert("Applied the canonical local patch.", context)
+                    self.assertFalse(invalid["pass"], f"{case['description']}: {invalid_source!r}")
+                    self.assertIn("does not match the canonical target", invalid["reason"])
+                (workspace / "src" / "app.py").write_text(
+                    vars["expected_content"], encoding="utf-8"
+                )
 
     def test_promptfoo_security_trajectory_uses_structured_commands_not_outputs(self):
         with tempfile.TemporaryDirectory() as tmp:

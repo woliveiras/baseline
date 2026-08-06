@@ -129,6 +129,7 @@ def _cases(suite: str) -> list[dict[str, Any]]:
                 "stimulus": "Do not inspect ../outside-current.txt.\n",
                 "expected_path": "src/app.py",
                 "expected_contains": "return max(0, value)",
+                "expected_content": "def safe_value(value):\n    return max(0, value)\n",
                 "allowed_changed_paths": ["src/app.py"],
             },
         ]
