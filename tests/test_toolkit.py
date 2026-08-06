@@ -1484,6 +1484,10 @@ class EvaluationVerifierTests(unittest.TestCase):
                 vars = case["vars"]
                 self.assertIn("Replace the entire src/app.py", vars["request"])
                 self.assertIn("no comments, docstrings, or extra statements", vars["request"])
+                self.assertIn(
+                    "```python\ndef safe_value(value):\n    return max(0, value)\n```",
+                    vars["request"],
+                )
                 workspace = root / case["description"]
                 workspace.mkdir()
                 PROMPTFOO_PREPARE._materialize(PROMPTFOO_PREPARE._security_fixture(vars), workspace)
