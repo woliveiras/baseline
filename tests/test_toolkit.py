@@ -17,7 +17,6 @@ from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
-GUARD = ROOT / "hooks" / "scripts" / "guard.py"
 RULES = ROOT / "templates" / "codex" / "tuxedo.rules"
 EXPECTED_SKILLS = {
     "refine", "brainstorming", "spec", "tdd", "bugfix", "verify", "docs",
@@ -61,19 +60,6 @@ PROMPTFOO_RUNNER = load_promptfoo_module(
 )
 
 
-def digest_object(value: dict) -> str:
-    encoded = json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
-    return hashlib.sha256(encoded).hexdigest()
-
-
-def digest_map(value: dict[str, str]) -> str:
-    return digest_object(value)
-
-
-def hash_file(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
 class ToolkitStructureTests(unittest.TestCase):
     def test_full_evaluation_is_explicit_and_not_a_push_gate(self):
         package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
@@ -88,9 +74,89 @@ class ToolkitStructureTests(unittest.TestCase):
         manifest = json.loads((ROOT / ".codex-plugin" / "plugin.json").read_text())
         self.assertEqual("tuxedo", manifest["name"])
         self.assertEqual("0.1.0", manifest["version"])
-        self.assertNotIn("hooks", manifest, "default hooks/hooks.json discovery avoids stale manifest schemas")
+        self.assertNotIn("hooks", manifest, "the plugin does not distribute lifecycle hooks")
         actual = {path.name for path in (ROOT / "skills").iterdir() if path.is_dir()}
         self.assertEqual(EXPECTED_SKILLS, actual)
+
+    def test_distributed_product_has_no_lifecycle_runtime(self):
+        """DW-001/DW-005: no dormant hook or receipt runtime remains installed."""
+        absent = (
+            "hooks",
+            "templates/policy",
+            "templates/review",
+            "skills/verify/assets/spec-review.json",
+            "skills/verify/assets/test-review.json",
+            "skills/verify/assets/code-review.json",
+        )
+        for relative in absent:
+            self.assertFalse((ROOT / relative).exists(), relative)
+
+        manifest = json.loads((ROOT / ".codex-plugin" / "plugin.json").read_text())
+        self.assertNotIn("hooks", manifest)
+        self.assertNotIn("Lifecycle hooks", manifest["interface"]["capabilities"])
+        self.assertNotIn("executable guardrails", manifest["description"].lower())
+        installed_python = list((ROOT / "skills").rglob("*.py"))
+        installed_uv_projects = [
+            path for path in (ROOT / "skills").rglob("*")
+            if path.name in {"pyproject.toml", "uv.lock"}
+        ]
+        self.assertEqual([], installed_python)
+        self.assertEqual([], installed_uv_projects)
+
+        decision = (
+            ROOT / "docs" / "decisions" / "0002-defer-lifecycle-hooks-pending-empirical-need.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("a recurring observed failure", decision)
+        self.assertIn("no installed runtime dependency", decision)
+
+    def test_contract_defines_declarative_task_flow(self):
+        """DW-002/DW-003: strict order and authority remain explicit without hooks."""
+        contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        heading = "## Declarative task flow"
+        self.assertIn(heading, contract)
+        section = contract.split(heading, 1)[1].split("\n## ", 1)[0]
+        markers = (
+            "Oracle before implementation",
+            "Authorized scope",
+            "Review before completion",
+            "Task-owned commit",
+            "Additional work",
+            "declarative requirements, not mechanical enforcement",
+        )
+        positions = [section.index(marker) for marker in markers]
+        self.assertEqual(sorted(positions), positions)
+
+    def test_public_docs_do_not_claim_lifecycle_enforcement(self):
+        """DW-004/DW-006: public guarantees and experiment boundary stay honest."""
+        public_paths = (
+            ROOT / "README.md",
+            ROOT / "docs" / "README.md",
+            ROOT / "docs" / "development.md",
+            ROOT / "docs" / "architecture" / "enforcement.md",
+        )
+        corpus = "\n".join(path.read_text(encoding="utf-8") for path in public_paths)
+        for forbidden in (
+            ".tuxedo/policy.json",
+            "completion receipt",
+            "Workflow hooks",
+            "mechanical integrity of the spec-driven receipt",
+        ):
+            self.assertNotIn(forbidden, corpus)
+        self.assertIn("10–20 real tasks", corpus)
+        self.assertIn("declarative", corpus.lower())
+        trial_log = ROOT / "docs" / "evidence" / "declarative-workflow-trials.md"
+        self.assertTrue(trial_log.is_file())
+        trial_text = trial_log.read_text(encoding="utf-8")
+        for category in (
+            "Implementation before oracle",
+            "Scope expansion",
+            "Implementation-aware weak test",
+            "Missing review",
+            "Unrelated staged content",
+            "Unauthorized additional work",
+        ):
+            self.assertIn(category, corpus)
+            self.assertIn(category, trial_text)
 
     def test_skill_frontmatter_and_ui_policy(self):
         for name in EXPECTED_SKILLS:
@@ -138,15 +204,11 @@ class ToolkitStructureTests(unittest.TestCase):
             ("templates/spec/spec.md", "skills/spec/assets/spec-template.md"),
             ("templates/spec/behavior-matrix.md", "skills/spec/assets/behavior-matrix-template.md"),
             ("templates/spec/evidence.md", "skills/verify/assets/evidence-template.md"),
-            ("templates/review/spec.json", "skills/verify/assets/spec-review.json"),
-            ("templates/review/tests.json", "skills/verify/assets/test-review.json"),
-            ("templates/review/code.json", "skills/verify/assets/code-review.json"),
             ("skills/spec/references/scope-tiers.md", "skills/verify/references/scope-tiers.md"),
         ]
         for left, right in pairs:
             self.assertEqual((ROOT / left).read_bytes(), (ROOT / right).read_bytes(), f"{left} != {right}")
         self.assertNotIn("## Behavior and oracle matrix", (ROOT / "templates/spec/spec.md").read_text())
-        self.assertFalse((ROOT / "templates/policy/authority.json").exists())
 
     def test_eval_dry_run_is_seeded_and_covers_all_comparisons(self):
         command = ["uv", "run", "python", str(ROOT / "evals" / "run.py"), "--dry-run", "--seed", "17"]
@@ -238,274 +300,6 @@ class CodexRulesTests(unittest.TestCase):
             )
             self.assertEqual(0, result.returncode, result.stderr)
             self.assertEqual(expected, json.loads(result.stdout).get("decision"), command)
-
-
-class HookTests(unittest.TestCase):
-    def run_guard(self, mode: str, payload: str, cwd: Path):
-        payload = payload.replace("FIXTURE_CWD", str(cwd))
-        return subprocess.run(["uv", "run", "python", str(GUARD), mode], input=payload, text=True, capture_output=True, check=False)
-
-    def fixture(self, name: str) -> str:
-        return (ROOT / "tests" / "fixtures" / "hooks" / name).read_text()
-
-    def payload(self, cwd: Path, command: str) -> str:
-        return json.dumps({
-            "cwd": str(cwd),
-            "hook_event_name": "PreToolUse",
-            "tool_name": "Bash",
-            "tool_input": {"command": command},
-        })
-
-    def policy(self, required_trees: list[str] | None = None) -> dict:
-        return {
-            "version": 1,
-            "require_receipts_on": ["commit", "stop"],
-            "receipt_path": ".tuxedo/receipts.json",
-            "required_trees": required_trees if required_trees is not None else ["tests", "implementation"],
-            "tree_scopes": {
-                "tests": {"include": ["tests/**/*"], "exclude": []},
-                "implementation": {"include": ["src/**/*"], "exclude": []},
-            },
-            "allow_tree_overlap": False,
-        }
-
-    def write_receipt(self, cwd: Path, *, documentation: str = "required") -> dict:
-        control = cwd / ".tuxedo"
-        control.mkdir(exist_ok=True)
-        files = {
-            "spec.md": "# Spec\n",
-            "matrix.md": "# Matrix\n",
-            "evidence.md": "# Evidence\n",
-            "tests/test_example.py": "def test_example():\n    assert True\n",
-            "src/example.py": "VALUE = 1\n",
-        }
-        if documentation == "required":
-            files["README.md"] = "# Example\n"
-        for relative, content in files.items():
-            path = cwd / relative
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(content)
-
-        tests = {"tests/test_example.py": hash_file(cwd / "tests/test_example.py")}
-        implementation = {"src/example.py": hash_file(cwd / "src/example.py")}
-        test_evidence = {
-            "fail_first": {
-                "test_tree": digest_map(tests),
-                "command": "uv run python -m unittest tests/test_example.py",
-                "observed_failure": "expected VALUE behavior was absent",
-            },
-            "passing": {
-                "test_tree": digest_map(tests),
-                "command": "uv run python -m unittest tests/test_example.py",
-                "observed_result": "focused test passed",
-            },
-        }
-        artifacts = {name: hash_file(cwd / name) for name in ("spec.md", "matrix.md", "evidence.md")}
-
-        reviews_dir = cwd / "reviews"
-        reviews_dir.mkdir(exist_ok=True)
-        spec_review = {
-            "version": 1,
-            "phase": "spec",
-            "status": "approved",
-            "context": {"tests_exposed": False, "implementation_exposed": False},
-            "input_hashes": {"spec": artifacts["spec.md"]},
-            "output_hashes": {"behavior_matrix": artifacts["matrix.md"]},
-            "findings": [],
-        }
-        (reviews_dir / "spec.json").write_text(json.dumps(spec_review))
-        artifacts["reviews/spec.json"] = hash_file(reviews_dir / "spec.json")
-
-        test_review = {
-            "version": 1,
-            "phase": "tests",
-            "status": "approved",
-            "context": {"tests_exposed": True, "implementation_exposed": False},
-            "input_hashes": {
-                "spec": artifacts["spec.md"],
-                "behavior_matrix": artifacts["matrix.md"],
-                "tests": digest_map(tests),
-                "spec_review": artifacts["reviews/spec.json"],
-                "fail_first": digest_object(test_evidence["fail_first"]),
-            },
-            "output_hashes": {},
-            "findings": [],
-        }
-        (reviews_dir / "tests.json").write_text(json.dumps(test_review))
-        artifacts["reviews/tests.json"] = hash_file(reviews_dir / "tests.json")
-
-        docs = {
-            "decision": documentation,
-            "rationale": "The public behavior changed." if documentation == "required" else "No user-facing or durable contract changed.",
-            "artifacts": ["README.md"] if documentation == "required" else [],
-        }
-        if documentation == "required":
-            artifacts["README.md"] = hash_file(cwd / "README.md")
-        docs_value = {
-            "decision": docs["decision"],
-            "rationale": docs["rationale"],
-            "artifact_hashes": {path: artifacts[path] for path in docs["artifacts"]},
-        }
-        docs_digest = hashlib.sha256(
-            json.dumps(docs_value, sort_keys=True, separators=(",", ":")).encode()
-        ).hexdigest()
-
-        code_review = {
-            "version": 1,
-            "phase": "code",
-            "status": "approved",
-            "context": {"tests_exposed": True, "implementation_exposed": True},
-            "input_hashes": {
-                "spec": artifacts["spec.md"],
-                "behavior_matrix": artifacts["matrix.md"],
-                "tests": digest_map(tests),
-                "implementation": digest_map(implementation),
-                "evidence": artifacts["evidence.md"],
-                "test_review": artifacts["reviews/tests.json"],
-                "test_evidence": digest_object(test_evidence),
-                "documentation": docs_digest,
-            },
-            "output_hashes": {},
-            "findings": [],
-        }
-        (reviews_dir / "code.json").write_text(json.dumps(code_review))
-        artifacts["reviews/code.json"] = hash_file(reviews_dir / "code.json")
-
-        receipt = {
-            "version": 2,
-            "spec": "spec.md",
-            "behavior_matrix": "matrix.md",
-            "evidence": "evidence.md",
-            "trees": {"tests": tests, "implementation": implementation},
-            "test_evidence": test_evidence,
-            "documentation": docs,
-            "reviews": {
-                "spec": "reviews/spec.json",
-                "tests": "reviews/tests.json",
-                "code": "reviews/code.json",
-            },
-            "artifact_hashes": artifacts,
-        }
-        (control / "receipts.json").write_text(json.dumps(receipt))
-        return receipt
-
-    def test_valid_invalid_absent_and_malformed_inputs(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            cwd = Path(tmp)
-            ok = self.run_guard("pre-tool", self.fixture("pretool-valid.json"), cwd)
-            self.assertEqual(0, ok.returncode, ok.stdout + ok.stderr)
-            self.assertEqual("", ok.stdout)
-            for name in ("pretool-missing.json", "pretool-malformed.json"):
-                result = self.run_guard("pre-tool", self.fixture(name), cwd)
-                self.assertEqual(0, result.returncode, name)
-                self.assertEqual("deny", json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"])
-
-    def test_command_language_is_not_used_as_a_security_classifier(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            cwd = Path(tmp)
-            for command in (
-                "rg production README.md",
-                "git commit-message --help",
-                "printf 'DELETE FROM users'",
-                "rm -rf /",
-                "git push origin main",
-            ):
-                result = self.run_guard("pre-tool", self.payload(cwd, command), cwd)
-                self.assertEqual(0, result.returncode, command)
-                self.assertEqual("", result.stdout, command)
-
-    def test_direct_commit_and_stop_validate_receipts(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            cwd = Path(tmp)
-            control = cwd / ".tuxedo"
-            control.mkdir()
-            (control / "policy.json").write_text(json.dumps(self.policy()))
-            denied = self.run_guard("pre-tool", self.payload(cwd, 'git commit -m "feat: example"'), cwd)
-            self.assertEqual("deny", json.loads(denied.stdout)["hookSpecificOutput"]["permissionDecision"])
-
-            self.write_receipt(cwd)
-            allowed = self.run_guard("pre-tool", self.payload(cwd, 'git commit -m "feat: example"'), cwd)
-            self.assertEqual("", allowed.stdout)
-            stop_payload = json.dumps({"cwd": str(cwd), "hook_event_name": "Stop"})
-            stopped = self.run_guard("stop", stop_payload, cwd)
-            self.assertEqual("", stopped.stdout)
-
-    def test_receipts_detect_stale_trees_reviews_and_documentation(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            cwd = Path(tmp)
-            control = cwd / ".tuxedo"
-            control.mkdir()
-            policy = self.policy()
-            policy["require_receipts_on"] = ["stop"]
-            (control / "policy.json").write_text(json.dumps(policy))
-            payload = json.dumps({"cwd": str(cwd), "hook_event_name": "Stop"})
-
-            self.write_receipt(cwd)
-            (cwd / "tests/test_example.py").write_text("def test_example():\n    assert False\n")
-            stale_test = self.run_guard("stop", payload, cwd)
-            self.assertIn("Test tree is stale", json.loads(stale_test.stdout)["reason"])
-
-            self.write_receipt(cwd)
-            spec_review_path = cwd / "reviews/spec.json"
-            spec_review = json.loads(spec_review_path.read_text())
-            spec_review["context"]["implementation_exposed"] = True
-            spec_review_path.write_text(json.dumps(spec_review))
-            receipt = json.loads((control / "receipts.json").read_text())
-            receipt["artifact_hashes"]["reviews/spec.json"] = hash_file(spec_review_path)
-            (control / "receipts.json").write_text(json.dumps(receipt))
-            exposed = self.run_guard("stop", payload, cwd)
-            self.assertIn("Spec review must declare", json.loads(exposed.stdout)["reason"])
-
-            self.write_receipt(cwd)
-            (cwd / "README.md").write_text("# Changed\n")
-            stale_docs = self.run_guard("stop", payload, cwd)
-            self.assertIn("Completion artifact hashes is stale", json.loads(stale_docs.stdout)["reason"])
-
-            self.write_receipt(cwd)
-            receipt = json.loads((control / "receipts.json").read_text())
-            receipt["test_evidence"]["fail_first"]["test_tree"] = "0" * 64
-            (control / "receipts.json").write_text(json.dumps(receipt))
-            stale_red = self.run_guard("stop", payload, cwd)
-            self.assertIn("fail_first record is stale", json.loads(stale_red.stdout)["reason"])
-
-    def test_receipts_cover_exact_configured_tree_scopes(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            cwd = Path(tmp)
-            control = cwd / ".tuxedo"
-            control.mkdir()
-            policy = self.policy()
-            policy["require_receipts_on"] = ["stop"]
-            (control / "policy.json").write_text(json.dumps(policy))
-            payload = json.dumps({"cwd": str(cwd), "hook_event_name": "Stop"})
-
-            self.write_receipt(cwd)
-            unlisted = cwd / "tests/unlisted.py"
-            unlisted.write_text("raise AssertionError('must be covered')\n")
-            omitted = self.run_guard("stop", payload, cwd)
-            self.assertIn("Test tree omits scoped artifact", json.loads(omitted.stdout)["reason"])
-
-            unlisted.unlink()
-            receipt = self.write_receipt(cwd)
-            receipt["trees"]["tests"]["spec.md"] = hash_file(cwd / "spec.md")
-            (control / "receipts.json").write_text(json.dumps(receipt))
-            outside = self.run_guard("stop", payload, cwd)
-            self.assertIn("Test tree contains artifact outside its scope", json.loads(outside.stdout)["reason"])
-
-    def test_not_required_documentation_is_explicit_and_valid(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            cwd = Path(tmp)
-            control = cwd / ".tuxedo"
-            control.mkdir()
-            policy = self.policy()
-            policy["require_receipts_on"] = ["stop"]
-            (control / "policy.json").write_text(json.dumps(policy))
-            self.write_receipt(cwd, documentation="not-required")
-            result = self.run_guard(
-                "stop",
-                json.dumps({"cwd": str(cwd), "hook_event_name": "Stop"}),
-                cwd,
-            )
-            self.assertEqual("", result.stdout, result.stdout)
 
 
 class EvaluationVerifierTests(unittest.TestCase):

@@ -67,4 +67,3 @@ Tuxedo must first validate its strict declarative workflow in real engineering t
 - Spec review: [reviews/spec.md](reviews/spec.md)
 - Test review: [reviews/tests.md](reviews/tests.md)
 - Code review: [reviews/code.md](reviews/code.md)
-

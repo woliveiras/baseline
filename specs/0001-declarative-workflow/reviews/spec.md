@@ -9,4 +9,3 @@ No actionable spec finding. The requirement to write a unit test before every im
 ## Decision
 
 Approved for test design. The specification explicitly preserves strict scope, three-phase semantic review, task-owned staging, and human authority while removing claims of mechanical enforcement.
-

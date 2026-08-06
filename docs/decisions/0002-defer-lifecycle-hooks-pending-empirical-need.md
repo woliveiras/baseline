@@ -98,4 +98,3 @@ A future lifecycle hook requires all of the following:
 ## Validation
 
 The governing acceptance criteria and oracle matrix are in [`SPEC-0001`](../../specs/0001-declarative-workflow/spec.md).
-

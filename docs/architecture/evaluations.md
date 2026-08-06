@@ -126,7 +126,7 @@ changes scheduling, not coverage. Authoritative wall duration
 and per-row evidence are recorded in ignored JSON reports under
 `evals/promptfoo/results/`, and dated run outcomes are recorded in
 [the run log](../evidence/eval-runs.md). `eval:full` is
-not invoked by installation, hooks, or Git push, and a passing result does not
+not invoked by installation or Git push, and a passing result does not
 itself authorize a push.
 
 The evidence chain answers three different questions:

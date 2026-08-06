@@ -14,17 +14,16 @@ generator, or runtime dependency, and none should be added.
 
 - `skills/` holds the 17 distributed workflow skills. Each is a `SKILL.md` with
   optional `references/`, `assets/`, and `agents/` beside it.
-- `hooks/` holds the workflow-integrity hook (`hooks.json` and
-  `scripts/guard.py`).
-- `templates/` holds opt-in Codex Rules, policy and receipt templates, the three
-  review assets, and the spec templates.
+- `templates/` holds opt-in Codex Rules and spec/evidence templates.
+- `specs/` holds maintainer product contracts, oracle matrices, evidence, and
+  reconstructed review records.
 - `docs/` holds this maintainer documentation.
 - `evals/` holds the maintainer-only evaluation harness (the deterministic
   runner plus the Promptfoo orchestration). It is not installed with the plugin.
 - `tests/` holds the deterministic tests for the mechanical invariants.
 
-`docs/`, `tests/`, and `evals/` are maintainer-only and are not part of the
-installed plugin surface.
+`docs/`, `specs/`, `tests/`, and `evals/` are maintainer-only and are not part
+of the installed plugin surface.
 
 ## Toolchain
 
@@ -34,6 +33,9 @@ installed plugin surface.
   package commands with `pnpm run` or `pnpm exec`. Do not use npm or maintain a
   `package-lock.json`.
 
+These are maintainer toolchain conventions. Installed Tuxedo skills do not run
+UV, Python, PNPM, or Node.js in consumer projects.
+
 ## How to develop
 
 - Read the complete governing spec or skill before changing it. Metadata only
@@ -41,7 +43,7 @@ installed plugin surface.
 - Keep each `SKILL.md` concise and imperative. Put optional depth one level down
   in `references/`.
 - Keep portable workflow logic client-neutral. Codex invocation policy belongs
-  in `agents/openai.yaml`, and Codex lifecycle behavior belongs in `hooks/`.
+  in `agents/openai.yaml`.
 - Add a deterministic test for every mechanical invariant you introduce.
 - Classify work by the highest applicable proportionality tier (see the
   contract), never by line count.
@@ -71,7 +73,7 @@ The empirical provider evaluations (Promptfoo plus Codex) are maintainer-only
 and explicit. They are described in
 [the harness guide](guides/using-the-eval-harness.md) and
 [the evaluation architecture](architecture/evaluations.md), and are never
-implied by installation, hooks, or a Git push.
+implied by installation or a Git push.
 
 ## Committing
 

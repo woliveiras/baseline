@@ -1,7 +1,7 @@
 {
   "name": "tuxedo",
   "version": "0.1.0",
-  "description": "Spec-driven software engineering skills and executable guardrails",
+  "description": "Spec-driven software engineering skills for traceable delivery workflows",
   "author": {
     "name": "William Oliveira",
     "url": "https://github.com/woliveiras"
@@ -17,7 +17,7 @@
     "longDescription": "Keep specifications, test oracles, implementation, evidence, and review traceable throughout software delivery.",
     "developerName": "William Oliveira",
     "category": "Developer Tools",
-    "capabilities": ["Read", "Write", "Lifecycle hooks"],
+    "capabilities": ["Read", "Write"],
     "defaultPrompt": [
       "Refine this change and preserve traceability to its specification.",
       "Implement this approved specification with fail-first tests.",

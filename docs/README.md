@@ -19,8 +19,9 @@ decisions say why something was chosen, and evidence records what was measured.
 
 ## How things work (architecture)
 
-- [Enforcement boundaries](architecture/enforcement.md): Codex Rules and
-  workflow hooks, and the limits of what the mechanical gates establish.
+- [Workflow and command boundaries](architecture/enforcement.md): declarative
+  workflow responsibilities, optional Codex Rules, and the empirical checkpoint
+  before any lifecycle enforcement is reconsidered.
 - [Evaluation architecture](architecture/evaluations.md): responsibility
   boundaries, oracle matrix, failure semantics, and suites.
 - [Evaluation isolation and authentication](architecture/eval-isolation.md):
@@ -38,6 +39,8 @@ decisions say why something was chosen, and evidence records what was measured.
   prerequisites, authentication, suites, reading results, and cleanup.
 - [Evaluation run evidence](evidence/eval-runs.md): dated results and open items
   from maintainer runs.
+- [Declarative workflow trial log](evidence/declarative-workflow-trials.md):
+  real-task observations used to decide whether any lifecycle gate is needed.
 
 ## Research and evidence
 

@@ -82,8 +82,8 @@ def configure(variant: str, task: dict[str, Any], workspace: Path, source_root: 
     return {
         "contract": includes_contract,
         "skills": selected,
-        "hooks_active": False,
-        "note": "Hook mechanics are covered by deterministic unit tests, not model trials.",
+        "workflow_enforcement": "declarative",
+        "note": "Lifecycle hooks are not distributed; trials exercise AGENTS and skills.",
     }
 
 

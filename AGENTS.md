@@ -34,14 +34,22 @@ When conditions disagree, use the higher tier. A familiar implementation does no
 - Work autonomously inside the authorized local scope and preserve unrelated changes.
 - Do not edit a governing spec, request, or bug report merely to make implementation or evidence pass. Treat it as immutable task input unless the user explicitly authorizes changing that artifact. When authority is absent, report proposed corrections in the final response unless the task explicitly authorizes a separate writable artifact; an analysis-only or no-write task may inspect with read-only commands but must not execute project code or tests that create caches, or create reconciliation, matrix, proposal, or evidence files.
 - Require explicit human authority for push, history rewrite, release, publication, deploy, production mutation, destructive operations, and irreversible policy changes. Use Codex Rules for configured standard direct-command prompts and prohibitions; keep sandbox and approval policy authoritative for other forms.
-- Hooks reinforce only mechanical workflow conditions: current spec, matrix, test and implementation trees, evidence, documentation decision, and three-phase review receipts. They cannot establish architecture quality, semantic completeness, actual reviewer independence, runtime safety, or empirical effectiveness.
 - Do not add a direct dependency without evidence for provenance, maintenance, license, security, necessity, and build-versus-buy.
 - Do not claim completion without fresh commands, outputs, and residual limitations.
+
+## Declarative task flow
+
+- **Oracle before implementation:** For testable behavior, define the smallest suitable unit, integration, contract, end-to-end, static, or inspection oracle and run it fail-first before production implementation. When no automated oracle is appropriate, record the reason and the strongest available verification before editing production behavior.
+- **Authorized scope:** Derive the allowed files and behavior from the current spec, task, or plan. Preserve pre-existing and unrelated changes; do not broaden the task because adjacent work is useful.
+- **Review before completion:** Reconstruct spec review without tests or implementation, test review without the new implementation, and code review with the complete diff and fresh evidence. Passing tests alone do not establish fidelity.
+- **Task-owned commit:** Before a local commit, inspect status, unstaged diff, staged diff, and untracked files; stage explicit task-owned paths or hunks and re-read the complete cached diff.
+- **Additional work:** Do not begin another task, remediation, cleanup, or refactor unless the user authorized it. Report discoveries separately and request authority when they materially expand scope.
+- These are declarative requirements, not mechanical enforcement. Record observed workflow failures during real tasks; consider a narrow gate only after recurring evidence and only without a consumer runtime dependency.
 
 ## Toolkit maintenance
 
 - Keep each `SKILL.md` concise and imperative. Put optional detail one level down in `references/`.
-- Keep portable workflow logic client-neutral. Put Codex invocation policy in `agents/openai.yaml` and Codex lifecycle behavior in `hooks/`.
+- Keep portable workflow logic client-neutral. Put Codex invocation policy in `agents/openai.yaml`.
 - Add deterministic tests for every mechanical invariant.
 - Keep `evals/` and maintainer research outside installed skill content. Do not run paid or extensive evals without explicit authority.
 - Commit coherent task-owned slices locally with Conventional Commits. Never infer push, release, or publication authority.

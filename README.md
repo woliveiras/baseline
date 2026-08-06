@@ -36,18 +36,19 @@ The repository itself is the plugin. There is intentionally no separate installe
 
 1. **Add the skills.** Validate the repository with the current `plugin-creator` validator, then add it to a local Codex marketplace so the skills load in your agent. Publication and release are intentionally not automated here.
 2. **Opt in to Codex Rules (optional).** Copy [`templates/codex/tuxedo.rules`](templates/codex/tuxedo.rules) to `.codex/rules/tuxedo.rules` in a trusted project and restart Codex. The rules ask for human approval before push, destructive Git cleanup, release, publication, deploy, and infrastructure mutations, and forbid a few literal broad-deletion forms.
-3. **Opt in to workflow hooks (optional).** Copy [`templates/policy/policy.json`](templates/policy/policy.json) to `.tuxedo/policy.json` to activate the commit and turn-completion receipt gates.
+3. **Follow the declarative workflow.** Start from the authorized task, define the appropriate fail-first oracle before production implementation, stay inside scope, review spec/tests/code separately, and inspect the staged candidate before a local commit.
 
 Once the skills are available, work normally: your agent picks the smallest relevant workflow, and the deep-work skills stay explicit. Each skill documents its own steps in its `SKILL.md`.
 
-## Executable reinforcement
+## Responsibility boundaries
 
-Tuxedo separates command authority from workflow integrity:
+Tuxedo separates command authority from workflow guidance:
 
 - **Codex Rules** handle command-level safety through native, explicitly listed command prefixes.
-- **Workflow hooks** validate the mechanical integrity of the spec-driven receipt at direct commits and turn completion.
+- **`AGENTS.md` and skills** define the strict spec-first, oracle-first, scoped, reviewed workflow.
+- **Tests and CI** provide executable evidence for product behavior.
 
-Neither mechanism inspects transcripts, collects prompts, makes network requests, or decides semantic quality. Receipt hashes make stale or incomplete relationships detectable; they cannot prove wall-clock TDD order, oracle quality, or reviewer independence. See [the enforcement boundary](docs/architecture/enforcement.md) for the exact limits and setup.
+Tuxedo does not install lifecycle hooks or require UV or Python in consumer projects. The workflow requirements are declarative rather than mechanically enforced. The maintainer is validating them across real tasks before deciding whether any narrow gate is necessary. See [the workflow boundary](docs/architecture/enforcement.md) for responsibilities and the observation protocol.
 
 ## Documentation
 

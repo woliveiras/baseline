@@ -13,4 +13,4 @@ description: Create, review, or repair a CI workflow that produces traceable qua
 6. Keep release, publication, deploy, and production jobs behind explicit human/environment protection. Adding a workflow does not grant execution authority.
 7. Validate syntax locally when tooling exists, then inspect the real CI result when available. Record unavailable remote evidence honestly.
 
-Return trigger, permission, secret, cache, artifact, criterion mapping, and verification summaries. CI receipts establish what ran and against which revision; they do not establish semantic adequacy.
+Return trigger, permission, secret, cache, artifact, criterion mapping, and verification summaries. CI evidence establishes what ran and against which revision; it does not establish semantic adequacy.
