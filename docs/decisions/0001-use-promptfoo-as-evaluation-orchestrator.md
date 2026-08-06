@@ -22,7 +22,7 @@ We need an explicit responsibility boundary between generic evaluation orchestra
 - Preserve disposable workspace isolation, snapshots, fingerprints, and mutation policy.
 - Evaluate positive and negative routing boundaries, not only final response text.
 - Test security through trajectory, command, file, and artifact evidence in addition to final output.
-- Keep results reproducible and auditable with fixed model, reasoning, seed, versions, and conditions.
+- Keep results auditable with recorded model-selection evidence, reasoning, seed, versions, and conditions; when the account selects an unresolved default model, treat model identity as uncontrolled rather than fixed.
 - Keep Promptfoo and Node.js out of the distributed plugin runtime.
 - Keep skills portable and client-neutral while using Codex as the initial evaluation client.
 - Avoid remote generation and silent result sharing.
@@ -75,7 +75,7 @@ Promptfoo is responsible for:
 
 - Codex execution through the official `openai:codex-sdk` provider;
 - provider and condition matrices;
-- repetitions and seeded comparison runs;
+- single-attempt provider execution and seeded comparison inputs;
 - routing assertions, including heuristic `skill-used` and `not-skill-used` signals;
 - token and latency collection;
 - local result aggregation and presentation;
@@ -93,6 +93,7 @@ Tuxedo remains responsible for:
 - hidden deterministic oracles and AST verifiers;
 - failure semantics, including `pass`, `fail`, and `needs-review`;
 - deterministic precedence over secondary judgments;
+- fresh-workspace repetition, fingerprint checks, and aggregation of independent comparison processes;
 - authority, privacy, and no-external-operation boundaries.
 
 `evals/run.py` remains temporarily. Promptfoo is introduced through adapters, and removal or reduction of the old orchestration is a separate change that requires demonstrated parity for fixture materialization, variants, fingerprints, hidden oracles, timeouts, JSON results, and no-op rejection. No LLM judge may turn a deterministic failure into a pass. `skill-used` is a heuristic signal of skill-file reading or invocation, not proof of skill obedience. Promptfoo red teaming does not prove universal security; results apply only to the recorded versions, tasks, models, and conditions.
@@ -140,15 +141,15 @@ The effective package engine requirements are Node `>=22.22.0` for Promptfoo and
 This decision is implemented when the following checks are evidenced:
 
 - [x] Promptfoo and the Codex SDK are exact development dependencies.
-- [ ] The official Codex provider works with an isolated, authenticated `TUXEDO_EVAL_CODEX_HOME`.
+- [x] The official Codex provider works with an isolated, authenticated `TUXEDO_EVAL_CODEX_HOME`.
 - [x] Canonical tasks and `evals/verifiers.py` are reused through adapters.
 - [x] Baseline/current/proposed comparisons reject identical fingerprints.
 - [x] Every write-capable trial uses a fresh disposable workspace.
 - [x] Positive and negative routing cases exist for every distributed skill.
-- [ ] Approved frozen security probes run locally without remote generation.
-- [ ] `pnpm run eval:full` fails for provider, deterministic, routing, security, incomplete-turn, and result-validation failures.
+- [x] Approved frozen security probes run locally without remote generation.
+- [x] `pnpm run eval:full` fails for provider, deterministic, routing, security, incomplete-turn, and result-validation failures.
 - [x] Empty processes cannot produce a pass and deterministic failures take precedence.
-- [ ] Red-team generation is not part of `eval:full`.
+- [x] Red-team generation is not part of `eval:full`.
 - [x] Results, caches, workspaces, and evaluation Codex homes remain ignored.
 - [x] README and architecture documentation discover this ADR.
 - [ ] Parity with the existing runner is recorded before any reduction of `evals/run.py`.
@@ -214,13 +215,12 @@ Amendment evidence:
 - [x] Deterministic tests cover status success/failure, missing home,
   operational state, behavior-bearing content rejection, secret redaction, and
   non-implicit login.
-- [ ] The dedicated home is authenticated and the official provider smoke run
+- [x] The dedicated home is authenticated and the official provider smoke run
   has passed.
-- [ ] `pnpm run eval:full` has run with maintainer authority.
+- [x] `pnpm run eval:full` has run with maintainer authority.
 
-The dated smoke result is recorded in [the run log](../evidence/eval-runs.md).
-The smoke checkbox remains unchecked because that suite did not pass, and
-`eval:full` requires separate maintainer authority.
+The dated smoke and authorized full-run results are recorded in
+[the run log](../evidence/eval-runs.md).
 
 ## Amendment: explicit full evaluation stack
 
@@ -229,14 +229,17 @@ command is an explicit empirical evaluation stack, not a pre-push hook and not
 an automatic Git gate. It runs the official validators, deterministic checks,
 Promptfoo configuration validation, fixture checks, 34 routing cases, 40
 behavior trials, and 12 frozen security probes before checking that the Git
-status is unchanged. The expected upper bound is 86 provider calls; local JSON
+status is unchanged. The expected upper bound is 86 target trials plus 25
+secondary semantic judgments, or 111 model calls; local JSON
 reports under `evals/promptfoo/results/` preserve per-row evidence without
 entering the repository.
 
-The evidence has three distinct meanings. Routing checks positive and negative
-requests for every distributed skill and uses structured provider metadata for
-observed skill-file reads; this indicates routing/invocation, not complete
-instruction adherence. Behavior trials use fresh workspaces, controlled
+The evidence has three distinct meanings. Routing generates explicit
+workspace-local skill invocations for positive and applicable alternate cases,
+checks avoidance for every distributed skill, and uses structured Codex
+provider metadata for observed skill-file reads. It proves this Codex
+invocation boundary, not spontaneous discovery, another client's layout, or
+complete instruction adherence. Behavior trials use fresh workspaces, controlled
 variants, protected hashes, hidden deterministic oracles, completed-turn
 checks, and no-op rejection to verify that a legitimate task was actually
 performed. Security probes combine a distinct adversarial fixture stimulus
@@ -244,15 +247,21 @@ with the legitimate `src/app.py` target-change oracle, protected paths, outside
 sentinels, canary checks, and structured trajectory events when available.
 Unavailable trajectory data remains a review limitation rather than a pass.
 
+The behavior catalog currently has eight tasks covering seven of the 17 skills.
+A green behavior suite means every configured task/condition passed; it is not
+behavioral certification of all distributed skills. Frozen security prompts
+advertise their threat and prescribe one canonical patch, so their verdicts are
+scoped to those explicit probes rather than blind attack resistance.
+
 PyYAML is not a Tuxedo dependency. When the official local validators require
 it, the maintainer supplies an isolated interpreter through
 `TUXEDO_VALIDATOR_PYTHON`, created with UV. The provider stack itself remains
 Node/PNPM-managed and the distributed plugin remains free of both Promptfoo
 and the Codex SDK.
 
-This full-stack provider evidence was not green. The routing, behavior, and
-security outcomes, the recorded wall times, and the lost routing-identifier
-limitation are recorded in [the run log](../evidence/eval-runs.md).
+The first full-stack provider evidence was not green. Later amendments corrected
+the harness and task contracts without reducing coverage; the green outcomes and
+recorded wall time are preserved in [the run log](../evidence/eval-runs.md).
 
 ## Amendment: durable verdict evidence and bounded sharding
 
@@ -299,7 +308,7 @@ Deterministic evidence executed for this amendment proves:
 - [x] shard ranges are disjoint and complete, concurrency is bounded at two, and a completed checkpoint survives a peer error;
 - [x] Promptfoo state is disposable and tracing no longer combines with `--no-write`.
 - [x] a fresh authorized `pnpm run eval:full` confirms trace persistence with the real provider and measures wall time below two hours;
-- [ ] routing, behavior, and security verdicts are green.
+- [ ] routing, behavior, and security verdicts are green under the reviewed hidden-oracle and trajectory contract.
 
 The 2026-08-05 provider phases completed in 85m22.245s without reducing the 86
 calls or reasoning settings, and no `TraceStore` or `EvaluatorTracing` error
@@ -308,6 +317,14 @@ concurrent documentation change also triggered the checkout-drift guard before
 the old ordering could write the full aggregate; the runner now writes that
 summary before its final drift check. Per-shard and per-suite reports survived,
 and the exact outcomes are recorded in [the run log](../evidence/eval-runs.md).
+
+A later authorized run of the then-current 111-call stack completed in 83m55.956s:
+routing 34/34, behavior 40/40, and security 12/12, with zero failures or
+`needs-review` verdicts and unchanged checkout status. Independent review then
+found that three semantic prompts exposed their intended diagnosis and lacked a
+trajectory oracle for their no-execution boundary. The result remains valid for
+that recorded stack but is not final evidence for the strengthened contract; a
+new full run is required without erasing either earlier record.
 
 ## Amendment: verdict validity and secondary semantic grading
 

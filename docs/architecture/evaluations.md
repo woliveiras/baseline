@@ -12,7 +12,7 @@ boundaries.
 | --- | --- | --- |
 | Provider execution, repetitions, latency, tokens, and local aggregation | Promptfoo adapter | `evals/promptfoo/promptfooconfig.yaml`, provider result validation |
 | Canonical behavior tasks and hidden deterministic checks | Tuxedo | `evals/tasks/`, `evals/verifiers.py`, `assertions/workspace.py` |
-| Routing positive/negative cases | Tuxedo catalog plus Promptfoo skill assertions | `tests/routing.yaml`, `tests.py`, `assertions/routing.py`; metadata remains heuristic |
+| Explicit skill-invocation positive/negative cases | Tuxedo catalog plus generated Promptfoo requests and skill assertions | `tests/routing.yaml`, adapter transformation in `tests.py`, `assertions/routing.py`; Codex metadata remains heuristic |
 | Variant comparisons | Tuxedo workspace preparation | baseline/core/focal/broad/current/proposed roots and distinct fingerprints |
 | Security regression probes | Tuxedo fixtures and assertions | every frozen probe has a distinct stimulus, a legitimate `src/app.py` oracle, and outside-canary checks |
 | Red-team generation and review | Promptfoo, explicitly invoked | `eval:redteam:generate`, `eval:redteam:review`; never part of `eval:full` |
@@ -30,7 +30,7 @@ boundaries.
 | `EV-PRV-01` | Persist only sanitized verdict evidence, never model output, prompts, traces, credentials, or raw responses. | A synthetic secret in provider output is absent from the persisted report while the assertion reason remains. | independent |
 | `EV-SEC-01` | Normalize bridge-provided path lists before applying security change oracles. | Unit tests pass both native lists and JSON-serialized lists and require the declared allowed change to pass. | independent |
 | `EV-SST-01` | Frozen security probes vary the adversarial stimulus, not the legitimate patch implementation, so coding-style variance cannot obscure the guardrail result. | Every generated security request requires the same canonical `return max(0, value)` patch that the deterministic target oracle inspects; protected-path, trajectory, outside-sentinel, and canary checks remain unchanged. | spec-derived |
-| `EV-TIM-01` | Record actual suite wall time and do not transfer a timing claim across material call-count changes. | The 2026-08-05 run recorded 85m22.245s for 86 target calls; the amended 111-call stack requires fresh timing evidence. | external |
+| `EV-TIM-01` | Record actual suite wall time and do not transfer a timing claim across material call-count changes. | The first green 2026-08-05 stack recorded 83m55.956s for 86 target calls plus 25 secondary judgments, below the two-hour bound; independent review requires fresh timing for the strengthened hidden-oracle/trajectory contract. | external |
 | `EV-VRD-01` | Preserve `pass`, `fail`, and `needs-review` as distinct verdicts; a hard deterministic failure always outranks pending secondary review. | Synthetic Promptfoo rows cover review-only and mixed hard-failure/review components, and the workspace adapter delegates only after deterministic checks pass. | spec-derived |
 | `EV-REG-01` | Recognize a direct literal upper-bound regression assertion anywhere in a collected pytest function or unittest method, while rejecting unreachable nested assertions. | AST fixtures cover pytest `assert`, `unittest.TestCase.assertEqual`, a valid second assertion, and assertions under `if False`. | independent |
 | `EV-FIX-01` | A focused defect fixture exposes the reported failing boundary while preserving visible passing evidence for adjacent established behavior. | The clamp fixture starts with working lower-bound and in-range tests, fails only the reported upper-bound criterion, and retains a hidden oracle over all three behaviors. | independent |
@@ -39,7 +39,8 @@ boundaries.
 | `EV-JDG-01` | Semantic behavior cases receive a secondary rubric through the dedicated ChatGPT/Codex login; its result matters only when deterministic checks pass. | Generated-test inspection proves only semantic tasks attach an explicit read-only, no-network `openai:codex-sdk` grader with dedicated `CODEX_HOME` and an empty isolated working directory. | implementation-aware |
 | `EV-DLV-01` | When an isolated semantic judge can inspect only the final response, the task must state which decisions from its durable design artifact the completion report must summarize. | The multi-module task requires the same boundary, translation, trade-off, reversibility, and implementation-status evidence in `DESIGN.md` and the final response; the rubric remains unchanged. | spec-derived |
 | `EV-REP-01` | Every write-capable repetition starts from a fresh fixture and workspace; no Promptfoo process-level repeat may reuse mutated state. | The runner rejects `repeat != 1`, and compare executes three independent single-repetition processes before aggregating their sanitized reports. | independent |
-| `EV-ROA-01` | An analysis-only task may inspect its fixture but reports contradictions and proposed corrections without executing project code or tests or creating files, caches, matrices, or reconciliation artifacts. | Task prompts permit read-only commands while prohibiting execution and workspace mutation; contract and skill tests preserve the same authority boundary. | spec-derived |
+| `EV-ROA-01` | An analysis-only task may inspect its fixture but must derive the hidden diagnosis itself, without executing project code or tests or creating files, caches, matrices, or reconciliation artifacts. | Prompts contain only authority constraints, while task rubrics retain the hidden semantic criteria. A structured-trajectory allowlist accepts read-only inspection, rejects runtimes and mutating commands, and returns `needs-review` when trajectory evidence is unavailable. | independent |
+| `EV-TRC-01` | Every evaluation row carries a stable criterion identifier into sanitized evidence. | Routing and security case IDs are criterion IDs; behavior tasks declare unique `BH-*` IDs; generator and report tests preserve them. | spec-derived |
 
 ## Isolation and repeatability
 
@@ -156,6 +157,10 @@ and behavior, and `eval:security` runs the frozen security probes. The ordinary
 deterministic checks remain the fast local feedback path; the provider suites
 are explicit empirical evidence and are not a pre-push gate.
 
+Every command above that reaches a model/provider requires explicit maintainer
+authority, including smoke, skills, security, compare, and red-team execution.
+The narrower commands reduce scope and cost; they do not imply authority.
+
 Use the narrower commands when the full gate is disproportionate:
 
 ```bash
@@ -173,14 +178,21 @@ red-team command is implied by ordinary validation or `eval:full`.
 ## Residual limitations
 
 The Codex `skill-used` signal and `metadata.skillCalls` are provider heuristics,
-not proof of adherence. Security probes exercise frozen local stimuli and a
-small deterministic oracle; they do not certify universal security, silent
-credential reads, network infrastructure, or all possible prompt-injection
-trajectories. The secondary rubric uses the same Codex model family rather than
-an independent judge, so repeated runs and deterministic evidence remain
-necessary before comparative inference. Model, provider, CLI, task, fixture, and dependency upgrades
-require fresh evidence and review. The existing `evals/run.py` remains until
-parity evidence supports a separate reduction change.
+not proof of adherence. The routing suite measures explicit invocation through
+the Codex `.agents/skills/` materialization; it does not prove spontaneous
+discovery or another client's layout. The behavior catalog contains eight tasks
+covering seven of the 17 distributed skills, so 40/40 means the configured
+catalog passed, not that every skill has behavioral evidence. Security probes
+are frozen, use one canonical patch, and explicitly warn about each attack;
+12/12 proves those advertised probes only, not blind prompt-injection
+resistance, universal security, silent credential reads, or network
+infrastructure. The secondary rubric uses the same Codex model family rather
+than an independent judge. The account-selected model is recorded only as
+`codex-cli-default`, so its resolved identity is uncontrolled; do not compare
+runs longitudinally as model-controlled evidence without a resolved model ID.
+Model, provider, CLI, task, fixture, and dependency upgrades require fresh
+evidence and review. The existing `evals/run.py` remains until parity evidence
+supports a separate reduction change.
 
 See the [decision record](../decisions/0001-use-promptfoo-as-evaluation-orchestrator.md)
 for the trade-off and confirmation checklist.

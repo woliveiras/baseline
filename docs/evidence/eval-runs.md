@@ -74,15 +74,8 @@ Collected before dedicated Codex authentication was valid.
 
 ## Open items
 
-- Rerun routing to verify the two narrowed skill boundaries and the corrected
-  `negative-refine` oracle.
-- Rerun behavior with the attached secondary graders and corrected regression
-  and multi-module contracts.
-- Correct the legitimate task failure in `steganographic-exfiltration` and
-  rerun security.
-- Run `pnpm run eval:full` again after those corrections to produce one green,
-  internally aggregated result. The current evidence is intentionally not
-  classified as green.
+- The items recorded by the non-green runs below were resolved and rerun in the
+  green full-stack entry at the end of this log.
 
 ## 2026-08-05 — focused regression-fixture correction
 
@@ -157,3 +150,37 @@ Collected before dedicated Codex authentication was valid.
   these corrections. Fresh empirical verdicts remain pending explicit authority.
 - The previous 85m22.245s measurement covered 86 target calls. Whether the new
   111-call stack remains below two hours is unverified.
+
+## 2026-08-05 — first green full-stack result, superseded by review
+
+- Before correction, the fresh full run completed in 80m47.874s and preserved
+  all non-green evidence: routing 30/34, behavior 36/40, and security 10/12.
+  The exact failures were reproduced or isolated before changes were accepted.
+- Focused post-correction evidence passed: the three read-only semantic cases
+  15/15 across baseline/core/focal/broad/current, the four affected routing
+  cases 4/4, and the two previously failing security probes 2/2. Independent
+  review later invalidated the semantic 15/15 as final evidence because those
+  prompts exposed too much of their hidden diagnosis; it also classified the
+  explicit-invocation routing result as a different construct from spontaneous
+  discovery. Those findings do not erase the measured run, but prevent using it
+  as the final integral verdict.
+- `pnpm run eval:full`, with the official validators supplied PyYAML only through
+  an isolated UV environment, passed routing 34/34, behavior 40/40, and security
+  12/12. The full aggregate passed 86/86 target trials with zero failures and
+  zero `needs-review` verdicts in 5035.956 seconds (83m55.956s). The 25 attached
+  semantic judgments bring the model-call upper bound to 111. Target counts,
+  conditions, reasoning settings, and concurrency limits were unchanged; the
+  routing construct had changed to explicit workspace-local invocation.
+- `pnpm run eval:smoke` then passed 4/4 in 267.928 seconds.
+- Both runs used the authenticated dedicated ChatGPT/Codex home, disabled
+  sharing and remote red-team generation, persisted no raw responses, and left
+  checkout status unchanged. The durable local reports are ignored JSON files
+  under `evals/promptfoo/results/`.
+- Full aggregate: `full-aggregate-1785982236766502000.json`, SHA-256
+  `95f8f065f4f2928bd7c433e9197689206f7238138e277b76de3c05af71d923ac`.
+  Smoke: `smoke-1785982531492755000.json`, SHA-256
+  `1797b559eadf84678cf995a7f07490144d84dcefc7ff7df6efd07dbd7c2e5e14`.
+- After review, the semantic prompts were returned to hidden-oracle form and a
+  structured-trajectory allowlist began enforcing read-only inspection. The
+  strengthened focused cases passed 15/15. A new full run is required before
+  the amended stack is classified green.
