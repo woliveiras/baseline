@@ -520,6 +520,7 @@ def run_promptfoo(
     timeout: int = 1800,
     codex_home: Path | None = None,
     shard: Shard | None = None,
+    provider_filter: str | None = None,
 ) -> SuiteOutcome:
     if repeat != 1:
         raise RuntimeError(
@@ -553,6 +554,8 @@ def run_promptfoo(
         ]
         if shard:
             command.extend(["--filter-range", shard.filter_range])
+        if provider_filter:
+            command.extend(["--filter-providers", provider_filter])
         result = _run(
             command,
             timeout=timeout,

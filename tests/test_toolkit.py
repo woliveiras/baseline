@@ -1787,10 +1787,14 @@ class EvaluationVerifierTests(unittest.TestCase):
                 PROMPTFOO_RUNNER, "_promptfoo_version", return_value="promptfoo-test"
             ):
                 PROMPTFOO_RUNNER.run_promptfoo(
-                    "security", promptfoo_root / "security-config.yaml", codex_home=dedicated_home
+                    "security",
+                    promptfoo_root / "security-config.yaml",
+                    codex_home=dedicated_home,
+                    provider_filter="current",
                 )
 
             self.assertNotIn("--no-write", captured["command"])
+            self.assertEqual("current", captured["command"][captured["command"].index("--filter-providers") + 1])
             state = Path(captured["env"]["PROMPTFOO_CONFIG_DIR"])
             self.assertTrue(state.is_absolute())
             self.assertNotEqual(Path.home() / ".promptfoo", state)
