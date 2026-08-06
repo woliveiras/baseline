@@ -36,7 +36,7 @@ The repository itself is the plugin. There is intentionally no separate installe
 
 1. **Add the skills.** Validate the repository with the current `plugin-creator` validator, then add it to a local Codex marketplace so the skills load in your agent. Publication and release are intentionally not automated here.
 2. **Opt in to Codex Rules (optional).** Copy [`templates/codex/tuxedo.rules`](templates/codex/tuxedo.rules) to `.codex/rules/tuxedo.rules` in a trusted project and restart Codex. The rules ask for human approval before push, destructive Git cleanup, release, publication, deploy, and infrastructure mutations, and forbid a few literal broad-deletion forms.
-3. **Follow the declarative workflow.** Start from the authorized task, define the appropriate fail-first oracle before production implementation, stay inside scope, review spec/tests/code separately, and inspect the staged candidate before a local commit.
+3. **Follow the declarative workflow.** Start from the authorized task, define the oracle and run its appropriate verification fail-first before production implementation, stay inside scope, review spec/tests/code separately, and inspect the staged candidate before a local commit.
 
 Once the skills are available, work normally: your agent picks the smallest relevant workflow, and the deep-work skills stay explicit. Each skill documents its own steps in its `SKILL.md`.
 
@@ -53,6 +53,7 @@ Tuxedo does not install lifecycle hooks or require UV or Python in consumer proj
 ## Documentation
 
 - **Use it:** this page, plus each skill's own `SKILL.md`.
+- **Learn the vocabulary:** the [repository glossary](GLOSSARY.md) defines oracle, evidence, provenance, fail-first, and the three review phases.
 - **Work on it:** the [documentation hub](docs/README.md) links the development guide, architecture, decisions (ADRs), research evidence, and the maintainer evaluation harness.
 
 ## From Geremmyas to Tuxedo

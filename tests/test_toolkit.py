@@ -60,6 +60,73 @@ PROMPTFOO_RUNNER = load_promptfoo_module(
 )
 
 
+def _markdown_section(text: str, heading: str) -> str:
+    match = re.search(rf"^## {re.escape(heading)}\s*$", text, re.MULTILINE)
+    if match is None:
+        return ""
+    remainder = text[match.end():]
+    next_heading = re.search(r"^## ", remainder, re.MULTILINE)
+    return remainder[:next_heading.start() if next_heading else None].strip()
+
+
+def glossary_contract_errors(text: str) -> set[str]:
+    """Validate semantic boundaries that simple heading checks cannot establish."""
+    headings = (
+        "Acceptance criterion",
+        "Behavior/oracle matrix",
+        "Evidence",
+        "Fail-first",
+        "Governing input",
+        "Invariant",
+        "Oracle",
+        "Provenance",
+        "Task-owned change",
+        "Three-phase review",
+        "Verification",
+    )
+    sections = {heading: _markdown_section(text, heading) for heading in headings}
+    errors = {f"missing-definition:{heading}" for heading, body in sections.items() if len(body.split()) < 8}
+
+    semantic_requirements = {
+        "acceptance-obligation": ("Acceptance criterion", "condition that must be true for a requirement to be satisfied"),
+        "acceptance-stable-id": ("Acceptance criterion", "stable ids"),
+        "oracle-result": ("Oracle", "expected observable result"),
+        "oracle-authority": ("Oracle", "governing input or an independent authority"),
+        "oracle-not-implementation": ("Oracle", "not from the new implementation"),
+        "oracle-test-mechanism": ("Oracle", "a test is one mechanism that evaluates observed behavior against an oracle"),
+        "oracle-test-evidence-distinct": ("Oracle", "related but distinct"),
+        "matrix-mapping": ("Behavior/oracle matrix", "maps each acceptance criterion and relevant scenario"),
+        "matrix-invariant": ("Behavior/oracle matrix", "invariant"),
+        "matrix-observable-oracle": ("Behavior/oracle matrix", "observable oracle"),
+        "matrix-provenance": ("Behavior/oracle matrix", "provenance"),
+        "matrix-planned-verification": ("Behavior/oracle matrix", "planned verification"),
+        "matrix-evidence": ("Behavior/oracle matrix", "resulting evidence"),
+        "evidence-record": ("Evidence", "durable record of what was actually inspected or executed and what happened"),
+        "evidence-not-proof": ("Evidence", "not by itself proof"),
+        "provenance-origin": ("Provenance", "where an oracle came from"),
+        "provenance-exposure": ("Provenance", "how exposed its author was to the implementation"),
+        "provenance-per-oracle": ("Provenance", "record provenance per oracle"),
+        "fail-first-before-implementation": ("Fail-first", "before the production implementation"),
+        "fail-first-expected-reason": ("Fail-first", "fail for the expected reason"),
+        "fail-first-invalid-causes": ("Fail-first", "not valid fail-first evidence"),
+        "governing-input-authority": ("Governing input", "authoritative artifact that defines intent and scope"),
+        "governing-input-not-rewritten": ("Governing input", "must not be edited merely to make implementation or tests pass"),
+        "invariant-rule": ("Invariant", "condition that must remain true"),
+        "task-owned-authorized": ("Task-owned change", "created or modified to satisfy the authorized current task"),
+        "task-owned-no-silent-expansion": ("Task-owned change", "not task-owned unless the user explicitly adds them to scope"),
+        "review-spec-boundary": ("Three-phase review", "without using tests or implementation as justification"),
+        "review-test-boundary": ("Three-phase review", "without using the new implementation as justification"),
+        "review-code-boundary": ("Three-phase review", "complete implementation and diff"),
+        "review-contexts-distinct": ("Three-phase review", "information boundaries and findings must remain distinct"),
+        "verification-evaluates-oracle": ("Verification", "mechanism used to evaluate an oracle"),
+        "verification-does-not-invent-result": ("Verification", "do not let the mechanism or implementation invent the expected result"),
+    }
+    for error, (heading, required_text) in semantic_requirements.items():
+        if required_text not in sections[heading].lower():
+            errors.add(error)
+    return errors
+
+
 class ToolkitStructureTests(unittest.TestCase):
     def test_full_evaluation_is_explicit_and_not_a_push_gate(self):
         package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
@@ -125,6 +192,150 @@ class ToolkitStructureTests(unittest.TestCase):
         )
         positions = [section.index(marker) for marker in markers]
         self.assertEqual(sorted(positions), positions)
+
+    def test_contract_links_to_canonical_glossary(self):
+        """GL-001–GL-005: specialized contract terms have one discoverable meaning."""
+        contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        glossary_path = ROOT / "GLOSSARY.md"
+        self.assertTrue(glossary_path.is_file())
+        self.assertIn("[Repository glossary](GLOSSARY.md)", contract)
+        self.assertLess(
+            contract.index("[Repository glossary](GLOSSARY.md)"),
+            contract.index("spec -> behavior/oracle matrix"),
+        )
+
+        glossary = glossary_path.read_text(encoding="utf-8")
+        required_headings = (
+            "## Acceptance criterion",
+            "## Behavior/oracle matrix",
+            "## Evidence",
+            "## Fail-first",
+            "## Governing input",
+            "## Invariant",
+            "## Oracle",
+            "## Provenance",
+            "## Task-owned change",
+            "## Three-phase review",
+            "## Verification",
+        )
+        for heading in required_headings:
+            self.assertIn(heading, glossary)
+        self.assertEqual(set(), glossary_contract_errors(glossary))
+
+        empty_definitions = "# Glossary\n\n" + "\n\n".join(required_headings)
+        adversarial = {
+            "empty definitions": (empty_definitions, "missing-definition:Oracle"),
+            "heading prefix is not the oracle heading": (
+                glossary.replace("## Oracle\n", "## Oracle provenance\n"),
+                "missing-definition:Oracle",
+            ),
+            "acceptance criterion is optional": (
+                glossary.replace("condition that must be true for a requirement to be satisfied", "optional note about a requirement"),
+                "acceptance-obligation",
+            ),
+            "implementation defines oracle": (
+                glossary.replace("not from the new implementation", "from the new implementation"),
+                "oracle-not-implementation",
+            ),
+            "oracle test and evidence collapsed": (
+                glossary.replace("related but distinct", "equivalent"),
+                "oracle-test-evidence-distinct",
+            ),
+            "matrix only lists fields": (
+                glossary.replace("maps each acceptance criterion and relevant scenario", "lists fields"),
+                "matrix-mapping",
+            ),
+            "matrix omits invariant": (
+                glossary.replace("to its invariant, observable oracle", "to its observable oracle"),
+                "matrix-invariant",
+            ),
+            "matrix omits observable oracle": (
+                glossary.replace("observable oracle", "expected value"),
+                "matrix-observable-oracle",
+            ),
+            "matrix omits provenance": (
+                glossary.replace("observable oracle, provenance", "observable oracle"),
+                "matrix-provenance",
+            ),
+            "matrix omits planned verification": (
+                glossary.replace("planned verification", "planned work"),
+                "matrix-planned-verification",
+            ),
+            "matrix omits evidence": (
+                glossary.replace("and resulting evidence", "and result"),
+                "matrix-evidence",
+            ),
+            "evidence is not an execution record": (
+                glossary.replace("durable record of what was actually inspected or executed and what happened", "prediction of what might happen"),
+                "evidence-record",
+            ),
+            "evidence treated as proof": (
+                glossary.replace("not by itself proof", "by itself proof"),
+                "evidence-not-proof",
+            ),
+            "provenance assigned per file": (
+                glossary.replace("Record provenance per oracle", "Record provenance per file"),
+                "provenance-per-oracle",
+            ),
+            "provenance omits oracle origin": (
+                glossary.replace("Where an oracle came from", "A label"),
+                "provenance-origin",
+            ),
+            "provenance omits implementation exposure": (
+                glossary.replace("how exposed its author was to the implementation", "how the file is named"),
+                "provenance-exposure",
+            ),
+            "broken setup accepted as fail-first": (
+                glossary.replace("not valid fail-first evidence", "valid fail-first evidence"),
+                "fail-first-invalid-causes",
+            ),
+            "governing input may be rewritten to pass": (
+                glossary.replace("must not be edited merely to make implementation or tests pass", "may be edited to make implementation or tests pass"),
+                "governing-input-not-rewritten",
+            ),
+            "governing input is not authoritative": (
+                glossary.replace("authoritative artifact that defines intent and scope", "optional artifact unrelated to intent and scope"),
+                "governing-input-authority",
+            ),
+            "invariant need not remain true": (
+                glossary.replace("condition that must remain true", "condition that may change freely"),
+                "invariant-rule",
+            ),
+            "all changes become task-owned": (
+                glossary.replace("not task-owned unless the user explicitly adds them to scope", "automatically task-owned"),
+                "task-owned-no-silent-expansion",
+            ),
+            "task ownership ignores authorization": (
+                glossary.replace("created or modified to satisfy the authorized current task", "found anywhere in the repository"),
+                "task-owned-authorized",
+            ),
+            "spec review uses implementation": (
+                glossary.replace("without using tests or implementation as justification", "using tests and implementation as justification"),
+                "review-spec-boundary",
+            ),
+            "test review uses implementation": (
+                glossary.replace("without using the new implementation as justification", "using the new implementation as justification"),
+                "review-test-boundary",
+            ),
+            "code review excludes complete diff": (
+                glossary.replace("complete implementation and diff", "selected implementation snippets"),
+                "review-code-boundary",
+            ),
+            "review contexts collapsed": (
+                glossary.replace("information boundaries and findings must remain distinct", "information boundaries may be shared"),
+                "review-contexts-distinct",
+            ),
+            "verification does not evaluate oracle": (
+                glossary.replace("mechanism used to evaluate an oracle", "mechanism used to copy implementation output"),
+                "verification-evaluates-oracle",
+            ),
+        }
+        for label, (candidate, expected_error) in adversarial.items():
+            with self.subTest(label=label):
+                self.assertIn(expected_error, glossary_contract_errors(candidate))
+
+        docs_hub = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+        self.assertIn("[Repository glossary](../GLOSSARY.md)", docs_hub)
 
     def test_public_docs_do_not_claim_lifecycle_enforcement(self):
         """DW-004/DW-006: public guarantees and experiment boundary stay honest."""

@@ -14,6 +14,8 @@ decisions say why something was chosen, and evidence records what was measured.
 - [Engineering contract](../AGENTS.md) is the operating agreement: the fidelity
   chain, proportionality tiers, authority and evidence rules, toolchain
   conventions, and the required checks. Read it before changing behavior.
+- [Repository glossary](../GLOSSARY.md) defines oracle, behavior/oracle matrix,
+  oracle provenance, fail-first, task ownership, and the review phases.
 - [Development guide](development.md) covers the repository layout, the
   toolchain, how to develop a change, and how to test it.
 

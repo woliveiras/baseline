@@ -1,5 +1,5 @@
 # Behavior and oracle matrix
 
-| Criterion | Scenario | Invariant | Observable oracle | Provenance | Planned test | Evidence |
+| Criterion | Scenario | Invariant | Observable oracle | Oracle provenance | Planned verification | Evidence |
 | --- | --- | --- | --- | --- | --- | --- |
 | AC-001 | normal / edge / failure | | | spec-derived | | |

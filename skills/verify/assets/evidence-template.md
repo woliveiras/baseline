@@ -2,7 +2,7 @@
 
 ## Fail-first evidence
 
-| Criterion | Test or probe | Test-tree digest | Command | Expected failure | Observed failure | Provenance |
+| Criterion | Verification or probe | Test-tree digest | Command | Expected failure | Observed failure | Oracle provenance |
 | --- | --- | --- | --- | --- | --- | --- |
 | AC-001 | | | | | | spec-derived |
 

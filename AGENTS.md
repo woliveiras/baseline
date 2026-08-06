@@ -4,6 +4,8 @@ Tuxedo is a portable, spec-driven engineering toolkit. The repository is the pro
 
 ## Fidelity chain
 
+Use the [Repository glossary](GLOSSARY.md) for the canonical meaning of specialized workflow terms.
+
 For material behavior changes, preserve traceability through:
 
 `spec -> behavior/oracle matrix -> tests -> implementation -> evidence -> final review`
@@ -11,7 +13,7 @@ For material behavior changes, preserve traceability through:
 - Read the complete governing spec before implementing or reviewing it. Metadata is only for routing.
 - Treat the spec as canonical intent, not immutable truth. Correct ambiguity, contradiction, or an invalid premise explicitly and reconcile every downstream artifact.
 - Give acceptance criteria stable IDs. Link tests and evidence to those IDs.
-- Classify test evidence as `spec-derived`, `independent`, `implementation-aware`, `external`, or `diagnostic-probe`.
+- Classify each oracle's provenance as `spec-derived`, `independent`, `implementation-aware`, `external`, or `diagnostic-probe`.
 - Never let a test silently redefine behavior because it was written after the implementation.
 - Review in three phases: spec without implementation, tests without the new implementation, then code with spec, matrix, tests, diff, and evidence.
 - Report final review findings under `Spec`, `Standards`, and `Risk`.
@@ -39,7 +41,7 @@ When conditions disagree, use the higher tier. A familiar implementation does no
 
 ## Declarative task flow
 
-- **Oracle before implementation:** For testable behavior, define the smallest suitable unit, integration, contract, end-to-end, static, or inspection oracle and run it fail-first before production implementation. When no automated oracle is appropriate, record the reason and the strongest available verification before editing production behavior.
+- **Oracle before implementation:** For testable behavior, define the expected observable result as the oracle, choose the smallest suitable unit, integration, contract, end-to-end, static, or inspection verification, and run that verification fail-first before production implementation. When automated verification is not appropriate, record the reason, the oracle, and the strongest available manual verification before editing production behavior.
 - **Authorized scope:** Derive the allowed files and behavior from the current spec, task, or plan. Preserve pre-existing and unrelated changes; do not broaden the task because adjacent work is useful.
 - **Review before completion:** Reconstruct spec review without tests or implementation, test review without the new implementation, and code review with the complete diff and fresh evidence. Passing tests alone do not establish fidelity.
 - **Task-owned commit:** Before a local commit, inspect status, unstaged diff, staged diff, and untracked files; stage explicit task-owned paths or hunks and re-read the complete cached diff.
