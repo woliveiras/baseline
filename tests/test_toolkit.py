@@ -1712,10 +1712,13 @@ class EvaluationVerifierTests(unittest.TestCase):
             self.assertTrue(outcome.report_path.is_file())
             report_text = outcome.report_path.read_text(encoding="utf-8")
             self.assertNotIn("TOP_SECRET_MODEL_OUTPUT", report_text)
-            self.assertIn("expected skill was not observed", report_text)
+            self.assertNotIn("expected skill was not observed", report_text)
+            self.assertNotIn("routing assertion failed", report_text)
             report = json.loads(report_text)
             self.assertEqual(100, report["promptfoo_exit_code"])
             self.assertEqual("RT-REFINE-01", report["runs"][0]["criterion_id"])
+            self.assertEqual("fail", report["runs"][0]["result_code"])
+            self.assertEqual("fail", report["runs"][0]["deterministic_checks"][0]["result_code"])
 
     def test_promptfoo_uses_disposable_trace_state_and_not_no_write(self):
         """EV-ISO-01: the persisted eval row and its traces share disposable state."""

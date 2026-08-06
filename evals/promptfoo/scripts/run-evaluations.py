@@ -288,8 +288,8 @@ def _safe_metadata(row: dict[str, Any]) -> dict[str, Any]:
     return {"skills_observed": observed}
 
 
-def _safe_reason(value: Any) -> str:
-    return _redact(str(value or ""))[:1000]
+def _safe_label(value: Any) -> str:
+    return _redact(str(value or ""))[:200]
 
 
 def _safe_token_usage(value: Any) -> dict[str, int | float]:
@@ -313,7 +313,7 @@ def _safe_component_results(grading: dict[str, Any]) -> list[dict[str, Any]]:
             "pass": component.get("pass"),
             "score": component.get("score"),
             "needs_review": _needs_review(component),
-            "reason": _safe_reason(component.get("reason")),
+            "result_code": "needs-review" if _needs_review(component) else ("pass" if component.get("pass") is True else "fail"),
             "assertion_type": str(assertion.get("type") or "unknown"),
         })
     return safe
@@ -399,12 +399,12 @@ def _report(
             provider = provider.get("label") or provider.get("id") or "unknown"
         report_rows.append({
             "test_id": _row_id(row, index),
-            "criterion_id": _safe_reason(variables.get("criterion_id")) if variables.get("criterion_id") else None,
-            "provider": _safe_reason(provider),
+            "criterion_id": _safe_label(variables.get("criterion_id")) if variables.get("criterion_id") else None,
+            "provider": _safe_label(provider),
             "status": status,
             "duration_ms": response.get("latencyMs") or row.get("latencyMs"),
             "tokens": _safe_token_usage(response.get("tokenUsage") or row.get("tokenUsage")),
-            "reason": _safe_reason(grading.get("reason")),
+            "result_code": status,
             "deterministic_checks": _safe_component_results(grading),
             "secondary_scores": {"score": grading.get("score")} if "score" in grading else {},
             "observed": _safe_metadata(row),
