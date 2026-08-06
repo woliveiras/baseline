@@ -230,10 +230,10 @@ The dated smoke and authorized full-run results are recorded in
 The maintainer provider suites are exposed through `pnpm run eval:full`. This
 command is an explicit empirical evaluation stack, not a pre-push hook and not
 an automatic Git gate. It runs the official validators, deterministic checks,
-Promptfoo configuration validation, fixture checks, 34 routing cases, 40
+Promptfoo configuration validation, fixture checks, 40 routing cases, 40
 behavior trials, and 12 frozen security probes before checking that the Git
-status is unchanged. The expected upper bound is 86 target trials plus 25
-secondary semantic judgments, or 111 model calls; local JSON
+status is unchanged. The expected upper bound is 92 target trials plus 25
+secondary semantic judgments, or 117 model calls; local JSON
 reports under `evals/promptfoo/results/` preserve per-row evidence without
 entering the repository.
 
@@ -294,10 +294,10 @@ Every Promptfoo provider or red-team process now uses a
 evaluation row required by linked trace spans. That database is removed with
 the workspace after sanitized evidence is extracted; personal Promptfoo state
 is neither read nor written. Routing uses
-two zero-based, end-exclusive shards (`0:17`, `17:34`) and behavior uses four
+two zero-based, end-exclusive shards (`0:20`, `20:40`) and behavior uses four
 (`0:2`, `2:4`, `4:6`, `6:8`). At most two shards run concurrently and each
 Promptfoo process keeps provider concurrency one. Security remains a single
-suite. The ranges preserve all 86 calls and unchanged reasoning settings.
+suite. The ranges preserve all 92 target calls and unchanged reasoning settings.
 Completed shard reports are checkpoints; successful shard sets also produce a
 suite aggregate. Assertion failures do not prevent later authorized suites,
 and `eval:full` writes a full aggregate with total wall duration before it
@@ -394,6 +394,32 @@ Amendment evidence:
 - [x] independent reports retain repetition identity in the aggregate;
 - [x] fingerprint drift prevents aggregation;
 - [ ] a real repeated compare run has been executed with a distinct proposed root.
+
+## Amendment: indirect and composed skill routing
+
+The original 34 routing cases measured 17 direct positive invocations and 17
+negative boundaries. They did not establish that Codex could select Tuxedo from
+an outcome-oriented request or compose two workflows with distinct owners.
+
+SPEC-0003 adds three indirect cases for refinement, specification, and review,
+plus three composition cases for specification/TDD, boundary design/decision,
+and CI/security. Indirect prompts omit skill names and installed paths. Composed
+cases require both expected skill calls in Codex SDK metadata; observing only
+one is a failure, not partial success. The suite therefore has 40 routing
+targets, 92 target calls overall, and an upper bound of 117 model calls after
+the existing 25 semantic judges. Routing shards are now `0:20` and `20:40`.
+
+Deterministic evidence:
+
+- [x] generated indirect requests contain neither the expected skill name nor an injected skill path;
+- [x] generated composition cases preserve both expected skills and both blocking assertions;
+- [x] the structured routing adapter fails when any expected composed skill is absent;
+- [x] shard ranges are disjoint and cover all 40 routing cases;
+- [ ] the six new provider cases pass with the authenticated dedicated Codex home.
+
+Historical 34-case runs remain evidence for their recorded snapshots only. They
+do not prove this expanded catalog contract, and no complete 117-call run is
+claimed by this amendment.
 
 Re-evaluate this decision if Promptfoo drops Codex support, the Codex SDK or App Server changes materially, Promptfoo requires cloud sharing, adapters duplicate more logic than they remove, hidden oracles cannot be integrated, workspace or credential isolation weakens, the full evaluation becomes impractical for empirical review, another framework provides superior integration with less evidence loss, or `evals/run.py` becomes demonstrably redundant.
 

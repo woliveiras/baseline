@@ -37,13 +37,24 @@ def _routing_case(item: dict[str, Any]) -> dict[str, Any]:
     contract = _routing_contract()
     vars = dict(item)
     vars["criterion_id"] = str(item["id"])
-    vars["expected_skill"] = item.get("skill") if item.get("kind") == "positive" else item.get("expected_skill")
+    vars.pop("directed", None)
+    expected_skills = item.get("skills")
+    if expected_skills:
+        vars["expected_skills"] = ",".join(str(skill) for skill in expected_skills)
+        vars.pop("skills", None)
+        vars.pop("skill", None)
+    else:
+        vars["expected_skill"] = item.get("skill") if item.get("kind") == "positive" else item.get("expected_skill")
     vars["avoid_skill"] = None if item.get("kind") == "positive" else item.get("avoid_skill")
-    expected_skill = vars.get("expected_skill")
-    if expected_skill:
+    routed_skills = (
+        str(vars["expected_skills"]).split(",")
+        if vars.get("expected_skills")
+        else ([vars["expected_skill"]] if vars.get("expected_skill") else [])
+    )
+    for expected_skill in routed_skills:
         skill_path = f".agents/skills/{expected_skill}/SKILL.md"
         request = str(vars["request"])
-        if skill_path not in request:
+        if item.get("directed", True) and skill_path not in request:
             vars["request"] = f"{request} {contract['expected_skill_suffix'].format(skill=expected_skill)}"
     avoid_skill = vars.get("avoid_skill")
     if avoid_skill:
@@ -60,7 +71,8 @@ def _routing_case(item: dict[str, Any]) -> dict[str, Any]:
         }
     ]
     if item.get("kind") == "positive":
-        assertions.append({"type": "skill-used", "value": item["skill"]})
+        for expected_skill in routed_skills:
+            assertions.append({"type": "skill-used", "value": expected_skill})
     else:
         assertions.append({"type": "not-skill-used", "value": item["avoid_skill"]})
         if item.get("expected_skill"):

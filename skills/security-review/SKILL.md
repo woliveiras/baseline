@@ -1,6 +1,6 @@
 ---
 name: security-review
-description: Review a software change for technology-neutral security, privacy, data-loss, and authority risks using verifiable evidence. Use when behavior crosses trust boundaries, handles untrusted input or sensitive data, changes privileges, or performs destructive/external actions; defer stack-specific remediation to dedicated future skills.
+description: Review a software change or CI workflow for technology-neutral security, privacy, data-loss, and authority risks using verifiable evidence. Use when behavior crosses trust boundaries, executes fork-controlled or other untrusted input, handles secrets or sensitive data, changes permissions or privileges, or performs destructive/external actions; compose with the owning workflow and defer stack-specific remediation to dedicated skills.
 ---
 
 # Security Review

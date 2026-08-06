@@ -63,7 +63,7 @@ class SuiteOutcome(NamedTuple):
 
 
 SUITE_SHARDS = {
-    "routing": (Shard("1-of-2", "0:17"), Shard("2-of-2", "17:34")),
+    "routing": (Shard("1-of-2", "0:20"), Shard("2-of-2", "20:40")),
     "behavior": (
         Shard("1-of-4", "0:2"),
         Shard("2-of-4", "2:4"),
@@ -521,6 +521,7 @@ def run_promptfoo(
     codex_home: Path | None = None,
     shard: Shard | None = None,
     provider_filter: str | None = None,
+    case_pattern: str | None = None,
 ) -> SuiteOutcome:
     if repeat != 1:
         raise RuntimeError(
@@ -556,6 +557,8 @@ def run_promptfoo(
             command.extend(["--filter-range", shard.filter_range])
         if provider_filter:
             command.extend(["--filter-providers", provider_filter])
+        if case_pattern:
+            command.extend(["--filter-pattern", case_pattern])
         result = _run(
             command,
             timeout=timeout,
@@ -864,11 +867,22 @@ def run_full_evaluation() -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--suite", choices=("smoke", "skills", "security", "compare", "redteam-generate", "redteam-review", "redteam-full", "full"), required=True)
+    parser.add_argument("--suite", choices=("smoke", "routing", "skills", "security", "compare", "redteam-generate", "redteam-review", "redteam-full", "full"), required=True)
+    parser.add_argument("--case-pattern", help="Promptfoo description regex; supported only by the routing suite")
     args = parser.parse_args(argv)
     try:
+        if args.case_pattern and args.suite != "routing":
+            raise RuntimeError("--case-pattern is supported only with --suite routing")
         if args.suite == "smoke":
             _require_passing_outcomes([run_promptfoo("smoke", PROMPTFOO_ROOT / "smoke-config.yaml")])
+        elif args.suite == "routing":
+            _require_passing_outcomes([
+                run_promptfoo(
+                    "routing",
+                    PROMPTFOO_ROOT / "routing-config.yaml",
+                    case_pattern=args.case_pattern,
+                )
+            ])
         elif args.suite == "skills":
             _run_skills()
         elif args.suite == "security":

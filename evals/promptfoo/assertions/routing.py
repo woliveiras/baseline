@@ -27,12 +27,22 @@ def _skill_names(context: dict[str, Any]) -> list[str]:
 
 def get_assert(output: str, context: dict[str, Any]) -> dict[str, Any]:
     expected = context.get("vars", {}).get("expected_skill")
+    expected_many_raw = context.get("vars", {}).get("expected_skills") or ""
+    if isinstance(expected_many_raw, str):
+        expected_many = [name for name in expected_many_raw.split(",") if name]
+    elif isinstance(expected_many_raw, list):
+        expected_many = [name for name in expected_many_raw if isinstance(name, str)]
+    else:
+        expected_many = []
     avoided = context.get("vars", {}).get("avoid_skill")
     observed = _skill_names(context)
     if not output.strip():
         return {"pass": False, "score": 0, "reason": "provider returned an empty final response"}
     if expected and expected not in observed:
         return {"pass": False, "score": 0, "reason": f"expected heuristic skill call {expected!r}; observed={observed!r}"}
+    missing = [name for name in expected_many if name not in observed]
+    if missing:
+        return {"pass": False, "score": 0, "reason": f"expected heuristic skill calls {missing!r}; observed={observed!r}"}
     if avoided and avoided in observed:
         return {"pass": False, "score": 0, "reason": f"forbidden heuristic skill call {avoided!r}; observed={observed!r}"}
     return {

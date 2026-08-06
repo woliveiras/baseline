@@ -106,7 +106,7 @@ pnpm run eval:full
 ```
 
 This runs the official validators, Python and shell checks, all six Promptfoo
-config validations, fixture checks, 34 routing cases, 40 behavior-provider
+config validations, fixture checks, 40 routing cases, 40 behavior-provider
 trials, and 12 security probes, then checks that Git status is unchanged. It
 requires an authenticated dedicated evaluation home and consumes model quota.
 Routing is split into two disjoint shards and behavior into four disjoint
@@ -119,9 +119,9 @@ three suite outcomes exist, `eval:full` writes a full aggregate with total wall
 duration before checking final assertion verdicts or concurrent checkout drift.
 It then returns one aggregate failure if any outcome failed or needs review.
 
-The 86 target-agent calls remain the expected upper bound for one non-repeated
+The 92 target-agent calls are the expected upper bound for one non-repeated
 run. The five semantic tasks across five behavior conditions add up to 25
-secondary Codex rubric calls, for an upper bound of 111 model calls. Sharding
+secondary Codex rubric calls, for an upper bound of 117 model calls. Sharding
 changes scheduling, not coverage. Authoritative wall duration
 and per-row evidence are recorded in ignored JSON reports under
 `evals/promptfoo/results/`, and dated run outcomes are recorded in
@@ -131,8 +131,9 @@ itself authorize a push.
 
 The evidence chain answers three different questions:
 
-1. Routing: when a request explicitly invokes an applicable named skill, does
-   the agent read it, and does it avoid an explicitly inapplicable skill? Each
+1. Routing: when a request directly invokes a skill, implies one from the task,
+   or legitimately requires composition, does the agent read the expected
+   workflow set and avoid explicitly inapplicable skills? Each
    applicable request names the workspace-local `SKILL.md`; the assertion uses
    structured Codex provider metadata for observed reads. This deterministic
    invocation signal is not evidence of spontaneous skill discovery or proof

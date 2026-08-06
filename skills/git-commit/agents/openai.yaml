@@ -2,3 +2,5 @@ interface:
   display_name: "Git Commit"
   short_description: "Create an explicitly requested safe local commit"
   default_prompt: "Use $git-commit to commit the verified task-owned slice safely."
+policy:
+  allow_implicit_invocation: false

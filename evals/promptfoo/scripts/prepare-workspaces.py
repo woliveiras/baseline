@@ -209,6 +209,8 @@ def prepare(suite: str, workspace_root: Path, current_root: Path, proposed_root:
                 _materialize(_security_fixture(item), destination)
             elif item.get("task_id"):
                 _materialize(_behavior_fixture(str(item["task_id"])), destination)
+            elif isinstance(item.get("fixture"), dict):
+                _materialize(item["fixture"], destination)
             subprocess.run(["git", "init", "--quiet", str(destination)], check=True, capture_output=True, text=True)
             source_root = proposed_root if condition == "proposed" else current_root
             if source_root is None:

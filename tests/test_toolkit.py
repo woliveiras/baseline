@@ -192,6 +192,8 @@ class ToolkitStructureTests(unittest.TestCase):
         )
         positions = [section.index(marker) for marker in markers]
         self.assertEqual(sorted(positions), positions)
+        self.assertIn("smallest complete set of applicable workflows", section)
+        self.assertIn("Do not stop after the first match", section)
 
     def test_contract_links_to_canonical_glossary(self):
         """GL-001–GL-005: specialized contract terms have one discoverable meaning."""
@@ -382,6 +384,127 @@ class ToolkitStructureTests(unittest.TestCase):
         for name in {"brainstorming", "session-bridge", "improve-architecture"}:
             ui = (ROOT / "skills" / name / "agents" / "openai.yaml").read_text()
             self.assertIn("allow_implicit_invocation: false", ui)
+
+    def test_skill_catalog_contract_covers_every_distributed_skill(self):
+        catalog = (ROOT / "skills" / "catalog.md").read_text(encoding="utf-8")
+        normalized_catalog = catalog.replace("`", "")
+        rows = re.findall(
+            r"^\| `([^`]+)` \| ([^|]+) \| ([^|]+) \| ([^|]+) \| ([^|]+) \| ([^|]+) \| ([^|]+) \|$",
+            catalog,
+            re.MULTILINE,
+        )
+        self.assertEqual(EXPECTED_SKILLS, {row[0] for row in rows})
+        self.assertEqual(len(EXPECTED_SKILLS), len(rows))
+        for row in rows:
+            self.assertTrue(all(cell.strip() for cell in row[1:]), row[0])
+        for required in (
+            "spec owns the canonical behavior/oracle matrix",
+            "verify reviews the canonical matrix",
+            "design-deep-modules owns boundary options",
+            "decision-framework owns selection",
+            "No matching skill",
+            "declarative transition model",
+        ):
+            self.assertIn(required, normalized_catalog)
+
+    def test_catalog_overlap_and_authority_contracts_are_explicit(self):
+        refine = (ROOT / "skills" / "refine" / "SKILL.md").read_text(encoding="utf-8")
+        verify = (ROOT / "skills" / "verify" / "SKILL.md").read_text(encoding="utf-8")
+        design = (ROOT / "skills" / "design-deep-modules" / "SKILL.md").read_text(encoding="utf-8")
+        decision = (ROOT / "skills" / "decision-framework" / "SKILL.md").read_text(encoding="utf-8")
+        premortem = (ROOT / "skills" / "premortem" / "SKILL.md").read_text(encoding="utf-8")
+
+        self.assertIn("approved and sufficient", refine)
+        self.assertIn("do not reopen", refine.lower())
+        self.assertNotIn("Produce the behavior/oracle matrix", verify)
+        self.assertIn("canonical behavior/oracle matrix", verify)
+        self.assertIn("owns boundary options", design)
+        self.assertIn("does not select", design)
+        self.assertIn("owns the final selection", decision)
+        self.assertIn("does not redesign", decision)
+        self.assertIn("propose", premortem.lower())
+        self.assertIn("explicit authority", premortem.lower())
+
+        ci_description = (ROOT / "skills" / "ci-workflow" / "SKILL.md").read_text(encoding="utf-8").split("---", 2)[1]
+        security_description = (ROOT / "skills" / "security-review" / "SKILL.md").read_text(encoding="utf-8").split("---", 2)[1]
+        self.assertIn("GitHub Actions", ci_description)
+        self.assertIn("compose with security-review", ci_description)
+        self.assertIn("fork-controlled", security_description)
+        self.assertIn("compose with the owning workflow", security_description)
+
+    def test_explicit_only_skill_policies_match_catalog_contract(self):
+        explicit_only = {
+            "brainstorming", "git-commit", "improve-architecture", "premortem",
+            "session-bridge", "technical-research",
+        }
+        for name in explicit_only:
+            ui = (ROOT / "skills" / name / "agents" / "openai.yaml").read_text(encoding="utf-8")
+            self.assertIn("allow_implicit_invocation: false", ui, name)
+
+    def test_spec_templates_do_not_preselect_risk_or_review_policy(self):
+        for relative in ("templates/spec/spec.md", "skills/spec/assets/spec-template.md"):
+            template = (ROOT / relative).read_text(encoding="utf-8")
+            self.assertIn("risk: unresolved", template)
+            self.assertIn("review_policy: unresolved", template)
+            self.assertNotIn("risk: small", template)
+            self.assertNotIn("review_policy: single-isolated-reviewer", template)
+
+    def test_documentation_and_ci_reference_assets_are_routed_and_sourced(self):
+        docs_skill = (ROOT / "skills" / "docs" / "SKILL.md").read_text(encoding="utf-8")
+        required_assets = {
+            "adr-madr-template.md": ("Context and Problem Statement", "https://adr.github.io/madr/"),
+            "project-c4-template.md": ("System context", "https://c4model.com/"),
+            "rfc-template.md": ("Alternatives", "https://github.com/npm/rfcs"),
+            "postmortem-template.md": ("Timeline", "https://sre.google/"),
+        }
+        for name, required in required_assets.items():
+            path = ROOT / "skills" / "docs" / "assets" / name
+            self.assertTrue(path.is_file(), name)
+            text = path.read_text(encoding="utf-8")
+            for marker in required:
+                self.assertIn(marker, text, name)
+            self.assertIn(f"./assets/{name}", docs_skill)
+
+        ci_skill = (ROOT / "skills" / "ci-workflow" / "SKILL.md").read_text(encoding="utf-8")
+        ci_reference = ROOT / "skills" / "ci-workflow" / "references" / "github-actions.md"
+        self.assertTrue(ci_reference.is_file())
+        self.assertIn("GitHub Actions", ci_skill)
+        reference = ci_reference.read_text(encoding="utf-8")
+        for marker in ("permissions", "full-length commit SHA", "pull_request_target", "OIDC", "artifact", "cache"):
+            self.assertIn(marker, reference)
+        self.assertIn("https://docs.github.com/", reference)
+
+    def test_readme_documents_codex_installation_and_discovery(self):
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        for marker in (
+            "codex plugin marketplace add",
+            "/plugins",
+            ".agents/skills",
+            "Implicit invocation",
+            "Explicit invocation",
+            "Update",
+            "Remove",
+        ):
+            self.assertIn(marker, readme)
+        self.assertIn("cloning the repository does not install", readme.lower())
+        self.assertIn("Codex CLI", readme)
+        self.assertIn("Codex desktop", readme)
+        marketplace = json.loads(
+            (ROOT / ".agents" / "plugins" / "marketplace.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual("tuxedo-local", marketplace["name"])
+        self.assertEqual("tuxedo", marketplace["plugins"][0]["name"])
+        self.assertEqual(
+            {"source": "local", "path": "./"},
+            marketplace["plugins"][0]["source"],
+        )
+        self.assertTrue((ROOT / ".codex-plugin" / "plugin.json").is_file())
+
+    def test_agents_contract_has_conventional_commit_examples(self):
+        contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        self.assertIn("type(scope): imperative subject", contract)
+        self.assertIn("feat(evals): isolate Codex authentication", contract)
+        self.assertIn("fix stuff", contract)
 
     def test_git_commit_routes_only_explicit_commit_requests(self):
         text = (ROOT / "skills" / "git-commit" / "SKILL.md").read_text()
@@ -1233,6 +1356,63 @@ class EvaluationVerifierTests(unittest.TestCase):
             if case["description"] == "negative-refine":
                 self.assertNotIn(".agents/skills/brainstorming/", case["vars"]["request"])
 
+    def test_promptfoo_routing_includes_indirect_and_composed_cases(self):
+        cases = {
+            case["description"]: case
+            for case in PROMPTFOO_TESTS.generate_tests({"suite": "routing"})
+        }
+        indirect = cases["implicit-spec"]
+        request = indirect["vars"]["request"].lower()
+        self.assertNotIn("spec", request)
+        self.assertNotIn(".agents/skills", request)
+        self.assertEqual("spec", indirect["vars"]["expected_skills"])
+        self.assertIn(
+            ("skill-used", "spec"),
+            {(item["type"], item.get("value")) for item in indirect["assert"]},
+        )
+
+        composed = cases["composition-design-decision"]
+        self.assertEqual(
+            "design-deep-modules,decision-framework",
+            composed["vars"]["expected_skills"],
+        )
+        assertions = {(item["type"], item.get("value")) for item in composed["assert"]}
+        self.assertIn(("skill-used", "design-deep-modules"), assertions)
+        self.assertIn(("skill-used", "decision-framework"), assertions)
+
+        for case_id in (
+            "composition-spec-tdd",
+            "composition-design-decision",
+            "composition-ci-security",
+        ):
+            composition_request = cases[case_id]["vars"]["request"]
+            self.assertNotIn(".agents/skills", composition_request)
+            for skill_name in cases[case_id]["vars"]["expected_skills"].split(","):
+                self.assertNotIn(skill_name, composition_request)
+
+        ci_security_source = json.loads(
+            (ROOT / "evals" / "promptfoo" / "tests" / "routing.yaml").read_text(encoding="utf-8")
+        )
+        ci_security_item = next(item for item in ci_security_source if item["id"] == "composition-ci-security")
+        workflow = ci_security_item["fixture"][".github/workflows/deploy.yml"]
+        self.assertIn("pull_request_target", workflow)
+        self.assertIn("permissions: write-all", workflow)
+        self.assertIn("github.event.pull_request.head.sha", workflow)
+        self.assertIn("secrets.DEPLOY_TOKEN", workflow)
+
+        self.assertEqual(40, len(cases))
+
+    def test_promptfoo_routing_materializes_case_specific_fixture(self):
+        cases = PROMPTFOO_PREPARE._cases("routing")
+        item = next(case for case in cases if case["id"] == "composition-ci-security")
+        with tempfile.TemporaryDirectory() as tmp:
+            destination = Path(tmp) / "fixture"
+            destination.mkdir()
+            PROMPTFOO_PREPARE._materialize(item["fixture"], destination)
+            workflow = destination / ".github" / "workflows" / "deploy.yml"
+            self.assertTrue(workflow.is_file())
+            self.assertIn("pull_request_target", workflow.read_text(encoding="utf-8"))
+
     def test_skill_routing_contracts_separate_divergence_refinement_and_architecture_audit(self):
         descriptions = {
             skill: (ROOT / "skills" / skill / "SKILL.md").read_text(encoding="utf-8").split("---", 2)[1]
@@ -1369,6 +1549,29 @@ class EvaluationVerifierTests(unittest.TestCase):
             },
         )
         self.assertTrue(result["pass"], result)
+
+        composed = PROMPTFOO_ROUTING.get_assert(
+            "done",
+            {
+                "vars": {"expected_skills": "design-deep-modules,decision-framework"},
+                "metadata": {
+                    "skillCalls": [
+                        {"name": "design-deep-modules"},
+                        {"name": "decision-framework"},
+                    ]
+                },
+            },
+        )
+        self.assertTrue(composed["pass"], composed)
+        missing_second = PROMPTFOO_ROUTING.get_assert(
+            "done",
+            {
+                "vars": {"expected_skills": "design-deep-modules,decision-framework"},
+                "metadata": {"skillCalls": [{"name": "design-deep-modules"}]},
+            },
+        )
+        self.assertFalse(missing_second["pass"], missing_second)
+        self.assertIn("decision-framework", missing_second["reason"])
         self.assertIn("heuristic", result["reason"])
         provider_result = PROMPTFOO_ROUTING.get_assert(
             "done",
@@ -1844,11 +2047,65 @@ class EvaluationVerifierTests(unittest.TestCase):
             self.assertTrue(state.parent.is_dir(), "debug workspace may be preserved explicitly")
             self.assertFalse(state.exists(), "Promptfoo database and traces must always be removed")
 
+    def test_promptfoo_focused_routing_preserves_the_isolated_runner(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            promptfoo_root = root / "promptfoo"
+            (promptfoo_root / "results").mkdir(parents=True)
+            dedicated_home = root / "codex-home"
+            dedicated_home.mkdir()
+            captured = {}
+            manifest = {
+                "manifest_path": str(root / "manifest.json"),
+                "workspace_root": str(root / "workspaces"),
+                "workspaces": {},
+            }
+
+            def fake_run(command, **_kwargs):
+                captured["command"] = command
+                raw_path = Path(command[command.index("-o") + 1])
+                raw_path.write_text(json.dumps({
+                    "results": [{
+                        "description": "implicit-spec",
+                        "success": True,
+                        "response": {"output": "done"},
+                        "gradingResult": {"pass": True, "componentResults": []},
+                    }]
+                }), encoding="utf-8")
+                return subprocess.CompletedProcess(command, 0, "", "")
+
+            with patch.object(PROMPTFOO_RUNNER, "PROMPTFOO_ROOT", promptfoo_root), patch.object(
+                PROMPTFOO_RUNNER.PREPARE, "prepare", return_value=manifest
+            ), patch.object(
+                PROMPTFOO_RUNNER.PREPARE, "evaluation_environment", return_value={}
+            ), patch.object(PROMPTFOO_RUNNER, "_run", side_effect=fake_run), patch.object(
+                PROMPTFOO_RUNNER, "_check_workspace_clean"
+            ), patch.object(
+                PROMPTFOO_RUNNER, "_codex_version", return_value="codex-test"
+            ), patch.object(
+                PROMPTFOO_RUNNER, "_promptfoo_version", return_value="promptfoo-test"
+            ):
+                PROMPTFOO_RUNNER.run_promptfoo(
+                    "routing",
+                    promptfoo_root / "routing-config.yaml",
+                    codex_home=dedicated_home,
+                    case_pattern="^(implicit-|composition-)",
+                )
+
+            command = captured["command"]
+            self.assertEqual(
+                "^(implicit-|composition-)",
+                command[command.index("--filter-pattern") + 1],
+            )
+            self.assertIn("--no-cache", command)
+            self.assertIn("--no-share", command)
+            self.assertEqual("1", command[command.index("--max-concurrency") + 1])
+
     def test_promptfoo_full_shards_cover_all_cases_and_aggregate_failures(self):
         """EV-SHD-01/EV-AGG-01: full coverage runs before one aggregate verdict."""
         self.assertEqual(2, PROMPTFOO_RUNNER.FULL_MAX_WORKERS)
         self.assertEqual(
-            [(0, 17), (17, 34)],
+            [(0, 20), (20, 40)],
             [PROMPTFOO_RUNNER._parse_filter_range(shard.filter_range) for shard in PROMPTFOO_RUNNER.SUITE_SHARDS["routing"]],
         )
         self.assertEqual(
@@ -1856,17 +2113,17 @@ class EvaluationVerifierTests(unittest.TestCase):
             [PROMPTFOO_RUNNER._parse_filter_range(shard.filter_range) for shard in PROMPTFOO_RUNNER.SUITE_SHARDS["behavior"]],
         )
         outcomes = [
-            PROMPTFOO_RUNNER.SuiteOutcome("routing", Path("routing.json"), "fail", 34, 29, 5, 0, ("r-1",)),
+            PROMPTFOO_RUNNER.SuiteOutcome("routing", Path("routing.json"), "fail", 40, 35, 5, 0, ("r-1",)),
             PROMPTFOO_RUNNER.SuiteOutcome("behavior", Path("behavior.json"), "fail", 40, 11, 29, 0, ("b-1",)),
             PROMPTFOO_RUNNER.SuiteOutcome("security", Path("security.json"), "fail", 12, 0, 12, 0, ("s-1",)),
         ]
-        with self.assertRaisesRegex(RuntimeError, "routing: 29/34.*behavior: 11/40.*security: 0/12"):
+        with self.assertRaisesRegex(RuntimeError, "routing: 35/40.*behavior: 11/40.*security: 0/12"):
             PROMPTFOO_RUNNER._require_passing_outcomes(outcomes)
 
     def test_promptfoo_full_runs_every_suite_before_assertion_verdict(self):
         """EV-AGG-01: failed assertions do not suppress later suite evidence."""
         outcomes = {
-            "routing": PROMPTFOO_RUNNER.SuiteOutcome("routing", Path("routing.json"), "fail", 34, 29, 5, 0, ("r",)),
+            "routing": PROMPTFOO_RUNNER.SuiteOutcome("routing", Path("routing.json"), "fail", 40, 35, 5, 0, ("r",)),
             "behavior": PROMPTFOO_RUNNER.SuiteOutcome("behavior", Path("behavior.json"), "fail", 40, 11, 29, 0, ("b",)),
             "security": PROMPTFOO_RUNNER.SuiteOutcome("security", Path("security.json"), "fail", 12, 0, 12, 0, ("s",)),
         }
@@ -1893,7 +2150,7 @@ class EvaluationVerifierTests(unittest.TestCase):
     def test_promptfoo_full_writes_summary_before_checkout_drift_failure(self):
         """EV-AGG-01: completed provider evidence survives concurrent checkout edits."""
         outcomes = [
-            PROMPTFOO_RUNNER.SuiteOutcome("routing", Path("routing.json"), "pass", 34, 34, 0, 0, ()),
+            PROMPTFOO_RUNNER.SuiteOutcome("routing", Path("routing.json"), "pass", 40, 40, 0, 0, ()),
             PROMPTFOO_RUNNER.SuiteOutcome("behavior", Path("behavior.json"), "pass", 40, 40, 0, 0, ()),
             PROMPTFOO_RUNNER.SuiteOutcome("security", Path("security.json"), "pass", 12, 12, 0, 0, ()),
         ]
@@ -1912,7 +2169,7 @@ class EvaluationVerifierTests(unittest.TestCase):
 
     def test_promptfoo_full_summary_records_sanitized_execution_controls(self):
         outcomes = [
-            PROMPTFOO_RUNNER.SuiteOutcome("routing", Path("routing.json"), "pass", 34, 34, 0, 0, ()),
+            PROMPTFOO_RUNNER.SuiteOutcome("routing", Path("routing.json"), "pass", 40, 40, 0, 0, ()),
             PROMPTFOO_RUNNER.SuiteOutcome("behavior", Path("behavior.json"), "pass", 40, 40, 0, 0, ()),
             PROMPTFOO_RUNNER.SuiteOutcome("security", Path("security.json"), "pass", 12, 12, 0, 0, ()),
         ]
@@ -1930,7 +2187,7 @@ class EvaluationVerifierTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             report = Path(tmp) / "routing-1-of-2.json"
             report.write_text('{"summary":{"status":"pass"}}', encoding="utf-8")
-            completed = PROMPTFOO_RUNNER.SuiteOutcome("routing", report, "pass", 17, 17, 0, 0, ())
+            completed = PROMPTFOO_RUNNER.SuiteOutcome("routing", report, "pass", 20, 20, 0, 0, ())
 
             def run_shard(*_args, **kwargs):
                 if kwargs["shard"].name == "1-of-2":

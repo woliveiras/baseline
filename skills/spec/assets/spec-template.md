@@ -4,12 +4,12 @@ title: Short behavior-focused title
 summary: One sentence for routing
 status: draft
 scope: []
-risk: small
+risk: unresolved
 risk_domains: []
 reversibility: easy
 change_surfaces: []
 contracts: []
-review_policy: single-isolated-reviewer
+review_policy: unresolved
 test_provenance: []
 navigation: []
 documentation: undecided

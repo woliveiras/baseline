@@ -5,6 +5,8 @@ description: Make a material software decision with explicit options, evidence t
 
 # Decision Framework
 
+This workflow owns the final selection among established material options when authority permits. It does not redesign options while scoring them; return incomplete boundary options to the workflow that owns their design.
+
 1. State the decision, deadline, owner, scope, non-goals, and upstream decisions it depends on.
 2. Extract decision drivers from the active spec, domain invariants, constraints, risks, and authority. Weight only when the weights reflect a real preference.
 3. Compare materially different options, including leave-as-is when credible. Keep behavior and constraints constant.

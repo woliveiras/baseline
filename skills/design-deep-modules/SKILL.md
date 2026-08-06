@@ -7,6 +7,8 @@ description: Design or compare concrete high-leverage module boundaries with sma
 
 Use depth, seams, adapters, leverage, locality, and the deletion test as diagnostics, not slogans.
 
+This workflow owns boundary options and their trade-offs. It does not select among material viable options when that choice requires a separate decision owner; hand those options to `decision-framework`.
+
 1. Start from domain behavior, spec invariants, callers, state ownership, side effects, failure modes, change history, contracts, and tests.
 2. Apply the deletion test: identify which caller concepts and coordination disappear if the module is removed. Pass-through indirection with no hidden decision has little depth.
 3. For consequential boundaries, load [boundary options](./references/boundary-options.md) and compare at least two materially different interfaces under the same scenarios.

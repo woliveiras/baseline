@@ -2,3 +2,5 @@ interface:
   display_name: "Premortem"
   short_description: "Anticipate plausible failures before commitment"
   default_prompt: "Use $premortem to identify and mitigate likely failure modes."
+policy:
+  allow_implicit_invocation: false

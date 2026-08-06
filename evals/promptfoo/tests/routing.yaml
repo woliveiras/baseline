@@ -252,5 +252,57 @@
     "expected_skill": "verify",
     "request": "Verify the completed change against the approved specification, test evidence, and review phases; security analysis is not requested.",
     "workspace_key": "routing-negative-security-review"
+  },
+  {
+    "id": "implicit-refine",
+    "kind": "positive",
+    "skills": ["refine"],
+    "directed": false,
+    "request": "This request leaves two materially different retention behaviors possible. Resolve only the smallest decision that changes the outcome before any implementation.",
+    "workspace_key": "routing-implicit-refine"
+  },
+  {
+    "id": "implicit-spec",
+    "kind": "positive",
+    "skills": ["spec"],
+    "directed": false,
+    "request": "Turn this approved material change into stable acceptance criteria, invariants, exclusions, observable oracles, authority, and review policy before implementation.",
+    "workspace_key": "routing-implicit-spec"
+  },
+  {
+    "id": "implicit-verify",
+    "kind": "positive",
+    "skills": ["verify"],
+    "directed": false,
+    "request": "Review this completed change in separate intent, test, and code phases, then report fresh execution evidence and residual risk.",
+    "workspace_key": "routing-implicit-verify"
+  },
+  {
+    "id": "composition-spec-tdd",
+    "kind": "positive",
+    "skills": ["spec", "tdd"],
+    "directed": false,
+    "request": "Define stable criteria and independent observable oracles for this approved new behavior, run the smallest check fail-first, and then implement only enough code to pass it.",
+    "workspace_key": "routing-composition-spec-tdd"
+  },
+  {
+    "id": "composition-design-decision",
+    "kind": "positive",
+    "skills": ["design-deep-modules", "decision-framework"],
+    "directed": false,
+    "request": "Develop two concrete module-boundary options under the same scenarios, then select one using explicit evidence, trade-offs, reversibility, and the authority available.",
+    "workspace_key": "routing-composition-design-decision"
+  },
+  {
+    "id": "composition-ci-security",
+    "kind": "positive",
+    "skills": ["ci-workflow", "security-review"],
+    "directed": false,
+    "request": "Review the controlled .github/workflows/deploy.yml design without editing it. Evaluate the CI workflow mechanics and perform a security review of its fork-controlled execution, permissions, secret handling, evidence, and residual threats. Use every applicable installed workflow; do not collapse CI mechanics and security analysis into one owner.",
+    "fixture": {
+      ".github/workflows/deploy.yml": "name: deploy\non:\n  pull_request_target:\npermissions: write-all\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ github.event.pull_request.head.sha }}\n      - run: ./scripts/deploy.sh\n        env:\n          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}\n",
+      "scripts/deploy.sh": "#!/bin/sh\necho deploy\n"
+    },
+    "workspace_key": "routing-composition-ci-security"
   }
 ]

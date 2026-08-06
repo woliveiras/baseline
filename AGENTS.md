@@ -46,6 +46,7 @@ When conditions disagree, use the higher tier. A familiar implementation does no
 - **Review before completion:** Reconstruct spec review without tests or implementation, test review without the new implementation, and code review with the complete diff and fresh evidence. Passing tests alone do not establish fidelity.
 - **Task-owned commit:** Before a local commit, inspect status, unstaged diff, staged diff, and untracked files; stage explicit task-owned paths or hunks and re-read the complete cached diff.
 - **Additional work:** Do not begin another task, remediation, cleanup, or refactor unless the user authorized it. Report discoveries separately and request authority when they materially expand scope.
+- **Skill composition:** When one authorized request has multiple outcomes with independently matching skill owners, load the smallest complete set of applicable workflows. Do not stop after the first match or make one skill silently own another skill's artifact.
 - These are declarative requirements, not mechanical enforcement. Record observed workflow failures during real tasks; consider a narrow gate only after recurring evidence and only without a consumer runtime dependency.
 
 ## Toolkit maintenance
@@ -55,6 +56,14 @@ When conditions disagree, use the higher tier. A familiar implementation does no
 - Add deterministic tests for every mechanical invariant.
 - Keep `evals/` and maintainer research outside installed skill content. Do not run paid or extensive evals without explicit authority.
 - Commit coherent task-owned slices locally with Conventional Commits. Never infer push, release, or publication authority.
+
+### Commit convention
+
+- Format local commit subjects as `type(scope): imperative subject`; omit the scope only when no stable subsystem name helps.
+- Keep the subject specific, imperative, and under 72 characters. Use a body when the reason, migration, evidence, or residual risk is not obvious from the diff.
+- Good: `feat(evals): isolate Codex authentication`, `fix(routing): preserve multi-skill assertions`, `docs(skills): add Codex installation guide`.
+- Bad: `fix stuff` (no scope or intent), `Updated files` (not imperative or behavioral), `feat: changes` (not specific).
+- A Conventional Commit describes the staged task-owned candidate; it never expands authority to stage unrelated work or to push.
 
 ## Toolchain convention
 
@@ -70,7 +79,7 @@ When conditions disagree, use the higher tier. A familiar implementation does no
 - Allowed managed evaluation-home entries must be real directories/files rather than symlinks, so a personal target cannot hide behind an allowed name.
 - Neither `OPENAI_API_KEY` nor `CODEX_API_KEY` is a requirement or fallback for the dedicated evaluation flow. The preflight removes both from Codex child environments, accepts only the `Logged in using ChatGPT` status label, and requires that evidence before creating workspaces or making provider calls; API-key, agent-identity, ambiguous, or failed statuses are rejected.
 - Provider configurations omit a fixed `model`; the Codex CLI selects an account-supported model for the authenticated ChatGPT/Codex session, and reports label this as `codex-cli-default`. Do not pin a model without a fresh compatibility check for the selected authentication method.
-- Run `pnpm run eval:full` only with explicit maintainer authority because it invokes model calls and consumes quota. It runs the official validators, deterministic checks, config validation, then all routing, behavior, frozen security, and task-specific secondary rubric cases before proving Git status is unchanged. The current upper bound is 111 model calls: 86 target trials plus 25 semantic judges. Routing and behavior may use disjoint shards with at most two active processes; do not reduce coverage or reasoning to optimize elapsed time. It is an explicit empirical evaluation, not a pre-push hook or an automatic Git gate.
+- Run `pnpm run eval:full` only with explicit maintainer authority because it invokes model calls and consumes quota. It runs the official validators, deterministic checks, config validation, then all routing, behavior, frozen security, and task-specific secondary rubric cases before proving Git status is unchanged. The current upper bound is 117 model calls: 92 target trials plus 25 semantic judges. Routing and behavior may use disjoint shards with at most two active processes; do not reduce coverage or reasoning to optimize elapsed time. It is an explicit empirical evaluation, not a pre-push hook or an automatic Git gate.
 - Treat `evals/promptfoo/generated/` as reviewable generated probes and `evals/promptfoo/results/` as append-only local reports. Persist a sanitized checkpoint for every completed shard, including Promptfoo exit 100 assertion failures; aggregate verdicts only after all authorized suite outcomes are available. Never persist raw model output, prompts, traces, or credentials. Do not make `eval:full` require either directory to be empty or delete prior evidence silently.
 - Give each Promptfoo provider or red-team process a disposable `PROMPTFOO_CONFIG_DIR`. Deep tracing requires Promptfoo to persist the parent evaluation row in that disposable database, so do not combine tracing with `--no-write`; remove the entire temporary state after extracting sanitized evidence.
 - Frozen security probes require a concrete adversarial fixture stimulus and a legitimate deterministic oracle. A refusal or “done” response without the requested edit is not a pass. The canary check covers exfiltration/copying; it does not establish silent reads without reliable trajectory evidence.

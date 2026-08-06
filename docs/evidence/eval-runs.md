@@ -282,3 +282,38 @@ Collected before dedicated Codex authentication was valid.
 - No provider/model call was authorized or executed for this decision. Real-task
   observations belong in
   [the declarative workflow trial log](declarative-workflow-trials.md).
+
+## 2026-08-06 — SPEC-0003 indirect and composition routing
+
+- The routing catalog grew from 34 to 40 cases. Three new prompts test implicit
+  selection without a skill name or installed path. Three test composition and
+  require both expected skill calls; one expected skill cannot pass a composed
+  case.
+- The first focused attempt exposed an invalid test representation:
+  `expected_skills` was an array, which Promptfoo expanded into a variable
+  matrix. Nine rows ran instead of six and the Python assertion interpreted a
+  scalar skill name as characters. The run was rejected as evidence. The
+  generator now transports the set as a comma-delimited string, the adapter
+  parses it explicitly, and deterministic tests prove both presence and
+  missing-second-skill failure.
+- The CI/security composition stimulus was strengthened rather than relaxed.
+  It now materializes a controlled `.github/workflows/deploy.yml` containing
+  `pull_request_target`, `write-all`, fork-head checkout, and a deployment
+  secret. The request is read-only, contains no skill identifier or skill path,
+  and requires separate CI-mechanics and security owners.
+- The final isolated CI/security case passed 1/1 in 251.042 seconds. Report
+  `routing-1786032168028157000.json`, SHA-256
+  `8d306992347cb98dcdb12d2245f8de46667d9ffd23f83a5c92461e858e5a9dd0`.
+- The final six-case batch passed 5/6 in 644.001 seconds. The only failure was
+  `composition-ci-security`, with neither expected skill observed. Report
+  `routing-1786032826863716000.json`, SHA-256
+  `7dc85ded508f1061ebd0cc787ba8551aa2dba2ab1fc244e3d4f45de44c9331b5`.
+  The condition fingerprint was
+  `494fd36763016dbc5a3291afe3cfa482fb4f776fe49b3d0b1618cb5a77d4b0ca`.
+- Both reports used Codex CLI 0.144.4, Promptfoo 0.122.0, the dedicated
+  ChatGPT/Codex home, approval `never`, network/web disabled, no persisted
+  threads, and disabled caches. The isolated pass plus repeated batch failure
+  demonstrates context-sensitive or stochastic implicit composition. It is not
+  recorded as 6/6, and the ADR provider checkbox remains open.
+- No full 117-call evaluation was authorized or executed. Historical 34-case
+  routing and 86-target full reports do not prove the 40-case catalog.

@@ -12,7 +12,7 @@ Assume the change has failed after release or handoff, then work backward from c
 3. Write a causal chain for each material failure: trigger -> hidden condition -> propagation -> observable impact.
 4. Rank likelihood, impact, detectability, reversibility, and evidence strength. Avoid precise probabilities without data.
 5. Assign a proportional response: prevent, detect, contain, recover, accept, or investigate.
-6. Add stable criteria, tests, observability, rollout guard, rollback step, or open decision to the spec only when the mitigation is justified.
+6. Propose stable criteria, tests, observability, rollout guards, rollback steps, or open decisions when justified. Edit the governing spec or another durable artifact only with explicit authority for that artifact; analysis alone grants no write authority.
 7. Identify residual risk, owner, trigger, and authority required. Do not convert every recommendation into a blocking hook.
 
 Return the highest-leverage failure modes first. Separate evidence-backed risks from speculative prompts and say what would reduce uncertainty.
