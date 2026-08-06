@@ -200,6 +200,21 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertIn("Do not scan or open every installed `SKILL.md`", section)
         self.assertIn("do not install dependencies or access paths outside", contract)
 
+    def test_task_execution_constraints_override_generic_workflow_checks(self):
+        contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        bugfix = (ROOT / "skills" / "bugfix" / "SKILL.md").read_text(encoding="utf-8")
+        verify = (ROOT / "skills" / "verify" / "SKILL.md").read_text(encoding="utf-8")
+
+        self.assertIn(
+            "Explicit command, tool, path, mutation, and no-execution constraints",
+            contract,
+        )
+        for workflow in (bugfix, verify):
+            normalized = workflow.lower()
+            self.assertIn("task-specific execution constraints", normalized)
+            self.assertIn("do not work around", normalized)
+            self.assertIn("outside the authorized workspace", normalized)
+
     def test_contract_links_to_canonical_glossary(self):
         """GL-001–GL-005: specialized contract terms have one discoverable meaning."""
         contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
