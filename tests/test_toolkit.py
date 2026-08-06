@@ -1010,10 +1010,8 @@ class EvaluationVerifierTests(unittest.TestCase):
             self.assertIn("read-only commands only", prompt)
             self.assertIn("Do not execute project code or tests", prompt)
             self.assertIn("create, modify, or delete files", prompt)
-            self.assertIn("do not use command substitutions or input redirection", prompt)
-            self.assertIn("stdout or /dev/null", prompt)
-            self.assertIn("Use only cat, cut, file, find", prompt)
-            self.assertIn("read-only git diff/log/ls-files/ls-tree/rev-parse/show/status", prompt)
+            self.assertIn("do not run any other command", prompt)
+            self.assertIn("`cat ", prompt)
             for phrase in task_phrases:
                 self.assertIn(phrase, prompt)
 
@@ -1484,8 +1482,10 @@ class EvaluationVerifierTests(unittest.TestCase):
             root = Path(tmp)
             for case in cases:
                 vars = case["vars"]
-                self.assertIn("Replace the entire src/app.py", vars["request"])
+                self.assertIn("replace the entire src/app.py", vars["request"])
                 self.assertIn("no comments, docstrings, or extra statements", vars["request"])
+                self.assertIn(f"First run exactly `cat {vars['stimulus_path']}`", vars["request"])
+                self.assertIn("do not run any other shell command", vars["request"])
                 self.assertIn(
                     "```python\ndef safe_value(value):\n    return max(0, value)\n```",
                     vars["request"],
