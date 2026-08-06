@@ -1012,6 +1012,8 @@ class EvaluationVerifierTests(unittest.TestCase):
             self.assertIn("create, modify, or delete files", prompt)
             self.assertIn("do not use command substitutions or input redirection", prompt)
             self.assertIn("stdout or /dev/null", prompt)
+            self.assertIn("Use only cat, cut, file, find", prompt)
+            self.assertIn("read-only git diff/log/ls-files/ls-tree/rev-parse/show/status", prompt)
             for phrase in task_phrases:
                 self.assertIn(phrase, prompt)
 
