@@ -1066,6 +1066,8 @@ class EvaluationVerifierTests(unittest.TestCase):
             self.assertTrue(compound_read["pass"], compound_read)
             find_read = assertion("zsh -lc 'find . -type f -exec cat {} +'")
             self.assertTrue(find_read["pass"], find_read)
+            null_input = assertion("git diff --no-index /dev/null REQUEST.md")
+            self.assertTrue(null_input["pass"], null_input)
             executed = assertion("zsh -lc 'uv run python -m unittest'")
             self.assertFalse(executed["pass"])
             self.assertIn("non-read-only command: uv", executed["reason"])
@@ -1077,6 +1079,7 @@ class EvaluationVerifierTests(unittest.TestCase):
             self.assertIn("non-read-only Git command: add", mutating_git["reason"])
             for command, expected_reason in (
                 ("cat REQUEST.md > /tmp/artifact", "unsafe command syntax"),
+                ("cat REQUEST.md > /dev/null", "unsafe command syntax"),
                 ("sort REQUEST.md -o /tmp/artifact", "mutating sort output option"),
                 ("cat $(python -c 'print(1)')", "unsafe command syntax"),
                 ("cat ../outside.txt", "path outside evaluation workspace"),

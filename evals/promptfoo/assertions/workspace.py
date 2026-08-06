@@ -104,6 +104,8 @@ def _read_only_trajectory(context: dict[str, Any], workspace: Path) -> tuple[lis
             elif executable not in _READ_ONLY_COMMANDS:
                 violations.append(f"non-read-only command: {executable}")
             for argument in arguments:
+                if argument == "/dev/null":
+                    continue
                 candidate = Path(argument.split("=", 1)[-1])
                 if not candidate.is_absolute() and ".." not in candidate.parts:
                     continue
