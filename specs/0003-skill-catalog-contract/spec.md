@@ -22,8 +22,8 @@ navigation:
   - tests/test_toolkit.py
 documentation: required
 authority:
-  granted: [local-edit, deterministic-tests, focused-routing-eval, local-commits]
-  withheld: [full-eval, push, release, publish, deploy, production, destructive]
+  granted: [local-edit, deterministic-tests, focused-routing-eval, full-eval, local-commits]
+  withheld: [push, release, publish, deploy, production, destructive]
 dependencies: []
 ---
 
@@ -63,7 +63,6 @@ Provide reusable documentation knowledge instead of command-only reminders, and 
 - Removing or merging skills based only on the current audit.
 - Adding lifecycle hooks or a runtime state machine.
 - Claiming empirical cross-client installation or routing without clean-room evidence.
-- Running the full paid evaluation suite.
 - Publishing a marketplace, plugin, release, or Git ref.
 
 ## Edge and failure scenarios
@@ -84,8 +83,8 @@ Provide reusable documentation knowledge instead of command-only reminders, and 
 ## Evidence and review
 
 - Behavior matrix: `behavior-matrix.md`
-- Fail-first evidence: pending
+- Fail-first evidence: `evidence.md#fail-first`
 - Documentation decision: required for installation, catalog behavior, templates, and audit reconciliation
-- Spec review: pending
-- Test review: pending
-- Code review: pending
+- Spec review: `reviews/spec.md`
+- Test review: `reviews/tests.md`
+- Code review: `reviews/code.md`

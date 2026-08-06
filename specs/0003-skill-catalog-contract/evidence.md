@@ -62,6 +62,8 @@ The invalid 9-row attempt was rejected after it exposed Promptfoo array expansio
 
 This is non-green empirical evidence. The isolated pass cannot override the complete batch failure. No full 117-call evaluation was run.
 
+After delivery of the initial implementation, the maintainer explicitly authorized diagnosis of the failed composed case, affected reruns, and—only after routing stability—the complete evaluation with a two-hour limit. Push, release, publication, deploy, production, and destructive authority remain withheld.
+
 ## Primary-source evidence
 
 - Codex skill discovery, implicit/explicit invocation, plugin surfaces, and local marketplace setup: current OpenAI Codex manual fetched on 2026-08-06.
