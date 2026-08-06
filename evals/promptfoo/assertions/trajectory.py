@@ -21,7 +21,7 @@ TRACE_IGNORED_KEYS = {
     "input", "request", "response", "insights",
 }
 _SHELLS = {"bash", "dash", "sh", "zsh"}
-_UNSAFE_SYNTAX = ("<", ">", "`", "$(", "\n", "\r")
+_UNSAFE_SYNTAX = ("`", "$(", "\n", "\r")
 _SEPARATORS = {";", "&&", "||", "|"}
 _UNSUPPORTED_SEPARATORS = {"&", ";;", "|&", ";&", ";;&"}
 
@@ -101,11 +101,29 @@ def command_segments(command: str) -> tuple[list[list[str]], list[str]]:
     if violations:
         return [], violations
     try:
-        lexer = shlex.shlex(command, posix=True, punctuation_chars=";&|")
+        lexer = shlex.shlex(command, posix=True, punctuation_chars=";&|<>")
         lexer.whitespace_split = True
         tokens = list(lexer)
     except ValueError:
         return [], ["unparseable command"]
+    filtered: list[str] = []
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
+        if token in {">", ">>"}:
+            if filtered and filtered[-1].isdigit():
+                filtered.pop()
+            if index + 1 >= len(tokens) or tokens[index + 1] != "/dev/null":
+                violations.append("unsafe output redirection")
+            index += 2
+            continue
+        if "<" in token or token in {">&", "<&"}:
+            violations.append("unsafe input or descriptor redirection")
+            index += 1
+            continue
+        filtered.append(token)
+        index += 1
+    tokens = filtered
     segments: list[list[str]] = []
     current: list[str] = []
     raw_segments: list[list[str]] = []
@@ -123,6 +141,19 @@ def command_segments(command: str) -> tuple[list[list[str]], list[str]]:
         segment = _strip_prefix(raw)
         if not segment:
             violations.append("command has no executable")
+            continue
+        if segment[0] == "for":
+            if len(segment) < 4 or segment[2] != "in":
+                violations.append("unsupported shell for-loop")
+            continue
+        if segment[0] == "do":
+            segment = segment[1:]
+            if not segment:
+                violations.append("shell do has no command")
+                continue
+        if segment[0] == "done":
+            if len(segment) != 1:
+                violations.append("unsupported shell loop terminator")
             continue
         executable = Path(segment[0]).name.lower()
         if executable not in _SHELLS:

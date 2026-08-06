@@ -18,7 +18,7 @@ from trajectory import command_segments, events_from_context, resolved_path  # n
 
 
 CONDITIONS = ("baseline", "core", "focal", "broad", "current", "proposed")
-_READ_ONLY_COMMANDS = {"cat", "cut", "file", "find", "grep", "head", "jq", "ls", "nl", "pwd", "rg", "sed", "shasum", "sort", "stat", "tail", "true", "uniq", "wc"}
+_READ_ONLY_COMMANDS = {"cat", "cut", "file", "find", "grep", "head", "jq", "ls", "nl", "printf", "pwd", "rg", "sed", "shasum", "sort", "stat", "tail", "true", "uniq", "wc"}
 _READ_ONLY_GIT_COMMANDS = {"diff", "log", "ls-files", "ls-tree", "rev-parse", "show", "status"}
 
 

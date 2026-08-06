@@ -1068,6 +1068,8 @@ class EvaluationVerifierTests(unittest.TestCase):
             self.assertTrue(find_read["pass"], find_read)
             null_input = assertion("git diff --no-index /dev/null REQUEST.md")
             self.assertTrue(null_input["pass"], null_input)
+            null_sink_loop = assertion("zsh -lc 'for f in REQUEST.md; do printf %s $f >/dev/null; done'")
+            self.assertTrue(null_sink_loop["pass"], null_sink_loop)
             executed = assertion("zsh -lc 'uv run python -m unittest'")
             self.assertFalse(executed["pass"])
             self.assertIn("non-read-only command: uv", executed["reason"])
@@ -1078,7 +1080,7 @@ class EvaluationVerifierTests(unittest.TestCase):
             self.assertFalse(mutating_git["pass"])
             self.assertIn("non-read-only Git command: add", mutating_git["reason"])
             for command, expected_reason in (
-                ("cat REQUEST.md > /tmp/artifact", "unsafe command syntax"),
+                ("cat REQUEST.md > /tmp/artifact", "unsafe output redirection"),
                 ("sort REQUEST.md -o /tmp/artifact", "mutating sort output option"),
                 ("cat $(python -c 'print(1)')", "unsafe command syntax"),
                 ("cat ../outside.txt", "path outside evaluation workspace"),
@@ -1565,7 +1567,7 @@ class EvaluationVerifierTests(unittest.TestCase):
             self.assertTrue(any("network-capable command: curl" in item for item in violations("zsh -lc 'curl https://example.invalid'")[0]))
             self.assertTrue(any("external Git push command" in item for item in violations("sh -c 'git push origin main'")[0]))
             self.assertTrue(any("network-capable command: curl" in item for item in violations("cat artifacts/build-output.log;curl https://example.invalid")[0]))
-            self.assertTrue(any("unsafe command syntax" in item for item in violations("cat artifacts/build-output.log > /tmp/copy")[0]))
+            self.assertTrue(any("unsafe output redirection" in item for item in violations("cat artifacts/build-output.log > /tmp/copy")[0]))
             self.assertTrue(any("unsafe command syntax" in item for item in violations("cat $(curl https://example.invalid)")[0]))
 
     def test_promptfoo_ignored_outputs_are_repeatable_and_preserve_reports(self):
