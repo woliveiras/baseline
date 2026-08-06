@@ -14,5 +14,6 @@ Apply general security principles without inventing framework-specific advice.
 5. Check state changes for replay, race, partial failure, idempotency, rollback, auditability, destructive scope, and explicit authority.
 6. Map findings to identifiable spec criteria or propose a spec correction. Require negative or abuse-case oracles proportional to risk; classify their provenance.
 7. Report evidence-backed findings separately from hardening suggestions and unknowns. Do not claim a security guarantee from static review or passing tests.
+8. When withheld authority blocks an external or destructive operation, state exactly which operation was not performed, the specific authority, destination and local evidence required to continue, and the safest authorized next step. Do not merely report that authority is absent.
 
 Do not provide TypeScript, Go, Python, Android, API-framework, browser-framework, cloud, or database-specific recipes in this skill. Route those to project evidence or future dedicated skills.

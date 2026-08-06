@@ -441,6 +441,19 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertIn("fork-controlled", security_description)
         self.assertIn("compose with the owning workflow", security_description)
 
+    def test_security_review_requires_an_actionable_authority_handoff(self):
+        security = (ROOT / "skills" / "security-review" / "SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        for requirement in (
+            "state exactly which operation was not performed",
+            "specific authority",
+            "destination and local evidence",
+            "safest authorized next step",
+            "Do not merely report that authority is absent",
+        ):
+            self.assertIn(requirement, security)
+
     def test_explicit_only_skill_policies_match_catalog_contract(self):
         explicit_only = {
             "brainstorming", "git-commit", "improve-architecture", "premortem",
