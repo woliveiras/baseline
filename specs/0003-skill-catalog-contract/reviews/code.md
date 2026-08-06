@@ -21,6 +21,6 @@ The documentation templates adapt rather than silently copy their sources, ident
 - Skill-call metadata remains a structural heuristic. The corrected harness removes the two observed false-negative sources, but future Codex tool-call or path-schema changes can require adapter updates.
 - Plugin installation instructions and local marketplace metadata passed static and official validation but were not installed in a clean-room Codex profile during this task.
 - Other Agent Skills clients remain format-compatible claims only; discovery, routing, composition, and name-collision behavior are unverified.
-- The complete 117-call evaluation was authorized after the initial delivery but remains pending until the focused correction is committed and verified.
+- The complete 117-call evaluation passed 92/92 target trials after the focused corrections. It does not establish clean-room installation or support for non-Codex clients.
 
-Verdict: implementation is deliverable with explicit empirical residual risk; no push, release, or publication authority exists.
+Verdict: implementation and expanded evaluation are complete with explicit empirical residual risk; no push, release, or publication authority exists.

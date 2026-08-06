@@ -21,4 +21,12 @@ The tests do not treat model text as proof of skill use. They require Codex SDK 
 - Skill-call metadata is heuristic and does not prove that every loaded instruction changed the result.
 - The original 5/6 result was preserved and investigated rather than retried until green. Dedicated operational trajectories proved two false negatives: a missing linked glossary made a compound skill-read command fail, and a macOS `/var` versus `/private/var` alias escaped the structural path matcher. Tests now require both fixture completeness and canonical provider roots; two fresh affected batches passed 6/6.
 
-Verdict: deterministic oracles and focused empirical SC-010 approved; the complete evaluation remains separate evidence.
+The first complete expanded run remained non-green at 90/92 and exposed two
+actionable workflow failures; both assertions remained unchanged. Fail-first
+tests now require actionable authority handoff language and task-specific
+execution-constraint precedence. Focused current/security reruns passed, and a
+fresh complete run passed 92/92. The unassisted baseline's intervening rubric
+failure was retained rather than exempted.
+
+Verdict: deterministic oracles, focused empirical SC-010, and the complete
+expanded evaluation are approved within their documented scope.

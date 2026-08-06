@@ -133,7 +133,8 @@ The effective package engine requirements are Node `>=22.22.0` for Promptfoo and
 - Plugin users do not need Promptfoo installed.
 - Distributed skill content remains client-neutral.
 - Codex is the first evaluation client, not a conceptual dependency of the skills.
-- Hooks continue to be tested deterministically.
+- The declarative workflow contract continues to be tested deterministically;
+  lifecycle hooks remain intentionally absent.
 - This decision grants no authority for push, publication, release, deployment, or remote services.
 
 ## Confirmation
@@ -419,8 +420,12 @@ Deterministic evidence:
 
 Historical 34-case runs remain evidence for their recorded snapshots only. They
 do not prove this expanded catalog contract. Two independent corrected-harness
-batches passed the six affected cases 6/6; the complete 117-call run remains a
-separate gate and is not claimed by this amendment.
+batches passed the six affected cases 6/6. The first complete expanded run
+preserved two actionable failures and remained 90/92. After strengthening
+authority handoffs and precedence of task-specific execution constraints, a
+fresh authorized run passed routing 40/40, behavior 40/40, and security 12/12
+in 62m47.123s, with unchanged checkout status. Exact reports, hashes, focused
+evidence, and residual limitations are preserved in the run log.
 
 Re-evaluate this decision if Promptfoo drops Codex support, the Codex SDK or App Server changes materially, Promptfoo requires cloud sharing, adapters duplicate more logic than they remove, hidden oracles cannot be integrated, workspace or credential isolation weakens, the full evaluation becomes impractical for empirical review, another framework provides superior integration with less evidence loss, or `evals/run.py` becomes demonstrably redundant.
 

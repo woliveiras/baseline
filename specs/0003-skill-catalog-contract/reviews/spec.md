@@ -8,7 +8,7 @@ Reviewed the user's requested outcomes, explicit authority, SPEC-0003, and its b
 
 No actionable finding. The criteria preserve the user's decisions: retain 17 skills pending real-task evidence, make premortem and technical research explicit-only, keep composition strict, retain `git-commit` as portable procedure, replace biased defaults, add reusable sourced documentation assets, and provide reproducible Codex installation.
 
-The state-machine concern is resolved proportionally: the requested lifecycle clarity needs a declarative owner/transition table, not runtime state or enforcement. The spec explicitly excludes hooks, daemons, and full evaluation authority.
+The state-machine concern is resolved proportionally: the requested lifecycle clarity needs a declarative owner/transition table, not runtime state or enforcement. The spec excludes hooks and daemons. Full evaluation authority was granted later and is recorded separately from the original implementation authority.
 
 ## Standards
 

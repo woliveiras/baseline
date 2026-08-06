@@ -96,12 +96,15 @@ Both batches used fresh disposable workspaces, concurrency one, disabled local a
 
 - Official plugin validator: pass.
 - Official skill validator: 17/17 pass.
-- `uv run python -m unittest discover -s tests -v`: 76/76 pass.
-- `uv run python evals/run.py --dry-run`: 48 runs; fingerprint `42282a9ec07926d909ef97cf8a510f8444ad14206e5bc2327035ecd7222ba761`.
+- `uv run python -m unittest discover -s tests -v`: 79/79 pass.
+- `uv run python evals/run.py --dry-run`: 48 runs; fingerprint `e936f2ad5959862b91f42619d1bb6a2b84584865f4b063052a26984ca902d324`.
 - `pnpm run promptfoo:validate`: configuration valid.
 - Shell syntax: no shell source files found.
 - `git diff --check`: pass.
-- `git status --short`: only task-owned tracked and untracked paths before commit.
+- `git status --short`: only the seven task-owned documentation paths before commit.
 
-The deterministic contract and the focused empirical routing gate are green.
-The complete 117-call evaluation remains pending.
+The deterministic contract and focused empirical routing gate are green. The
+final complete evaluation passed routing 40/40, behavior 40/40, and security
+12/12 in 3767.123 seconds, with 92/92 target trials, zero `needs-review`
+verdicts, and unchanged checkout status. Reports and hashes are recorded in
+`docs/evidence/eval-runs.md`.
