@@ -106,6 +106,14 @@ class ToolkitStructureTests(unittest.TestCase):
             ui = (ROOT / "skills" / name / "agents" / "openai.yaml").read_text()
             self.assertIn("allow_implicit_invocation: false", ui)
 
+    def test_git_commit_routes_only_explicit_commit_requests(self):
+        text = (ROOT / "skills" / "git-commit" / "SKILL.md").read_text()
+        description = re.search(r"^description: (.+)$", text, re.MULTILINE)
+        self.assertIsNotNone(description)
+        self.assertIn("only when the user explicitly requests a local commit", description.group(1))
+        self.assertIn("do not use when the request says not to commit", description.group(1))
+        self.assertNotIn("local commit authority is present", description.group(1))
+
     def test_links_resolve_and_no_placeholders(self):
         markdown = list((ROOT / "skills").rglob("*.md"))
         for path in markdown:

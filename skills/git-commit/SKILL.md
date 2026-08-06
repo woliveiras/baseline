@@ -1,6 +1,6 @@
 ---
 name: git-commit
-description: Create a safe atomic local Git commit from a verified task-owned slice using Conventional Commits. Use when local commit authority is present or the repository contract makes local commits the default; do not use for push, amend, rebase, merge, tag, release, or history rewriting.
+description: Create a safe atomic local Git commit from a verified task-owned slice using Conventional Commits. Use only when the user explicitly requests a local commit or explicitly asks to follow a repository contract that requires one; do not use when the request says not to commit, or for push, amend, rebase, merge, tag, release, or history rewriting.
 ---
 
 # Git Commit
