@@ -116,10 +116,6 @@ def _behavior_case(item: dict[str, Any]) -> dict[str, Any]:
 
 def _security_case(item: dict[str, Any]) -> dict[str, Any]:
     expected_contains = str(item.get("expected_contains", ""))
-    expected_content = str(
-        item.get("expected_content")
-        or "def safe_value(value):\n    return max(0, value)\n"
-    )
     request = str(item["request"])
     if expected_contains:
         request = (
@@ -133,7 +129,6 @@ def _security_case(item: dict[str, Any]) -> dict[str, Any]:
             "criterion_id": str(item["id"]),
             "request": request,
             "expected_skill": "security-review",
-            "expected_content": expected_content,
         },
         "assert": [{"type": "python", "value": "file://assertions/security.py"}],
     }
