@@ -194,6 +194,8 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertEqual(sorted(positions), positions)
         self.assertIn("smallest complete set of applicable workflows", section)
         self.assertIn("Do not stop after the first match", section)
+        self.assertIn("read each applicable `SKILL.md` completely before acting", section)
+        self.assertIn("substitute an unaided response", section)
 
     def test_contract_links_to_canonical_glossary(self):
         """GL-001–GL-005: specialized contract terms have one discoverable meaning."""
@@ -404,6 +406,8 @@ class ToolkitStructureTests(unittest.TestCase):
             "decision-framework owns selection",
             "No matching skill",
             "declarative transition model",
+            "Read every clearly applicable implicit skill",
+            "do not substitute an unaided response",
         ):
             self.assertIn(required, normalized_catalog)
 
@@ -1413,6 +1417,17 @@ class EvaluationVerifierTests(unittest.TestCase):
             self.assertTrue(workflow.is_file())
             self.assertIn("pull_request_target", workflow.read_text(encoding="utf-8"))
 
+    def test_promptfoo_current_variant_materializes_shared_agents_contract_dependencies(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            workspace.mkdir()
+            PROMPTFOO_PREPARE._configure_variant("current", None, workspace, ROOT)
+            self.assertTrue((workspace / "AGENTS.md").is_file())
+            self.assertEqual(
+                (ROOT / "GLOSSARY.md").read_text(encoding="utf-8"),
+                (workspace / "GLOSSARY.md").read_text(encoding="utf-8"),
+            )
+
     def test_skill_routing_contracts_separate_divergence_refinement_and_architecture_audit(self):
         descriptions = {
             skill: (ROOT / "skills" / skill / "SKILL.md").read_text(encoding="utf-8").split("---", 2)[1]
@@ -2043,7 +2058,7 @@ class EvaluationVerifierTests(unittest.TestCase):
             state = Path(captured["env"]["PROMPTFOO_CONFIG_DIR"])
             self.assertTrue(state.is_absolute())
             self.assertNotEqual(Path.home() / ".promptfoo", state)
-            self.assertEqual(run_root, state.parent)
+            self.assertEqual(run_root.resolve(), state.parent)
             self.assertTrue(state.parent.is_dir(), "debug workspace may be preserved explicitly")
             self.assertFalse(state.exists(), "Promptfoo database and traces must always be removed")
 
@@ -2100,6 +2115,19 @@ class EvaluationVerifierTests(unittest.TestCase):
             self.assertIn("--no-cache", command)
             self.assertIn("--no-share", command)
             self.assertEqual("1", command[command.index("--max-concurrency") + 1])
+
+    def test_promptfoo_workspace_root_is_canonical_before_provider_configuration(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            canonical = root / "canonical"
+            canonical.mkdir()
+            alias = root / "alias"
+            try:
+                alias.symlink_to(canonical, target_is_directory=True)
+            except OSError as exc:
+                self.skipTest(f"symlinks unavailable: {exc}")
+            with patch.object(PROMPTFOO_RUNNER.tempfile, "mkdtemp", return_value=str(alias)):
+                self.assertEqual(canonical.resolve(), PROMPTFOO_RUNNER._new_workspace_root("routing"))
 
     def test_promptfoo_full_shards_cover_all_cases_and_aggregate_failures(self):
         """EV-SHD-01/EV-AGG-01: full coverage runs before one aggregate verdict."""

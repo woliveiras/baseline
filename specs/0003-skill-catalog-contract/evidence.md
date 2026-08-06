@@ -64,6 +64,24 @@ This is non-green empirical evidence. The isolated pass cannot override the comp
 
 After delivery of the initial implementation, the maintainer explicitly authorized diagnosis of the failed composed case, affected reruns, and—only after routing stability—the complete evaluation with a two-hour limit. Push, release, publication, deploy, production, and destructive authority remain withheld.
 
+## Follow-up diagnosis and correction
+
+An unchanged isolated rerun of `composition-ci-security` passed 1/1, so the investigation compared the failed batch with the dedicated evaluation home's operational session trajectories. No authentication file, credential, raw response, prompt, or trace was copied into the repository.
+
+The two failures in the first corrected-contract batch were false negatives in the harness rather than missing skill reads:
+
+- `implicit-refine` read `refine/SKILL.md`, but the same compound command then failed because the workspace copied `AGENTS.md` without its linked `GLOSSARY.md`. Promptfoo correctly excludes a failed command from `skillCalls` even though the earlier read had occurred.
+- `composition-design-decision` read both expected skills through the macOS canonical `/private/var/...` path while the provider had received the alias `/var/...`. Promptfoo's structural path matcher compares the command path with the configured skill root and therefore did not recognize the equivalent alias.
+
+The correction materializes `GLOSSARY.md` with every copied `AGENTS.md` and resolves the disposable root before configuring the provider. Deterministic tests failed first for both absent properties and pass after implementation. The applicability contract also failed first before AGENTS and the catalog required complete reads of every applicable workflow.
+
+Fresh independent evidence after both harness fixes:
+
+- affected batch A: 6/6 pass in 738.733 s; report `routing-1786037481548729000.json`; SHA-256 `f5f653e734284556e72f94b12840067984c1ca751d0d0a23da726313b8718e16`;
+- affected batch B: 6/6 pass in 824.082 s; report `routing-1786038318496887000.json`; SHA-256 `59f6461a0784d303090df5fbda4fdf56c6e86bcb91787adf6d6426418018a87c`.
+
+Both batches used fresh disposable workspaces, concurrency one, disabled local and remote caches, disabled network/web search, approval `never`, and non-persistent threads. These results close the focused six-case gate; they do not substitute for the authorized complete 117-call evaluation.
+
 ## Primary-source evidence
 
 - Codex skill discovery, implicit/explicit invocation, plugin surfaces, and local marketplace setup: current OpenAI Codex manual fetched on 2026-08-06.
@@ -78,13 +96,12 @@ After delivery of the initial implementation, the maintainer explicitly authoriz
 
 - Official plugin validator: pass.
 - Official skill validator: 17/17 pass.
-- `uv run python -m unittest discover -s tests -v`: 74/74 pass.
-- `uv run python evals/run.py --dry-run`: 48 runs; fingerprint `494fd36763016dbc5a3291afe3cfa482fb4f776fe49b3d0b1618cb5a77d4b0ca`.
+- `uv run python -m unittest discover -s tests -v`: 76/76 pass.
+- `uv run python evals/run.py --dry-run`: 48 runs; fingerprint `42282a9ec07926d909ef97cf8a510f8444ad14206e5bc2327035ecd7222ba761`.
 - `pnpm run promptfoo:validate`: configuration valid.
 - Shell syntax: no shell source files found.
 - `git diff --check`: pass.
 - `git status --short`: only task-owned tracked and untracked paths before commit.
 
-The deterministic contract is green. The empirical affected routing gate is
-not green: 5/6 in the complete batch, with one isolated 1/1 pass that does not
-override the batch failure.
+The deterministic contract and the focused empirical routing gate are green.
+The complete 117-call evaluation remains pending.

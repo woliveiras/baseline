@@ -19,6 +19,6 @@ The tests do not treat model text as proof of skill use. They require Codex SDK 
 - Static tests prove source URLs and required template sections, not that external pages will remain available.
 - Marketplace shape and validators do not prove clean-room installation on every Codex surface.
 - Skill-call metadata is heuristic and does not prove that every loaded instruction changed the result.
-- The final affected batch is 5/6, so empirical automatic composition remains non-green. Tests correctly preserve that failure.
+- The original 5/6 result was preserved and investigated rather than retried until green. Dedicated operational trajectories proved two false negatives: a missing linked glossary made a compound skill-read command fail, and a macOS `/var` versus `/private/var` alias escaped the structural path matcher. Tests now require both fixture completeness and canonical provider roots; two fresh affected batches passed 6/6.
 
-Verdict: deterministic oracles approved; empirical SC-010 remains open.
+Verdict: deterministic oracles and focused empirical SC-010 approved; the complete evaluation remains separate evidence.

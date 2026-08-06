@@ -510,6 +510,10 @@ def _check_workspace_clean(manifest: dict[str, Any]) -> None:
                     raise RuntimeError(f"outside sentinel changed: {path}")
 
 
+def _new_workspace_root(suite: str) -> Path:
+    return Path(tempfile.mkdtemp(prefix=f"tuxedo-promptfoo-{suite}-")).resolve()
+
+
 def run_promptfoo(
     suite: str,
     config: Path,
@@ -531,7 +535,7 @@ def run_promptfoo(
     codex_home = codex_home or PREPARE.preflight_codex_home()
     codex_version = _codex_version(codex_home)
     promptfoo_version = _promptfoo_version()
-    workspace_root = Path(tempfile.mkdtemp(prefix=f"tuxedo-promptfoo-{suite}-"))
+    workspace_root = _new_workspace_root(suite)
     keep = os.environ.get("TUXEDO_EVAL_KEEP_WORKSPACES") == "1"
     raw_path = workspace_root / "promptfoo-raw.json"
     manifest: dict[str, Any] | None = None

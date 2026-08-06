@@ -37,6 +37,7 @@ Provide reusable documentation knowledge instead of command-only reminders, and 
 
 - The catalog contract is declarative guidance; it does not add hooks, a CLI, a daemon, or mechanical lifecycle enforcement.
 - Every skill has one primary owner boundary, required input, output, precedence rule, stop condition, and fallback.
+- Before acting, the agent reads every clearly applicable implicit skill and every explicitly invoked skill completely; it does not replace an applicable installed workflow with an unaided response.
 - `spec` owns the canonical behavior/oracle matrix. `verify` reviews that matrix and may report corrections, but does not silently replace it.
 - Boundary design generates concrete options; the decision workflow selects among material viable options when selection authority exists.
 - Explicit-only workflows are never implicitly invoked by Codex metadata.
@@ -47,7 +48,7 @@ Provide reusable documentation knowledge instead of command-only reminders, and 
 ## Acceptance criteria
 
 - **SC-001** The installed catalog defines owner, input, output, precedence, stop, and fallback for exactly all 17 distributed skills.
-- **SC-002** Composition rules define the normal change sequence and resolve `spec` versus `verify`, `design-deep-modules` versus `decision-framework`, `refine` versus approved work, and CI versus security review without inventing an executable state machine.
+- **SC-002** Composition rules require applicable skills to be read before acting, define the normal change sequence, and resolve `spec` versus `verify`, `design-deep-modules` versus `decision-framework`, `refine` versus approved work, and CI versus security review without inventing an executable state machine.
 - **SC-003** `premortem` and `technical-research` are explicit-only in Codex metadata; `premortem` proposes governing-artifact changes unless explicit write authority exists.
 - **SC-004** `refine` cannot reopen approved decisions or become an approval owner; it stops and routes directly to the applicable workflow when evidence is sufficient.
 - **SC-005** Spec templates require classification instead of defaulting to `small` and `single-isolated-reviewer`.

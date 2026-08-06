@@ -8,7 +8,7 @@ Reviewed the governing input, SPEC-0003, matrix, tests, complete diff, documenta
 
 No unreconciled implementation finding. All requested artifacts are present and the original audit remains unchanged; a later reconciliation records disposition. `spec`, `verify`, design, decision, refine, premortem, CI, security, docs, and commit ownership now match the catalog contract.
 
-SC-010 is not empirically complete: five affected cases pass as a batch, while CI/security composition passes isolated and fails in repeated batch runs. The ADR checkbox remains open and documentation states the failure.
+SC-010 focused evidence is complete after correcting two harness false negatives. The correction preserves successful-command skill evidence, materializes the glossary referenced by the copied AGENTS contract, and canonicalizes disposable paths before provider configuration. Two independent affected batches pass 6/6; the ADR focused-provider checkbox is now supported.
 
 ## Standards
 
@@ -18,9 +18,9 @@ The documentation templates adapt rather than silently copy their sources, ident
 
 ## Risk
 
-- Automatic CI/security composition is context-sensitive or stochastic in the current Codex/Promptfoo stack. It remains a blocking evaluation failure, not a green claim.
+- Skill-call metadata remains a structural heuristic. The corrected harness removes the two observed false-negative sources, but future Codex tool-call or path-schema changes can require adapter updates.
 - Plugin installation instructions and local marketplace metadata passed static and official validation but were not installed in a clean-room Codex profile during this task.
 - Other Agent Skills clients remain format-compatible claims only; discovery, routing, composition, and name-collision behavior are unverified.
-- No full 117-call evaluation was authorized; prior full reports are historical snapshots.
+- The complete 117-call evaluation was authorized after the initial delivery but remains pending until the focused correction is committed and verified.
 
 Verdict: implementation is deliverable with explicit empirical residual risk; no push, release, or publication authority exists.

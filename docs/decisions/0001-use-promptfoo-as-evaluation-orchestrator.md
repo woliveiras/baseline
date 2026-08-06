@@ -415,11 +415,12 @@ Deterministic evidence:
 - [x] generated composition cases preserve both expected skills and both blocking assertions;
 - [x] the structured routing adapter fails when any expected composed skill is absent;
 - [x] shard ranges are disjoint and cover all 40 routing cases;
-- [ ] the six new provider cases pass with the authenticated dedicated Codex home.
+- [x] the six new provider cases pass with the authenticated dedicated Codex home.
 
 Historical 34-case runs remain evidence for their recorded snapshots only. They
-do not prove this expanded catalog contract, and no complete 117-call run is
-claimed by this amendment.
+do not prove this expanded catalog contract. Two independent corrected-harness
+batches passed the six affected cases 6/6; the complete 117-call run remains a
+separate gate and is not claimed by this amendment.
 
 Re-evaluate this decision if Promptfoo drops Codex support, the Codex SDK or App Server changes materially, Promptfoo requires cloud sharing, adapters duplicate more logic than they remove, hidden oracles cannot be integrated, workspace or credential isolation weakens, the full evaluation becomes impractical for empirical review, another framework provides superior integration with less evidence loss, or `evals/run.py` becomes demonstrably redundant.
 

@@ -317,3 +317,13 @@ Collected before dedicated Codex authentication was valid.
   recorded as 6/6, and the ADR provider checkbox remains open.
 - No full 117-call evaluation was authorized or executed. Historical 34-case
   routing and 86-target full reports do not prove the 40-case catalog.
+
+## 2026-08-06 — SPEC-0003 routing false-negative correction
+
+- A fresh isolated CI/security rerun passed 1/1, so the failed batch was not treated as proof of a CI/security skill defect.
+- Inspection of structural commands in the dedicated evaluation home's operational sessions showed that both newly reported failures had read their expected skills. No authentication file, credential, prompt, raw response, or trace was copied into the repository.
+- `implicit-refine` used a compound command whose later `GLOSSARY.md` read failed because the fixture copied `AGENTS.md` without its linked glossary. Promptfoo excludes the whole failed command from successful `skillCalls`.
+- `composition-design-decision` used canonical macOS `/private/var/...` paths while the provider root used the equivalent `/var/...` alias, so textual skill-root matching missed both reads.
+- The harness now copies `GLOSSARY.md` with `AGENTS.md` and resolves the disposable root before provider configuration. Both properties have fail-first deterministic regression tests. The routing oracle still requires successful commands and both expected skills; no assertion was weakened.
+- Two independent post-fix affected batches passed 6/6: `routing-1786037481548729000.json` in 738.733 seconds, SHA-256 `f5f653e734284556e72f94b12840067984c1ca751d0d0a23da726313b8718e16`; and `routing-1786038318496887000.json` in 824.082 seconds, SHA-256 `59f6461a0784d303090df5fbda4fdf56c6e86bcb91787adf6d6426418018a87c`.
+- This closes the six-case focused gate. The newly authorized complete 117-call evaluation remains pending and will run only from a committed, deterministically verified candidate.

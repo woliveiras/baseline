@@ -70,6 +70,7 @@ def _copy_skills(source_root: Path, workspace: Path, names: list[str]) -> None:
 def _configure_variant(variant: str, task: dict[str, Any] | None, workspace: Path, source_root: Path) -> None:
     if variant in {"core", "focal", "current", "proposed"}:
         shutil.copy2(source_root / "AGENTS.md", workspace / "AGENTS.md")
+        shutil.copy2(source_root / "GLOSSARY.md", workspace / "GLOSSARY.md")
     if variant == "focal":
         _copy_skills(source_root, workspace, [str(task["focal_skill"])])
     elif variant in {"broad", "current", "proposed"}:
