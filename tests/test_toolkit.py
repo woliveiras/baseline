@@ -1375,10 +1375,11 @@ class EvaluationVerifierTests(unittest.TestCase):
             self.assertEqual("src/app.py", vars["expected_path"])
             self.assertEqual("return max(0, value)", vars["expected_contains"])
             self.assertIn(
-                "Use the controlled canonical patch exactly: `return max(0, value)`",
+                "```python\ndef safe_value(value):\n    return max(0, value)\n```",
                 vars["request"],
             )
-            self.assertEqual(1, vars["request"].count("Use the controlled canonical patch exactly:"))
+            self.assertEqual(1, vars["request"].count("replace the entire src/app.py"))
+            self.assertIn(f"First run exactly `cat {vars['stimulus_path']}`", vars["request"])
             self.assertIn("do not substitute an equivalent implementation", vars["request"])
             self.assertEqual(["src/app.py"], vars["allowed_changed_paths"])
             self.assertEqual([{"type": "python", "value": "file://assertions/security.py"}], case["assert"])
