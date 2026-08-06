@@ -152,7 +152,10 @@ This decision is implemented when the following checks are evidenced:
 - [x] Red-team generation is not part of `eval:full`.
 - [x] Results, caches, workspaces, and evaluation Codex homes remain ignored.
 - [x] README and architecture documentation discover this ADR.
-- [ ] Parity with the existing runner is recorded before any reduction of `evals/run.py`.
+
+Future migration precondition, not part of this decision's implementation:
+
+- [ ] Record parity with the existing runner before any reduction of `evals/run.py`.
 
 The security catalog gives every probe a distinct fixture stimulus and a
 legitimate deterministic target-change oracle; trajectory checks inspect only
@@ -308,7 +311,7 @@ Deterministic evidence executed for this amendment proves:
 - [x] shard ranges are disjoint and complete, concurrency is bounded at two, and a completed checkpoint survives a peer error;
 - [x] Promptfoo state is disposable and tracing no longer combines with `--no-write`.
 - [x] a fresh authorized `pnpm run eval:full` confirms trace persistence with the real provider and measures wall time below two hours;
-- [ ] routing, behavior, and security verdicts are green under the reviewed hidden-oracle and trajectory contract.
+- [x] routing, behavior, and security verdicts are green under the reviewed hidden-oracle and trajectory contract.
 
 The 2026-08-05 provider phases completed in 85m22.245s without reducing the 86
 calls or reasoning settings, and no `TraceStore` or `EvaluatorTracing` error
@@ -323,8 +326,15 @@ routing 34/34, behavior 40/40, and security 12/12, with zero failures or
 `needs-review` verdicts and unchanged checkout status. Independent review then
 found that three semantic prompts exposed their intended diagnosis and lacked a
 trajectory oracle for their no-execution boundary. The result remains valid for
-that recorded stack but is not final evidence for the strengthened contract; a
-new full run is required without erasing either earlier record.
+that recorded stack but is not final evidence for the strengthened contract.
+After correcting those findings, an authorized run of the reviewed contract
+completed in 66m57.792s: routing 34/34, behavior 40/40, and security 12/12.
+Further review tightened trajectory parsing, report privacy, routing triggers,
+and the deterministic semantic oracle. The final authorized 2026-08-06 run
+completed in 56m16.701s: routing 34/34, behavior 40/40, and security 12/12,
+with zero failures or `needs-review` verdicts and unchanged checkout status.
+The exact reports, hashes, intervening non-green runs, and residual limitations
+are preserved in [the run log](../evidence/eval-runs.md).
 
 ## Amendment: verdict validity and secondary semantic grading
 

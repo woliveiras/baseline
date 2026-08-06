@@ -184,3 +184,86 @@ Collected before dedicated Codex authentication was valid.
   structured-trajectory allowlist began enforcing read-only inspection. The
   strengthened focused cases passed 15/15. A new full run is required before
   the amended stack is classified green.
+
+## 2026-08-05 — reviewed hidden-oracle and trajectory result
+
+- The first integral run after strengthening the hidden semantic prompts and
+  enforcing structured read-only trajectories remained non-green: routing
+  passed 32/34 while behavior passed 40/40 and security passed 12/12. It took
+  4238.324 seconds (70m38.324s). The aggregate report is
+  `full-aggregate-1785989360114687000.json`, SHA-256
+  `99ae7b42b7de3f92296548333265e7dbadccfde3e70e523d2f40206e32c2b607`.
+- The two routing failures were negative cases whose requests did not identify
+  the forbidden workspace-local `SKILL.md` precisely enough. The assertions
+  were not weakened: the requests now explicitly forbid opening that path, and
+  each affected case passed its isolated rerun 1/1 before another full run.
+- The final authorized `pnpm run eval:full`, with PyYAML supplied only through
+  an isolated UV environment, passed routing 34/34, behavior 40/40, and
+  security 12/12. The full aggregate passed 86/86 target trials with zero
+  failures and zero `needs-review` verdicts in 4017.792 seconds (66m57.792s),
+  below the two-hour operational bound. Up to 25 attached semantic judgments
+  keep the documented model-call upper bound at 111.
+- The run used the authenticated dedicated ChatGPT/Codex home, disabled network,
+  web search, sharing, cache reuse, and remote red-team generation, persisted no
+  raw responses, and left checkout status unchanged. Routing measures explicit
+  invocation, behavior covers seven of 17 distributed skills, and the 12
+  security results cover the advertised frozen probes; the run does not expand
+  any of those claims.
+- Full aggregate: `full-aggregate-1785993581510555000.json`, SHA-256
+  `0a694b5f7308a8f3a90b943db91c0d329f709858c18b2b156ad504356a800993`.
+  Routing aggregate: `routing-aggregate-1785990802704326000.json`, SHA-256
+  `a56de74d949b878fd387618ff4f2dd607c18bbaaeed683510c461a51f5dc557d`.
+  Behavior aggregate: `behavior-aggregate-1785992658964527000.json`, SHA-256
+  `374b74674e391dd660a4a4a96a4b877a9748f97040f3857ee82cf69e46a7e4c9`.
+  Security: `security-1785993581150780000.json`, SHA-256
+  `068da42a3356759ca393524c6ea15b5e147a5e8740515208f379bd329eff871d`.
+
+## 2026-08-06 — final reviewed guardrail result
+
+- A complete run after the independent review passed routing 34/34 and security
+  12/12 but remained non-green at behavior 39/40. The sole failure was
+  `real-ambiguity` under `core`: its deterministic workspace/trajectory checks
+  passed, but the blocking semantic rubric scored the response 0.6 because it
+  omitted the existing seven-year duration. The full aggregate correctly
+  remained 85/86 in 3341.657 seconds (55m41.657s). Its report is
+  `full-aggregate-1786010057509038000.json`, SHA-256
+  `8888c2cc998a2e34438a4b2d6378b03d56b4a8cf56601f20dfb48cfa76e472bf`.
+- The same run's checkout-drift check also failed independently because a
+  concurrent repository audit moved its own untracked report from
+  `docs/reviews/` to `docs/internal/audit/` while the providers were running.
+  The provider workspaces remained disposable and outside the checkout. This
+  drift was retained as a guard success, not reclassified as a provider failure.
+- The guardrails were strengthened rather than relaxed. Commit `bd6a3d7`
+  narrows `git-commit` routing to explicit commit requests; its positive and
+  negative affected cases passed 1/1 each. Commit `70dc4c6` requires the
+  ambiguity response to report both durations discovered in `REQUEST.md` and
+  adds deterministic checks for 30 days, seven years, audit-record scope, and
+  exactly one scope-resolving question. The LLM rubric remains blocking. The
+  affected behavior matrix passed 5/5; report
+  `behavior-affected-real-ambiguity-1786010468188374000.json`, SHA-256
+  `0ec0d7a409349a142662ab35b6e3de05568fa8ba5c2e9fc1ccede1f0b059aee1`.
+- The final authorized `pnpm run eval:full` passed routing 34/34, behavior
+  40/40, and security 12/12. Its full aggregate passed all 86 target trials
+  with zero failures and zero `needs-review` verdicts in 3376.701 seconds
+  (56m16.701s), below the two-hour operational bound. The preflight passed the
+  official plugin validator, all 17 official skill validators, 66 unit tests,
+  the 48-run legacy dry-run, all six Promptfoo config validations, fixture
+  checks, and shell syntax checks. `git diff --check` passed and checkout status
+  was unchanged across the provider run.
+- The run used the authenticated dedicated ChatGPT/Codex home and recorded
+  approval `never`, network and web search disabled, thread persistence
+  disabled, Promptfoo and Codex remote caches disabled, sharing disabled, and
+  remote red-team generation disabled. Sanitized reports contain no prompts,
+  raw responses, free-form judge reasons, traces, or credentials.
+- Full aggregate: `full-aggregate-1786013868505052000.json`, SHA-256
+  `e6916e05766d7450c45a462b9b6e7a455672fb3595d8a32c1cc9211b4cc23827`.
+  Routing aggregate: `routing-aggregate-1786011691408727000.json`, SHA-256
+  `af7532529595023de1bf492e414d23b10e5b7c6ebbb68ae6900a5229795b1b52`.
+  Behavior aggregate: `behavior-aggregate-1786013498584329000.json`, SHA-256
+  `62d8275c672c72dff5afbbeb9d650f6a787f9d41a48772c5c8344cfa779964b1`.
+  Security: `security-1786013868119712000.json`, SHA-256
+  `00ceaaf68bbc421ff5768ea46a8edd889792eb5d5d38042775b1b941040bbb62`.
+- Claims remain scoped: routing records Codex SDK heuristic signals for explicit
+  invocation/avoidance, not physical proof of non-reading; behavior covers
+  seven of 17 distributed skills; security proves only the 12 controlled frozen
+  probes; and the same Codex model family supplies secondary semantic grading.
