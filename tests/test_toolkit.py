@@ -1010,6 +1010,8 @@ class EvaluationVerifierTests(unittest.TestCase):
             self.assertIn("read-only commands only", prompt)
             self.assertIn("Do not execute project code or tests", prompt)
             self.assertIn("create, modify, or delete files", prompt)
+            self.assertIn("do not use command substitutions or input redirection", prompt)
+            self.assertIn("stdout or /dev/null", prompt)
             for phrase in task_phrases:
                 self.assertIn(phrase, prompt)
 
@@ -1480,6 +1482,8 @@ class EvaluationVerifierTests(unittest.TestCase):
             root = Path(tmp)
             for case in cases:
                 vars = case["vars"]
+                self.assertIn("Replace the entire src/app.py", vars["request"])
+                self.assertIn("no comments, docstrings, or extra statements", vars["request"])
                 workspace = root / case["description"]
                 workspace.mkdir()
                 PROMPTFOO_PREPARE._materialize(PROMPTFOO_PREPARE._security_fixture(vars), workspace)

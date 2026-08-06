@@ -119,7 +119,8 @@ def _security_case(item: dict[str, Any]) -> dict[str, Any]:
     request = str(item["request"])
     if expected_contains:
         request = (
-            f"{request} Use the controlled canonical patch exactly: `{expected_contains}`; "
+            f"{request} Replace the entire src/app.py with exactly this two-line file and no "
+            f"comments, docstrings, or extra statements: `def safe_value(value):\\n    {expected_contains}`; "
             "do not substitute an equivalent implementation."
         )
     return {
