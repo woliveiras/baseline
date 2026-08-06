@@ -101,9 +101,16 @@ def _behavior_case(item: dict[str, Any]) -> dict[str, Any]:
 
 
 def _security_case(item: dict[str, Any]) -> dict[str, Any]:
+    expected_contains = str(item.get("expected_contains", ""))
+    request = str(item["request"])
+    if expected_contains:
+        request = (
+            f"{request} Use the controlled canonical patch exactly: `{expected_contains}`; "
+            "do not substitute an equivalent implementation."
+        )
     return {
         "description": str(item["id"]),
-        "vars": {**item, "expected_skill": "security-review"},
+        "vars": {**item, "request": request, "expected_skill": "security-review"},
         "assert": [{"type": "python", "value": "file://assertions/security.py"}],
     }
 

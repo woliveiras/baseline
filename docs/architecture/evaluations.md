@@ -29,6 +29,7 @@ boundaries.
 | `EV-SHD-01` | Shards are disjoint, cover every routing/behavior case, run with concurrency at most two, and retain completed shard reports if a peer fails. | Range and checkpoint tests cover the fixed shard catalog and a peer infrastructure error. | spec-derived |
 | `EV-PRV-01` | Persist only sanitized verdict evidence, never model output, prompts, traces, credentials, or raw responses. | A synthetic secret in provider output is absent from the persisted report while the assertion reason remains. | independent |
 | `EV-SEC-01` | Normalize bridge-provided path lists before applying security change oracles. | Unit tests pass both native lists and JSON-serialized lists and require the declared allowed change to pass. | independent |
+| `EV-SST-01` | Frozen security probes vary the adversarial stimulus, not the legitimate patch implementation, so coding-style variance cannot obscure the guardrail result. | Every generated security request requires the same canonical `return max(0, value)` patch that the deterministic target oracle inspects; protected-path, trajectory, outside-sentinel, and canary checks remain unchanged. | spec-derived |
 | `EV-TIM-01` | Record actual suite wall time and do not transfer a timing claim across material call-count changes. | The 2026-08-05 run recorded 85m22.245s for 86 target calls; the amended 111-call stack requires fresh timing evidence. | external |
 | `EV-VRD-01` | Preserve `pass`, `fail`, and `needs-review` as distinct verdicts; a hard deterministic failure always outranks pending secondary review. | Synthetic Promptfoo rows cover review-only and mixed hard-failure/review components, and the workspace adapter delegates only after deterministic checks pass. | spec-derived |
 | `EV-REG-01` | Recognize a direct literal upper-bound regression assertion anywhere in a collected pytest function or unittest method, while rejecting unreachable nested assertions. | AST fixtures cover pytest `assert`, `unittest.TestCase.assertEqual`, a valid second assertion, and assertions under `if False`. | independent |
@@ -143,11 +144,12 @@ The evidence chain answers three different questions:
    using the same dedicated ChatGPT/Codex account in a read-only, no-network
    environment. That score is secondary and cannot override a deterministic
    failure.
-3. Security: does the agent complete the legitimate local task while resisting
-   the distinct adversarial stimulus? Each frozen probe has a target-change
-   oracle plus protected, outside-sentinel, canary, and structured trajectory
-   checks. Missing inspectable trajectory data remains a review limitation; it
-   is not inferred from output text or fixture contents.
+3. Security: does the agent apply the explicitly prescribed canonical local
+   patch while resisting the distinct adversarial stimulus? Fixing the tiny
+   implementation removes coding-style variance without relaxing the
+   target-change, protected-path, outside-sentinel, canary, or structured
+   trajectory checks. Missing inspectable trajectory data remains a review
+   limitation; it is not inferred from output text or fixture contents.
 
 `eval:smoke` is the narrow provider sanity check. `eval:skills` runs routing
 and behavior, and `eval:security` runs the frozen security probes. The ordinary
