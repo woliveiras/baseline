@@ -392,12 +392,14 @@ def _report(
     for index, row in enumerate(rows):
         response = row.get("response") if isinstance(row.get("response"), dict) else {}
         grading = row.get("gradingResult") if isinstance(row.get("gradingResult"), dict) else {}
+        variables = row.get("vars") if isinstance(row.get("vars"), dict) else {}
         status = _row_status(row)
         provider = row.get("provider") or row.get("providerId") or "unknown"
         if isinstance(provider, dict):
             provider = provider.get("label") or provider.get("id") or "unknown"
         report_rows.append({
             "test_id": _row_id(row, index),
+            "criterion_id": _safe_reason(variables.get("criterion_id")) if variables.get("criterion_id") else None,
             "provider": _safe_reason(provider),
             "status": status,
             "duration_ms": response.get("latencyMs") or row.get("latencyMs"),

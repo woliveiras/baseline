@@ -1,1 +1,1 @@
-{"id":"bug-with-regression","fixture":"bug-with-regression","focal_skill":"bugfix","prompt":"Diagnose and fix the reported defect.","verifier":"clamp-regression","mutation_policy":"required","secondary_review":false}
+{"id":"bug-with-regression","criterion_id":"BH-BUG-01","fixture":"bug-with-regression","focal_skill":"bugfix","prompt":"Diagnose and fix the reported defect.","verifier":"clamp-regression","mutation_policy":"required","secondary_review":false}

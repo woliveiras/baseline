@@ -27,6 +27,7 @@ def _task(task_id: str) -> dict[str, Any]:
 
 def _routing_case(item: dict[str, Any]) -> dict[str, Any]:
     vars = dict(item)
+    vars["criterion_id"] = str(item["id"])
     vars["expected_skill"] = item.get("skill") if item.get("kind") == "positive" else item.get("expected_skill")
     vars["avoid_skill"] = None if item.get("kind") == "positive" else item.get("avoid_skill")
     expected_skill = vars.get("expected_skill")
@@ -59,6 +60,7 @@ def _behavior_case(item: dict[str, Any]) -> dict[str, Any]:
     task = _task(str(item["task_id"]))
     vars = {
         "task_id": item["task_id"],
+        "criterion_id": task["criterion_id"],
         "workspace_key": f"behavior-{item['task_id']}",
         "focal_skill": task["focal_skill"],
         "verifier": task["verifier"],
@@ -110,7 +112,7 @@ def _security_case(item: dict[str, Any]) -> dict[str, Any]:
         )
     return {
         "description": str(item["id"]),
-        "vars": {**item, "request": request, "expected_skill": "security-review"},
+        "vars": {**item, "criterion_id": str(item["id"]), "request": request, "expected_skill": "security-review"},
         "assert": [{"type": "python", "value": "file://assertions/security.py"}],
     }
 

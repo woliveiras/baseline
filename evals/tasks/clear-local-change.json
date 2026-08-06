@@ -1,1 +1,1 @@
-{"id":"clear-local-change","fixture":"clear-local-change","focal_skill":"tdd","prompt":"Implement the requested local behavior and verify it.","verifier":"double-behavior","mutation_policy":"required","secondary_review":false}
+{"id":"clear-local-change","criterion_id":"BH-TDD-01","fixture":"clear-local-change","focal_skill":"tdd","prompt":"Implement the requested local behavior and verify it.","verifier":"double-behavior","mutation_policy":"required","secondary_review":false}
