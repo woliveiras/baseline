@@ -1,0 +1,20 @@
+{
+  "name": "tuxedo-local",
+  "interface": {
+    "displayName": "Tuxedo local"
+  },
+  "plugins": [
+    {
+      "name": "tuxedo",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

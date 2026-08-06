@@ -16,6 +16,8 @@ decisions say why something was chosen, and evidence records what was measured.
   conventions, and the required checks. Read it before changing behavior.
 - [Repository glossary](../GLOSSARY.md) defines oracle, behavior/oracle matrix,
   oracle provenance, fail-first, task ownership, and the review phases.
+- [Skill catalog contract](../skills/catalog.md) defines ownership, composition,
+  precedence, stop conditions, and fallback for all 17 installed workflows.
 - [Development guide](development.md) covers the repository layout, the
   toolchain, how to develop a change, and how to test it.
 
@@ -34,6 +36,7 @@ decisions say why something was chosen, and evidence records what was measured.
 
 - [ADR index](decisions/README.md)
 - [ADR 0001: Promptfoo as evaluation orchestrator](decisions/0001-use-promptfoo-as-evaluation-orchestrator.md)
+- [ADR 0002: defer lifecycle hooks](decisions/0002-defer-lifecycle-hooks-pending-empirical-need.md)
 
 ## Working with the evaluation harness
 

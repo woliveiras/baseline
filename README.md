@@ -28,17 +28,62 @@ Tuxedo v0.1 distributes 17 workflow skills that your agent loads on demand:
 - Deep work (explicitly invoked): `brainstorming`, `premortem`, `session-bridge`, `technical-research`.
 - Safety: `security-review`.
 
-Routine changes load only the smallest relevant workflow. `brainstorming`, `session-bridge`, and the architecture audits are explicit tools for deep work, not defaults.
+Routine changes load only the smallest relevant workflow. `brainstorming`, `git-commit`, `improve-architecture`, `premortem`, `session-bridge`, and `technical-research` are explicit-only; the other workflows may be selected automatically when their descriptions match. The [catalog contract](skills/catalog.md) defines ownership, precedence, stop conditions, and composition without adding a runtime state machine.
 
-## Using it with Codex
+## Install for Codex
 
-The repository itself is the plugin. There is intentionally no separate installer, package manager, or sync layer.
+Cloning the repository does not install Tuxedo and the root `skills/` directory is not a standalone Codex discovery location. Choose either the plugin route for the complete bundle or the standalone route for direct Agent Skills. Neither route installs a Tuxedo runtime, Python, UV, or Node dependency in the consumer project.
 
-1. **Add the skills.** Validate the repository with the current `plugin-creator` validator, then add it to a local Codex marketplace so the skills load in your agent. Publication and release are intentionally not automated here.
-2. **Opt in to Codex Rules (optional).** Copy [`templates/codex/tuxedo.rules`](templates/codex/tuxedo.rules) to `.codex/rules/tuxedo.rules` in a trusted project and restart Codex. The rules ask for human approval before push, destructive Git cleanup, release, publication, deploy, and infrastructure mutations, and forbid a few literal broad-deletion forms.
-3. **Follow the declarative workflow.** Start from the authorized task, define the oracle and run its appropriate verification fail-first before production implementation, stay inside scope, review spec/tests/code separately, and inspect the staged candidate before a local commit.
+### Option A: install the plugin
 
-Once the skills are available, work normally: your agent picks the smallest relevant workflow, and the deep-work skills stay explicit. Each skill documents its own steps in its `SKILL.md`.
+This repository includes a local marketplace entry. From a trusted clone:
+
+```bash
+git clone https://github.com/woliveiras/tuxedo.git
+cd tuxedo
+codex plugin marketplace add "$(pwd)"
+codex
+```
+
+Inside Codex CLI, open `/plugins`, select the `tuxedo-local` marketplace, install `tuxedo`, and start a new session. In Codex desktop, restart the app, open **Plugins**, choose **Tuxedo local**, install **Tuxedo**, and start a new task. The installed plugin exposes all 17 skills; you do not have to name the plugin in normal prompts.
+
+#### Update
+
+Pull the trusted clone, then uninstall and reinstall Tuxedo from `/plugins` or the desktop Plugins screen so the installed cache is refreshed.
+
+#### Remove
+
+Uninstall Tuxedo first, then remove the marketplace:
+
+```bash
+codex plugin marketplace remove tuxedo-local
+```
+
+### Option B: install standalone skills
+
+Codex discovers user skills under `$HOME/.agents/skills` and repository skills under `.agents/skills`. It follows symlinked skill directories. For a personal installation from an existing trusted clone:
+
+```bash
+mkdir -p "$HOME/.agents/skills"
+for skill_dir in "/absolute/path/to/tuxedo/skills"/*/; do
+  ln -s "$skill_dir" "$HOME/.agents/skills/$(basename "$skill_dir")"
+done
+```
+
+Replace the example path with the absolute path to your clone and restart Codex. For one repository only, use that repository's `.agents/skills` instead of `$HOME/.agents/skills`. Update by pulling the source clone; remove by deleting only the Tuxedo symlinks you created. Do not symlink the whole `skills/` directory as one skill.
+
+### Discovery and invocation
+
+- **Implicit invocation:** Codex may select an installed skill when the request matches its frontmatter description and `agents/openai.yaml` permits it. Ask for the outcome normally; no plugin name is required.
+- **Explicit invocation:** use `$skill-name` in Codex CLI/IDE or choose the skill from the UI. Explicit-only Tuxedo workflows require this or an equally direct request.
+- If many skills are installed, Codex may shorten or omit entries from its initial skill list because of the context budget. Use explicit invocation when you need a particular workflow deterministically.
+- The plugin is supported by Codex CLI and Codex desktop. Codex IDE supports standalone skills but not plugin installation. Tuxedo follows the portable Agent Skills format, but installation, discovery, routing, and composition in other clients remain unverified until clean-room client tests are recorded.
+
+### Optional command rules
+
+Copy [`templates/codex/tuxedo.rules`](templates/codex/tuxedo.rules) to `.codex/rules/tuxedo.rules` in a trusted project and restart Codex. The rules ask for human approval before push, destructive Git cleanup, release, publication, deploy, and infrastructure mutations, and forbid a few literal broad-deletion forms.
+
+Once installed, work normally: start from the authorized task, define the oracle and run the appropriate verification fail-first, stay inside scope, review intent/tests/code separately, and inspect the staged candidate before a local commit. Each skill documents its own workflow in `SKILL.md`.
 
 ## Responsibility boundaries
 
