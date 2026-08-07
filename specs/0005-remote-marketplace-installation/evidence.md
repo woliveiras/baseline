@@ -32,13 +32,25 @@ literal were reconciled with the written contract.
 | RM-001–RM-008 | n/a | `pnpm run promptfoo:validate` | Configuration is valid; no model call | 2026-08-07 |
 | RM-001–RM-008 | n/a | `git diff --check` | pass for the current worktree candidate | 2026-08-07 |
 
+## Post-authorization remote clean-room evidence
+
+After the original task completed, the maintainer explicitly authorized push
+and remote installation testing. The evidence commit was available at
+`origin/main` before these probes ran.
+
+| Criterion | Test-tree digest | Command or probe | Result | Timestamp or run identifier |
+| --- | --- | --- | --- | --- |
+| RM-009 | `3ad1a6aceff88c332da0e7a86360bee38aeb7805` | Isolated `HOME` and `CODEX_HOME`; `codex plugin marketplace add woliveiras/tuxedo --ref main --json` with both API-key variables removed | Expected transport-authentication failure: the shorthand cloned over HTTPS, the repository was private, and terminal credential prompts were disabled | 2026-08-07 |
+| RM-003–RM-005, RM-009 | `3ad1a6aceff88c332da0e7a86360bee38aeb7805` | Isolated remote SSH lifecycle using `git@github.com:woliveiras/tuxedo.git`, marketplace upgrade, plugin add, app-server `skills/list`, remove, reinstall, and final plugin/marketplace removal | pass; package contained only `.codex-plugin` and `skills`, all 17 expected Tuxedo skills were enabled and resolved inside the isolated plugin cache, no `auth.json` was created, and final configured state was empty | 2026-08-07 |
+| RM-001–RM-009 | `3ad1a6aceff88c332da0e7a86360bee38aeb7805` | `uv run python -m unittest -v tests.test_toolkit.ToolkitStructureTests.test_readme_documents_remote_marketplace_installation_contract` | 1/1 pass after the private-access clarification | 2026-08-07 |
+
 ## Documentation decision
 
 - Decision: `required`
 - Rationale: The change is a public installation and credential-boundary contract. A consumer needs executable commands and explicit limitations, while maintainers need the local clone path preserved separately.
 - Updated artifacts: `README.md`, `docs/development.md`, and this specification's matrix, evidence, and review records.
 
-## Execution boundary
+## Original execution boundary
 
 - No plugin installation or reinstallation was run. In particular, the
   existing clean-room test that invokes `codex plugin marketplace add` and
@@ -51,11 +63,17 @@ literal were reconciled with the written contract.
   available. The focused deterministic test and a later filtered deterministic
   suite excluding that integration test are the applicable local evidence.
 
+Those constraints describe commit `c092f1f`. They were superseded only for the
+later, separately authorized remote clean-room probes recorded above; the
+history is retained rather than rewritten as if the original task had broader
+authority.
+
 ## Residual limitations
 
-- Static tests prove the documented command shapes and negative claims, not a
-  remote GitHub fetch, private SSH access, Codex desktop behavior, or a fresh
-  remote clean-room install.
+- Remote SSH installation and Codex CLI discovery are now verified. Anonymous
+  HTTPS access remains unavailable while the repository is private; machines
+  using the shorthand need separately configured GitHub HTTPS credentials.
+- Codex desktop installation and UI discovery remain unexecuted.
 - `main` remains mutable and no immutable Git ref is documented because no Git
   tags are published yet. A future tag must be verified before documentation
   can recommend it.

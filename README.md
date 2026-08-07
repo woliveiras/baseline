@@ -38,7 +38,16 @@ Cloning the repository does not install Tuxedo. Choose either the plugin route f
 
 ### Option A: install from the GitHub marketplace
 
-For another machine, install Tuxedo without keeping a local Tuxedo checkout. Codex fetches the GitHub marketplace snapshot, reads its committed `.agents/plugins/marketplace.json`, and then installs the package at `plugins/tuxedo/`:
+For another machine, install Tuxedo without keeping a local Tuxedo checkout. Codex fetches the GitHub marketplace snapshot, reads its committed `.agents/plugins/marketplace.json`, and then installs the package at `plugins/tuxedo/`.
+
+This repository is currently private. SSH is the verified remote clean-room route for its current access policy. Configure the machine's GitHub SSH access, then run:
+
+```bash
+codex plugin marketplace add git@github.com:woliveiras/tuxedo.git --ref main
+codex plugin add tuxedo@tuxedo-local
+```
+
+The `woliveiras/tuxedo` shorthand uses HTTPS. Use it when the repository has public access or separately configured GitHub HTTPS credentials:
 
 ```bash
 codex plugin marketplace add woliveiras/tuxedo --ref main
@@ -49,10 +58,19 @@ The `tuxedo-local` name is the committed marketplace name; it does not mean that
 
 #### Optional sparse checkout
 
-To fetch only the two paths needed to resolve and install the plugin, repeat `--sparse` for the marketplace manifest and the package:
+To fetch only the two paths needed to resolve and install the plugin, repeat `--sparse` for the marketplace manifest and the package. This HTTPS form has the same access requirement described above:
 
 ```bash
 codex plugin marketplace add woliveiras/tuxedo --ref main \
+  --sparse .agents/plugins/marketplace.json \
+  --sparse plugins/tuxedo
+codex plugin add tuxedo@tuxedo-local
+```
+
+For the currently verified SSH route, use the same sparse paths with the SSH source:
+
+```bash
+codex plugin marketplace add git@github.com:woliveiras/tuxedo.git --ref main \
   --sparse .agents/plugins/marketplace.json \
   --sparse plugins/tuxedo
 codex plugin add tuxedo@tuxedo-local
@@ -62,7 +80,7 @@ Do not omit either sparse path: the manifest selects the plugin and `plugins/tux
 
 #### Private repositories and credentials
 
-For a private repository or private fork, use an SSH Git URL after configuring the machine's GitHub SSH access:
+For this private repository or another private fork, use an SSH Git URL after configuring the machine's GitHub SSH access:
 
 ```bash
 codex plugin marketplace add git@github.com:woliveiras/tuxedo.git --ref main
@@ -132,7 +150,7 @@ Replace the example path with the absolute path to your clone and restart Codex.
 - **Implicit invocation:** Codex may select an installed skill when the request matches its frontmatter description and `agents/openai.yaml` permits it. Ask for the outcome normally; no plugin name is required.
 - **Explicit invocation:** use `$skill-name` in Codex CLI/IDE or choose the skill from the UI. Explicit-only Tuxedo workflows require this or an equally direct request.
 - If many skills are installed, Codex may shorten or omit entries from its initial skill list because of the context budget. Use explicit invocation when you need a particular workflow deterministically.
-- Clean-room Codex CLI evidence covers plugin installation, discovery of all distributed skills, removal, and reinstallation without credentials or model calls. It proves packaging and discovery, not that a model follows a skill correctly.
+- Local clean-room Codex CLI evidence covers plugin installation, discovery of all distributed skills, removal, and reinstallation without Codex authentication or model calls. A separate remote clean-room run verified the same lifecycle over SSH using machine-managed GitHub access. These checks prove packaging and discovery, not that a model follows a skill correctly.
 - The plugin is supported by Codex CLI and Codex desktop. Codex IDE supports standalone skills but not plugin installation. Tuxedo follows the portable Agent Skills format, but installation, discovery, routing, and composition in other clients remain unverified until client-specific clean-room tests are recorded.
 
 ### Optional command rules

@@ -41,3 +41,24 @@ that remains outside the candidate.
   the filtered deterministic suite excluding that test is the applicable
   broader local check.
 - No unresolved in-scope finding remains.
+
+## Post-authorization amendment review
+
+### Spec
+
+- README now leads with the verified SSH route for the repository's current
+  private state and conditions the HTTPS shorthand on the access it requires.
+- The original exact shorthand and marketplace-first selector remain
+  documented; the clarification does not invent direct URL plugin installation.
+
+### Standards
+
+- The focused RM-001–RM-009 documentation test passes after a valid fail-first
+  run. The external SSH lifecycle installed only the package boundary,
+  discovered all 17 enabled skills, removed, reinstalled, and cleaned final
+  marketplace/plugin state without a model call.
+
+### Risk
+
+- Codex desktop remains unexecuted. `main` remains mutable, and SSH availability
+  remains a machine-level GitHub configuration responsibility.

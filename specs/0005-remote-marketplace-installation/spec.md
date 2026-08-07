@@ -44,6 +44,7 @@ the maintainer's development path.
 - The remote marketplace resolves the committed marketplace manifest, whose plugin source remains `./plugins/tuxedo`; a consumer does not need a Tuxedo checkout.
 - Optional sparse checkout includes both `.agents/plugins/marketplace.json` and `plugins/tuxedo`; omitting either path is not a supported sparse recipe.
 - A private repository may use an SSH Git URL such as `git@github.com:woliveiras/tuxedo.git`; GitHub access is configured through the machine's Git/SSH setup, not embedded in the command or repository.
+- The repository is private at the time of the recorded remote clean-room run. The SSH source is the verified fresh-machine route; the `woliveiras/tuxedo` shorthand uses HTTPS and requires either public access or GitHub HTTPS credentials configured outside Codex.
 - Updating the configured Git marketplace uses `codex plugin marketplace upgrade tuxedo-local`; refreshing the installed plugin uses the documented remove/add cycle.
 - Reinstallation removes and adds `tuxedo@tuxedo-local`; complete removal removes the plugin before removing the `tuxedo-local` marketplace.
 - Codex account authentication and GitHub repository authentication are separate concerns. Installing a public marketplace does not require a GitHub credential, and a private marketplace requires Git access independently of Codex account login.
@@ -61,6 +62,7 @@ the maintainer's development path.
 - **RM-006** README states that `main` is mutable, that Git tags are not published yet, and that direct `codex plugin add <URL>` is not the supported route.
 - **RM-007** README and the development guide preserve the local clone flow as maintainer development workflow rather than presenting it as the remote installation requirement.
 - **RM-008** Deterministic tests assert the exact commands, both sparse paths, lifecycle order, credential limitations, mutable-ref limitation, and absence of the unsupported direct-URL claim without installing the plugin, using the network, or calling a model.
+- **RM-009** README states that the repository is currently private, identifies SSH as the verified clean-room route, and explains that the HTTPS shorthand requires public access or separately configured GitHub HTTPS credentials.
 
 # Explicit exclusions
 
@@ -74,6 +76,7 @@ the maintainer's development path.
 # Edge and failure scenarios
 
 - A consumer with a public repository can use the canonical shorthand without GitHub credentials; a private repository must use an authenticated Git transport such as SSH configured on that machine.
+- In an isolated home without GitHub HTTPS credentials, `woliveiras/tuxedo` resolves to HTTPS and fails while the repository is private. This is an expected transport-authentication failure, not a Codex account authentication failure.
 - A sparse checkout that omits either the marketplace manifest or the package directory cannot resolve the committed plugin source and is not documented as valid.
 - After `marketplace upgrade`, an installed plugin cache may still need the remove/add cycle to refresh the package contents; the documentation keeps these operations distinct.
 - Removing the marketplace before its installed plugin is an invalid lifecycle order; the documented removal sequence handles the plugin first.

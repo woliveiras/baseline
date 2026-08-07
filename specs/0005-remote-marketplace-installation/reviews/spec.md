@@ -32,3 +32,24 @@ SPEC-0005 without using the new tests or documentation as justification.
 - No unresolved specification finding remains. Remote installation and private
   SSH behavior are intentionally outside execution authority for this task and
   remain residual evidence limitations.
+
+## Post-authorization amendment review
+
+### Spec
+
+- The later remote probe established that the repository is currently private:
+  the `owner/repo` shorthand resolves to HTTPS and cannot be presented as an
+  anonymous fresh-machine route under the current access policy.
+- The marketplace-first contract remains unchanged. SSH is now the verified
+  transport for the current repository; the shorthand remains valid only with
+  public access or separately configured GitHub HTTPS credentials.
+
+### Standards
+
+- This clarification follows observed external behavior and preserves the
+  separation between Codex account authentication and Git transport access.
+
+### Risk
+
+- SSH depends on machine-managed GitHub access. No key, token, credential URL,
+  or Codex authentication state was copied into the isolated home.

@@ -33,3 +33,23 @@ implementation as evidence that the test expectations were correct.
 - No unresolved test finding remains after reconciling the capitalization
   expectation corrections and temporary sparse-command test literal observed
   during focused execution.
+
+## Post-authorization amendment review
+
+### Spec
+
+- RM-009 adds a deterministic documentation oracle for the current private
+  access policy and its HTTPS/SSH distinction.
+
+### Standards
+
+- The fail-first focused test rejected the prior README because it did not state
+  that the repository is private or identify the verified transport.
+- Remote probes stayed outside the static documentation test and used isolated
+  homes with both API-key environment variables removed.
+
+### Risk
+
+- The SSH lifecycle is external evidence for one configured machine. It does
+  not prove that another machine has valid GitHub SSH access or that Codex
+  desktop exposes the same UI behavior.

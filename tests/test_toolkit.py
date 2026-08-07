@@ -866,7 +866,7 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertTrue((PLUGIN_ROOT / ".codex-plugin" / "plugin.json").is_file())
 
     def test_readme_documents_remote_marketplace_installation_contract(self):
-        """RM-001..RM-008: remote install, lifecycle, limits, and maintainer path are explicit."""
+        """RM-001..RM-009: remote install, lifecycle, access, and maintainer path are explicit."""
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         development = (ROOT / "docs" / "development.md").read_text(encoding="utf-8")
 
@@ -876,6 +876,13 @@ class ToolkitStructureTests(unittest.TestCase):
             readme,
         )
         self.assertIn("without keeping a local Tuxedo checkout", readme)
+        for marker in (
+            "This repository is currently private",
+            "SSH is the verified remote clean-room route",
+            "The `woliveiras/tuxedo` shorthand uses HTTPS",
+            "public access or separately configured GitHub HTTPS credentials",
+        ):
+            self.assertIn(marker, readme, marker)
         sparse_command = "\n".join(
             (
                 "codex plugin marketplace add woliveiras/tuxedo --ref main \\",
