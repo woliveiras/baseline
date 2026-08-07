@@ -32,6 +32,7 @@ a compliance score.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `DWT-001` | 2026-08-07 | Codex desktop | `medium` | pass | none | `AGENTS.md` declarative flow, composed Tuxedo workflows, deterministic tests, and Git inspection | Commit `47148ab`; spec and matrix preceded implementation, the six-case fail-first run detected both target defects, three-phase review completed, and the task-owned commit excluded local contamination |
 | `DWT-002` | 2026-08-07 | Codex desktop | analysis-only | pass | none | Explicit no-write authority, official-source routing, and final Git inspection | Official Codex and GitHub evidence supported a remote-marketplace recommendation; no tests, installation, artifact, commit, push, or release was attempted |
+| `DWT-003` | 2026-08-07 | Codex desktop | `medium` | pass | none | `AGENTS.md` fidelity chain, composed Tuxedo workflows, deterministic documentation tests, three-phase review, and staged-diff inspection | Commit `c092f1f`; SPEC-0005 and its matrix preceded a valid fail-first oracle, the oracle was strengthened during review, 89/89 applicable deterministic tests passed, and the task-owned commit excluded concurrent and ignored state |
 
 ### DWT-001 observations
 
@@ -70,6 +71,26 @@ a compliance score.
   concurrent diff was unrelated to marketplace research, so no write is
   attributed to DWT-002.
 - The task completed in approximately 7 minutes 21 seconds.
+
+### DWT-003 observations
+
+- Codex selected `spec`, `tdd`, `docs`, and `verify` without the request naming
+  those workflows, then explicitly selected `git-commit` before staging.
+- SPEC-0005 and its eight-criterion behavior matrix preceded the fail-first
+  documentation test. The test failed because the remote marketplace sequence
+  was absent before the README and development guide were changed.
+- During the test review, Codex found that the sparse-checkout oracle only
+  checked two independent markers and strengthened it to require both paths in
+  the same command. Temporary test-authoring errors were corrected and recorded
+  without weakening the final oracle.
+- The applicable deterministic suite passed 89/89. The clean-room integration
+  case was not loaded because this trial explicitly withheld plugin-installation
+  authority; remote installation remained an honestly reported limitation.
+- A concurrent pre-existing catalog commit and the ignored `.DS_Store` were
+  identified, preserved, and excluded from the nine-path staged candidate.
+  The final commit was `c092f1f docs(install): document remote marketplace flow`.
+- The task completed in approximately 15 minutes 17 seconds. It performed no
+  plugin installation, model call, tag, release, or push.
 
 ## Decision checkpoint
 
