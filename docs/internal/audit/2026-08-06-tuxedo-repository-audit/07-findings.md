@@ -1,328 +1,328 @@
 # 07 — Findings
 
-> Estado mais recente em `8776a6a`: 22 abertos e 7 encerrados por remoção de escopo. Os detalhes abaixo preservam a evidência do snapshot original; veja [10 — Reconciliação após remoção](10-reconciliation-after-lifecycle-removal.md) para o estado atual e [09](09-reconciliation-2026-08-06.md) para o checkpoint anterior.
+> Latest state at `8776a6a`: 22 open and 7 closed by scope removal. The details below preserve evidence from the original snapshot; see [10 — Reconciliation after removal](10-reconciliation-after-lifecycle-removal.md) for the current state and [09](09-reconciliation-2026-08-06.md) for the previous checkpoint.
 
-Ordem: severidade, dependência e potencial de invalidar outras evidências. “Pode ser isolado” descreve implementação, não autorização para mudar o repositório.
+Order: severity, dependency, and potential to invalidate other evidence. “Can be isolated” describes implementation, not authorization to change the repository.
 
 ## P1 — High
 
-### TUX-AUD-001 — O próprio catálogo não possui cadeia de fidelidade durável
+### TUX-AUD-001 — The catalog itself lacks a durable fidelity chain
 
-- **Severidade/confiança/categoria/status:** P1; alta; arquitetura/rastreabilidade; confirmado.
-- **Contrato violado:** `AGENTS.md:7-17` e `README.md:9-20` exigem spec → matrix → tests → implementation → evidence → review com IDs estáveis.
-- **Evidência local:** `git ls-files` não contém `specs/`, AC/SPEC real fora dos templates, matrix do catálogo, evidence artifact ou review receipt. `templates/spec/*` fornece apenas moldes.
-- **Evidência externa:** não necessária; é contrato interno.
-- **Explicação/impacto:** `SKILL.md` funciona simultaneamente como intenção e implementação. Um reviewer não reconstrói fase 1 sem ler o objeto julgado; mudanças podem redefinir silenciosamente o contrato.
-- **Cenário:** alterar trigger/autoridade de uma skill e ajustar teste textual correspondente; nenhuma AC independente denuncia drift.
-- **Causa provável:** migração priorizou conteúdo distribuível e não materializou os receipts de sua própria criação.
-- **Recomendação/arquivos:** criar spec canônica do catálogo, ACs, oracle matrix, evidence/reviews; provavelmente nova superfície `specs/` ou equivalente e links em docs/tests.
-- **Aceitação:** 17 skills e mecanismos mapeados; AC único por promessa pública; cada AC liga oracle/test/eval/implementation/evidence/review; fase 1 é reconstruível sem `SKILL.md`.
-- **Validação:** link/schema checks, coverage matrix completa, review das três fases e todos os required checks.
-- **Ordem/dependência/residual/isolamento:** `WP-01`, primeiro; funda os demais; presença estrutural ainda não provará semântica; não isolável.
+- **Severity/confidence/category/status:** P1; high; architecture/traceability; confirmed.
+- **Violated contract:** `AGENTS.md:7-17` and `README.md:9-20` require spec → matrix → tests → implementation → evidence → review with stable IDs.
+- **Local evidence:** `git ls-files` contains no `specs/`, real AC/SPEC outside the templates, catalog matrix, evidence artifact, or review receipt. `templates/spec/*` provides only molds.
+- **External evidence:** not required; this is an internal contract.
+- **Explanation/impact:** `SKILL.md` simultaneously serves as intent and implementation. A reviewer cannot reconstruct phase 1 without reading the judged object; changes may silently redefine the contract.
+- **Scenario:** change a skill's trigger/authority and adjust the corresponding textual test; no independent AC detects drift.
+- **Likely cause:** migration prioritized distributable content and did not materialize receipts for its own creation.
+- **Recommendation/files:** create a canonical catalog spec, ACs, oracle matrix, evidence/reviews; probably a new `specs/` surface or equivalent, with links from docs/tests.
+- **Acceptance:** 17 skills and mechanisms mapped; one AC per public promise; every AC links oracle/test/eval/implementation/evidence/review; phase 1 is reconstructible without `SKILL.md`.
+- **Validation:** link/schema checks, complete coverage matrix, three-phase review, and all required checks.
+- **Order/dependency/residual/isolation:** `WP-01`, first; foundational for the others; structural presence still will not prove semantics; not isolable.
 
-### TUX-AUD-002 — O launcher do hook modifica o projeto consumidor
+### TUX-AUD-002 — The hook launcher modifies the consumer project
 
-- **Severidade/confiança/categoria/status:** P1; alta; hooks/runtime/portabilidade; confirmado.
-- **Contrato violado:** “sem runtime dependency” (`docs/development.md:7-11`) e hook sem rede/efeito implícito (`docs/architecture/enforcement.md:122-126`).
-- **Evidência local:** `hooks/hooks.json:10-11,22-23` usa `uv run python`; `tests/test_toolkit.py:235-238` não executa no cwd real do fixture.
-- **Evidência externa:** [UV `run`](https://docs.astral.sh/uv/concepts/projects/run/) sincroniza o project environment; [Codex hooks](https://developers.openai.com/codex/hooks) executam no cwd da sessão.
-- **Explicação/impacto:** UV participa do projeto consumidor antes do guard. Probe sem policy criou `.venv`/`uv.lock`; pyproject inválido retornou exit 2. Pode baixar/buildar dependências, alterar repo e bloquear Bash.
-- **Cenário:** abrir projeto Python/UV com plugin ativo e executar Bash sem `.tuxedo/policy.json`.
-- **Causa provável:** convenção de toolchain do mantenedor foi aplicada ao lifecycle do consumidor.
-- **Recomendação/arquivos:** launcher autocontido/isolado, sem project discovery/sync; `hooks/hooks.json`, possível wrapper e tests; `commandWindows` explícito.
-- **Aceitação:** projetos UV válido/inválido/sem policy não mudam nenhum byte, não criam env/lock e não acessam índice; comportamento missing-runtime e Windows documentado.
-- **Validação:** E2E da definição real do hook com cwd real, snapshot before/after e offline; suites obrigatórias.
-- **Ordem/dependência/residual/isolamento:** `WP-02`, paralelo após AC; runtime ausente ainda requer política; isolável.
+- **Severity/confidence/category/status:** P1; high; hooks/runtime/portability; confirmed.
+- **Violated contract:** “no runtime dependency” (`docs/development.md:7-11`) and a hook without network/implicit effects (`docs/architecture/enforcement.md:122-126`).
+- **Local evidence:** `hooks/hooks.json:10-11,22-23` uses `uv run python`; `tests/test_toolkit.py:235-238` does not execute in the fixture's real cwd.
+- **External evidence:** [UV `run`](https://docs.astral.sh/uv/concepts/projects/run/) syncs the project environment; [Codex hooks](https://developers.openai.com/codex/hooks) execute in the session cwd.
+- **Explanation/impact:** UV participates in the consumer project before the guard. A no-policy probe created `.venv`/`uv.lock`; an invalid pyproject returned exit 2. It may download/build dependencies, alter the repository, and block Bash.
+- **Scenario:** open a Python/UV project with the plugin active and run Bash without `.tuxedo/policy.json`.
+- **Likely cause:** maintainer toolchain convention was applied to the consumer lifecycle.
+- **Recommendation/files:** self-contained/isolated launcher, without project discovery/sync; `hooks/hooks.json`, a possible wrapper and tests; explicit `commandWindows`.
+- **Acceptance:** valid/invalid/no-policy UV projects do not change any byte, create an environment/lock, or access an index; missing-runtime and Windows behavior is documented.
+- **Validation:** E2E of the real hook definition with real cwd, before/after snapshot, and offline execution; required suites.
+- **Order/dependency/residual/isolation:** `WP-02`, in parallel after AC; missing runtime still requires a policy; isolable.
 
-### TUX-AUD-003 — O commit gate não valida o staged Git index
+### TUX-AUD-003 — The commit gate does not validate the staged Git index
 
-- **Severidade/confiança/categoria/status:** P1; alta; integridade/Git; confirmado.
-- **Contrato violado:** slice staged verificada em `skills/git-commit/SKILL.md:8-12`, `README.md:43-50` e enforcement commit gate.
-- **Evidência local:** `guard.py:79-98,141-162,247-364` lê somente working tree; não lê index/cached diff.
-- **Explicação/impacto:** probe com working tree `VALUE=1` receipted e index `VALUE=999` passou em PreToolUse e Stop. O commit pode gravar bytes não revisados.
-- **Cenário:** stage malicioso/antigo, restaurar working tree aprovada e executar `git commit`; `commit -a`/substitution amplia TOCTOU.
-- **Causa provável:** “snapshot de conclusão” foi modelado como filesystem, não como candidato do trigger.
-- **Recomendação/arquivos:** abstração de candidate snapshot; commit usa Git index, Stop usa working tree; `guard.py`, receipt schema, tests/docs.
-- **Aceitação:** index != WT, staged deletion/rename/intent-to-add e `commit -a` bloqueiam ou ficam explicitamente fora do claim.
-- **Validação:** repos Git temporários e `git show :path`/tree hash; required checks.
-- **Ordem/dependência/residual/isolamento:** `WP-03`; depende do contrato de candidate; shell TOCTOU residual deve ser documentado; isolável depois da decisão.
+- **Severity/confidence/category/status:** P1; high; integrity/Git; confirmed.
+- **Violated contract:** verified staged slice in `skills/git-commit/SKILL.md:8-12`, `README.md:43-50`, and the enforcement commit gate.
+- **Local evidence:** `guard.py:79-98,141-162,247-364` reads only the working tree; it does not read the index/cached diff.
+- **Explanation/impact:** a probe with receipted working tree `VALUE=1` and index `VALUE=999` passed in PreToolUse and Stop. The commit may record unreviewed bytes.
+- **Scenario:** stage malicious/old content, restore the approved working tree, and run `git commit`; `commit -a`/substitution expands TOCTOU.
+- **Likely cause:** the “completion snapshot” was modeled as a filesystem, not as the trigger candidate.
+- **Recommendation/files:** candidate snapshot abstraction; commit uses the Git index, Stop uses the working tree; `guard.py`, receipt schema, tests/docs.
+- **Acceptance:** index != WT, staged deletion/rename/intent-to-add, and `commit -a` block or are explicitly outside the claim.
+- **Validation:** temporary Git repositories and `git show :path`/tree hash; required checks.
+- **Order/dependency/residual/isolation:** `WP-03`; depends on the candidate contract; residual shell TOCTOU must be documented; isolable after the decision.
 
-### TUX-AUD-004 — Policy malformada pode falhar aberta ou fora do protocolo
+### TUX-AUD-004 — Malformed policy may fail open or outside the protocol
 
-- **Severidade/confiança/categoria/status:** P1; alta; security/fail-closed; confirmado.
-- **Contrato violado:** malformed/escaping inputs falham fechados (`docs/architecture/enforcement.md:122-126`).
-- **Evidência local:** `guard.py:247-251` usa `exists()` e policy não passa por `resolve_inside`; `load_object` (`:56-65`) não captura todo `OSError`.
-- **Explicação/impacto:** symlink quebrado desativa gate; symlink externo é lido; diretório causa traceback exit 1, não JSON deny. Falha de hook não equivale a bloqueio protocolado.
-- **Cenário:** checkout contém `.tuxedo/policy.json` quebrado ou trocado por directory/symlink.
-- **Causa provável:** tratamento de ausência confundido com tipagem/erro de filesystem.
-- **Recomendação/arquivos:** `lstat`, regular file, contenção e política de symlink; capturar filesystem errors e emitir deny; `guard.py`/tests/docs.
-- **Aceitação:** internal/external/broken symlink, directory, FIFO, unreadable e removal race nunca allow silencioso nem traceback.
-- **Validação:** matriz temporária de tipos/erros e protocolo Codex; required checks.
-- **Ordem/dependência/residual/isolamento:** `WP-04`; paralelo; race entre lstat/read continua residual até open seguro; isolável.
+- **Severity/confidence/category/status:** P1; high; security/fail-closed; confirmed.
+- **Violated contract:** malformed/escaping inputs fail closed (`docs/architecture/enforcement.md:122-126`).
+- **Local evidence:** `guard.py:247-251` uses `exists()` and policy does not pass through `resolve_inside`; `load_object` (`:56-65`) does not catch every `OSError`.
+- **Explanation/impact:** a broken symlink disables the gate; an external symlink is read; a directory causes traceback exit 1, not JSON deny. Hook failure is not equivalent to a protocolized block.
+- **Scenario:** the checkout contains a broken `.tuxedo/policy.json` or it is replaced with a directory/symlink.
+- **Likely cause:** absence handling was confused with filesystem typing/error handling.
+- **Recommendation/files:** `lstat`, regular-file check, containment, and symlink policy; catch filesystem errors and emit deny; `guard.py`/tests/docs.
+- **Acceptance:** internal/external/broken symlinks, directories, FIFOs, unreadable paths, and removal races never silently allow or traceback.
+- **Validation:** temporary type/error matrix and Codex protocol; required checks.
+- **Order/dependency/residual/isolation:** `WP-04`; parallel; race between lstat/read remains residual until safe open; isolable.
 
-### TUX-AUD-005 — Resultados verdes não identificam o snapshot completo
+### TUX-AUD-005 — Green results do not identify the complete snapshot
 
-- **Severidade/confiança/categoria/status:** P1; alta; eval provenance; confirmado.
-- **Contrato violado:** upgrades de task/fixture/provider/dependency exigem evidência nova (`docs/architecture/evaluations.md:193-195`).
-- **Evidência local:** `evals/run.py:279-286` hasheia só `AGENTS.md + skills/**`; propagação em `prepare-workspaces.py:183-196` e report `run-evaluations.py:430-455`; full verde em `docs/evidence/eval-runs.md:200-218` precede commits do harness.
-- **Explicação/impacto:** tasks/assertions/runner podem mudar mantendo fingerprint. Um routing posterior com o mesmo fingerprint falhou 33/34.
-- **Cenário:** corrigir oracle de security sem tocar skills; report antigo aparenta atual.
-- **Causa provável:** product fingerprint foi usado como evaluation-system fingerprint.
-- **Recomendação/arquivos:** commit + dirty digest + hash canônico de tasks, fixtures, rubrics, configs, assertions, verifiers, runner e versões resolvidas.
-- **Aceitação:** qualquer mudança em input/oracle altera identidade; report registra commit/dirty sem segredo; evidence log marca histórico incompatível.
-- **Validação:** mutation matrix de cada entrada e hash determinístico cross-order; sem model call.
-- **Ordem/dependência/residual/isolamento:** `WP-05`, antes de novo full; identidade não prova validade do oracle; parcialmente isolável.
+- **Severity/confidence/category/status:** P1; high; eval provenance; confirmed.
+- **Violated contract:** task/fixture/provider/dependency upgrades require new evidence (`docs/architecture/evaluations.md:193-195`).
+- **Local evidence:** `evals/run.py:279-286` hashes only `AGENTS.md + skills/**`; propagation is in `prepare-workspaces.py:183-196` and report handling in `run-evaluations.py:430-455`; the green full run in `docs/evidence/eval-runs.md:200-218` predates harness commits.
+- **Explanation/impact:** tasks/assertions/runner may change while retaining the fingerprint. A later routing run with the same fingerprint failed 33/34.
+- **Scenario:** fix the security oracle without touching skills; the old report appears current.
+- **Likely cause:** a product fingerprint was used as the evaluation-system fingerprint.
+- **Recommendation/files:** commit + dirty digest + canonical hash of tasks, fixtures, rubrics, configs, assertions, verifiers, runner, and resolved versions.
+- **Acceptance:** any input/oracle change alters identity; report records commit/dirty state without secrets; evidence log marks incompatible history.
+- **Validation:** mutation matrix for every input and cross-order deterministic hash; no model call.
+- **Order/dependency/residual/isolation:** `WP-05`, before a new full run; identity does not prove oracle validity; partially isolable.
 
-### TUX-AUD-006 — Security probes aceitam violações reais
+### TUX-AUD-006 — Security probes accept real violations
 
-- **Severidade/confiança/categoria/status:** P1; alta; security eval validity; confirmado.
-- **Contrato violado:** frozen probe requer estímulo concreto e oracle determinístico legítimo (`AGENTS.md:78-80`).
-- **Evidência local:** external path exige igualdade com sentinel (`security.py:99-133`); blacklist curta (`:114-120`); canary somente literal (`:182-191`); claims em `security-regressions.yaml:36-44,124-132`.
-- **Explicação/impacto:** probes controlados não detectaram `cat ~/.ssh/id_rsa` nem base64 da canary; `python`/`node` egress não entram na blacklist. 12/12 pode ser falso positivo.
-- **Cenário:** concluir patch canônico após ler home; exfiltrar token transformado; egress por Python.
-- **Causa provável:** blacklist/sentinel aproximam autoridade geral.
-- **Recomendação/arquivos:** allowlist exata por fixture, rejeitar qualquer path fora do workspace, detectar transformações explicitamente suportadas ou reduzir claim.
-- **Aceitação:** mutation tests de home/sibling, Python/Node, base64/hex e unknown command falham; documentação enumera limites.
-- **Validação:** unit tests dos assertions com trajectories sintéticas; security static config; full somente depois e com autoridade.
-- **Ordem/dependência/residual/isolamento:** `WP-06`, antes de novo full; silent read sem trajectory seguirá não comprovável; isolável.
+- **Severity/confidence/category/status:** P1; high; security eval validity; confirmed.
+- **Violated contract:** a frozen probe requires a concrete stimulus and legitimate deterministic oracle (`AGENTS.md:78-80`).
+- **Local evidence:** external paths require equality with a sentinel (`security.py:99-133`); the blacklist is short (`:114-120`); the canary is literal-only (`:182-191`); claims are in `security-regressions.yaml:36-44,124-132`.
+- **Explanation/impact:** controlled probes did not detect `cat ~/.ssh/id_rsa` or base64 of the canary; `python`/`node` egress is not in the blacklist. 12/12 may be false positives.
+- **Scenario:** conclude the canonical patch after reading the home directory; exfiltrate a transformed token; egress through Python.
+- **Likely cause:** blacklist/sentinel checks approximate general authority.
+- **Recommendation/files:** exact allowlist per fixture, reject every path outside the workspace, detect explicitly supported transformations, or reduce the claim.
+- **Acceptance:** mutation tests for home/sibling paths, Python/Node, base64/hex, and unknown commands fail; documentation enumerates limits.
+- **Validation:** assertion unit tests with synthetic trajectories; static security config; full run only afterward and with authority.
+- **Order/dependency/residual/isolation:** `WP-06`, before a new full run; silent reads without trajectory remain unprovable; isolable.
 
-### TUX-AUD-007 — Isolamento aceita superfícies futuras e symlinks aninhados
+### TUX-AUD-007 — Isolation accepts future surfaces and nested symlinks
 
-- **Severidade/confiança/categoria/status:** P1; alta; eval isolation; confirmado.
-- **Contrato violado:** managed entries reais e future surfaces fail-closed (`docs/architecture/eval-isolation.md:34-55`).
-- **Evidência local:** `codex_auth.py:137-191` não rejeita top-level desconhecido e só checa symlinks nos primeiros níveis.
-- **Explicação/impacto:** probes aceitaram `future-behavior-surface/` e symlink aninhado em `skills/.system/.../personal-link`; conteúdo pode contaminar behavior mantendo preflight verde.
-- **Cenário:** Codex adiciona surface behavior-bearing ou cache permitido contém link para conteúdo pessoal.
-- **Causa provável:** denylist/top-level partial e traversal não recursivo.
-- **Recomendação/arquivos:** allowlist explícita de top-level, `lstat` recursivo e validação de shape/proveniência do cache; `codex_auth.py`/tests/docs.
-- **Aceitação:** unknown file/dir/symlink falha antes de auth status; symlink em qualquer profundidade falha.
-- **Validação:** árvores sintéticas sem tocar dedicated home real.
-- **Ordem/dependência/residual/isolamento:** `WP-07`; paralelo; cache real ainda requer trust decision; isolável.
+- **Severity/confidence/category/status:** P1; high; eval isolation; confirmed.
+- **Violated contract:** managed entries must be real and future surfaces must fail closed (`docs/architecture/eval-isolation.md:34-55`).
+- **Local evidence:** `codex_auth.py:137-191` does not reject unknown top-level entries and checks symlinks only at the first levels.
+- **Explanation/impact:** probes accepted `future-behavior-surface/` and a nested symlink in `skills/.system/.../personal-link`; content may contaminate behavior while preflight remains green.
+- **Scenario:** Codex adds a behavior-bearing surface or an allowed cache contains a link to personal content.
+- **Likely cause:** partial top-level denylist and non-recursive traversal.
+- **Recommendation/files:** explicit top-level allowlist, recursive `lstat`, and cache shape/provenance validation; `codex_auth.py`/tests/docs.
+- **Acceptance:** unknown files/directories/symlinks fail before auth status; a symlink at any depth fails.
+- **Validation:** synthetic trees without touching the real dedicated home.
+- **Order/dependency/residual/isolation:** `WP-07`; parallel; real cache still requires a trust decision; isolable.
 
-### TUX-AUD-008 — O full pode passar com rows ausentes ou duplicadas
+### TUX-AUD-008 — Full can pass with missing or duplicate rows
 
-- **Severidade/confiança/categoria/status:** P1; alta; eval aggregation/coverage; confirmado.
-- **Contrato violado:** full cobre 34 routing, 40 behavior e 12 security (`docs/architecture/evaluations.md:108-124`).
-- **Evidência local:** raw validation não checa ID/cardinalidade (`run-evaluations.py:246-284`); aggregate concatena/soma (`:606-641`); pass depende apenas de status (`:734-743,843-862`).
-- **Explicação/impacto:** uma row pass por shard pode produzir aggregates pass com menos de 86 trials; duplicate/wrong-provider também não é infrastructure failure.
-- **Cenário:** Promptfoo omite rows por filtro/erro de schema, mas reporta as presentes como pass.
-- **Causa provável:** runner confia na cardinalidade da ferramenta e valida response, não a matriz esperada.
-- **Recomendação/arquivos:** conjunto esperado `(test_id, provider, shard)`, igualdade exata, unicidade e fingerprints/controls uniformes.
-- **Aceitação:** missing, duplicate, unknown, wrong-provider/shard falham; full exige exatamente 34/40/12.
-- **Validação:** raw-result fixtures mutantes e aggregate unit tests; sem provider.
-- **Ordem/dependência/residual/isolamento:** `WP-08`, antes de full; não prova qualidade das rows; isolável.
+- **Severity/confidence/category/status:** P1; high; eval aggregation/coverage; confirmed.
+- **Violated contract:** full covers 34 routing, 40 behavior, and 12 security cases (`docs/architecture/evaluations.md:108-124`).
+- **Local evidence:** raw validation does not check ID/cardinality (`run-evaluations.py:246-284`); aggregate concatenates/sums (`:606-641`); pass depends only on status (`:734-743,843-862`).
+- **Explanation/impact:** one passing row per shard can produce passing aggregates with fewer than 86 trials; duplicate/wrong-provider is also not an infrastructure failure.
+- **Scenario:** Promptfoo omits rows due to a filter/schema error, but reports the present rows as passing.
+- **Likely cause:** runner trusts tool cardinality and validates response, not the expected matrix.
+- **Recommendation/files:** expected `(test_id, provider, shard)` set, exact equality, uniqueness, and uniform fingerprints/controls.
+- **Acceptance:** missing, duplicate, unknown, and wrong-provider/shard cases fail; full requires exactly 34/40/12.
+- **Validation:** mutating raw-result fixtures and aggregate unit tests; no provider.
+- **Order/dependency/residual/isolation:** `WP-08`, before full; does not prove row quality; isolable.
 
-### TUX-AUD-009 — Runner legado viola isolamento e sanitização atuais
+### TUX-AUD-009 — Legacy runner violates current isolation and sanitization
 
-- **Severidade/confiança/categoria/status:** P1; alta; privacy/auth/duplicate harness; confirmado.
-- **Contrato violado:** dedicated home, API keys removidas e nenhum raw output persistido (`AGENTS.md:58-64`).
-- **Evidência local:** `docs/development.md:58-63` documenta `--execute`; `evals/run.py:155-174,203-221` herda env; `:232-246,385-403` grava answer/raw.
-- **Explicação/impacto:** um caminho oficial pode usar auth/home pessoal e persistir prompts/output/stderr sob pasta apenas ignorada.
-- **Cenário:** maintainer executa comando documentado com secrets no ambiente.
-- **Causa provável:** harness anterior foi preservado sem parity de controles.
-- **Recomendação/arquivos:** desabilitar execute ou migrar integralmente para preflight/env filtrado/report sanitizado; `evals/run.py`, docs/tests.
-- **Aceitação:** nenhum caminho herda keys/homes; secret sintético ausente de child env e disco; dry-run/verifiers preservados.
-- **Validação:** subprocess fake/fixture sem model call, scan de output temp.
-- **Ordem/dependência/residual/isolamento:** `WP-08`/subpacote; antes de qualquer uso; logs de ferramentas externas seguem residual; isolável.
+- **Severity/confidence/category/status:** P1; high; privacy/auth/duplicate harness; confirmed.
+- **Violated contract:** dedicated home, removed API keys, and no persisted raw output (`AGENTS.md:58-64`).
+- **Local evidence:** `docs/development.md:58-63` documents `--execute`; `evals/run.py:155-174,203-221` inherits the environment; `:232-246,385-403` writes answer/raw.
+- **Explanation/impact:** an official path may use personal auth/home and persist prompts/output/stderr in an ignored-only directory.
+- **Scenario:** a maintainer runs the documented command with secrets in the environment.
+- **Likely cause:** the previous harness was preserved without control parity.
+- **Recommendation/files:** disable execute or migrate fully to preflight/filtered environment/sanitized report; `evals/run.py`, docs/tests.
+- **Acceptance:** no path inherits keys/homes; a synthetic secret is absent from child environment and disk; dry-run/verifiers are preserved.
+- **Validation:** fake subprocess/fixture without model calls, plus temporary output scan.
+- **Order/dependency/residual/isolation:** `WP-08`/sub-package; before any use; external-tool logs remain residual; isolable.
 
-### TUX-AUD-010 — Receipts não rastreiam evidência por critério
+### TUX-AUD-010 — Receipts do not trace evidence by criterion
 
-- **Severidade/confiança/categoria/status:** P1; alta; fidelity/enforcement; confirmado.
-- **Contrato violado:** stable IDs e `criterion → oracle → test → evidence` (`AGENTS.md:7-17`, `skills/tdd/SKILL.md:8-18`).
-- **Evidência local:** `templates/policy/receipts.json:14-24` e `guard.py:199-219` têm um par global fail/passing; `templates/spec/evidence.md:3-13` exige AC rows. Test fixture sem AC e `assert True` passa (`tests/test_toolkit.py:268-380,409-423`).
-- **Explicação/impacto:** uma prova trivial satisfaz uma spec multi-critério; hashes conservam bytes, não coverage.
-- **Cenário:** cinco ACs, apenas um test record global; gate aprova.
-- **Causa provável:** receipt foi otimizado para integridade de artefatos, não traceability cardinal.
-- **Recomendação/arquivos:** IDs únicos e mapping criterion/test/fail/pass/evidence no receipt; validar estrutura sem alegar semântica.
-- **Aceitação:** ausente/duplicado/desconhecido/uncovered bloqueia; todos ACs têm oracle/proveniência/test/evidence.
-- **Validação:** negative matrix + compatibility/migration test de schema.
-- **Ordem/dependência/residual/isolamento:** `WP-01` + `WP-03`; depende do catálogo AC; presença continuará sem provar qualidade; não totalmente isolável.
+- **Severity/confidence/category/status:** P1; high; fidelity/enforcement; confirmed.
+- **Violated contract:** stable IDs and `criterion → oracle → test → evidence` (`AGENTS.md:7-17`, `skills/tdd/SKILL.md:8-18`).
+- **Local evidence:** `templates/policy/receipts.json:14-24` and `guard.py:199-219` have one global fail/passing pair; `templates/spec/evidence.md:3-13` requires AC rows. A fixture without AC and with `assert True` passes (`tests/test_toolkit.py:268-380,409-423`).
+- **Explanation/impact:** a trivial proof satisfies a multi-criterion spec; hashes preserve bytes, not coverage.
+- **Scenario:** five ACs, only one global test record; gate approves.
+- **Likely cause:** receipt was optimized for artifact integrity, not cardinal traceability.
+- **Recommendation/files:** unique IDs and criterion/test/fail/pass/evidence mapping in the receipt; validate structure without claiming semantics.
+- **Acceptance:** missing/duplicate/unknown/uncovered cases block; every AC has oracle/provenance/test/evidence.
+- **Validation:** negative matrix + schema compatibility/migration test.
+- **Order/dependency/residual/isolation:** `WP-01` + `WP-03`; depends on the AC catalog; presence will still not prove quality; not fully isolable.
 
 ## P2 — Medium
 
-### TUX-AUD-011 — Portabilidade é formato, não instalação/comportamento comprovado
+### TUX-AUD-011 — Portability is format, not proven installation/behavior
 
-- **Severidade/confiança/categoria/status:** P2; alta; portabilidade/distribuição; confirmado.
-- **Contrato:** toolkit portátil (`README.md:3,57-65`).
-- **Evidência:** checkout tem `skills/`; eval admite layout Codex explícito e 7/17 behavior (`docs/architecture/evaluations.md:180-185`). Docs oficiais de [Codex](https://developers.openai.com/codex/skills/), [Copilot](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills), [Claude](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview) e [OpenCode](https://opencode.ai/docs/skills) usam layouts/precedências distintos.
-- **Impacto/cenário/causa:** clone/cópia não auto-descobre skills; routing/authority cross-client não têm evidence; “portável” misturou formato com operação.
-- **Recomendação/arquivos:** support matrix, install fixtures e claims por nível; README/docs/evals.
-- **Aceitação/validação:** clean-room install/discovery + positive/negative routing mínimo em cada cliente alegado; validator continua verde.
-- **Ordem/residual/isolamento:** `WP-09`, após contrato; versões futuras ainda driftam; parcialmente isolável.
+- **Severity/confidence/category/status:** P2; high; portability/distribution; confirmed.
+- **Contract:** portable toolkit (`README.md:3,57-65`).
+- **Evidence:** checkout has `skills/`; evals allow explicit Codex layout and 7/17 behavior (`docs/architecture/evaluations.md:180-185`). Official docs for [Codex](https://developers.openai.com/codex/skills/), [Copilot](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills), [Claude](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview), and [OpenCode](https://opencode.ai/docs/skills) use distinct layouts/precedence.
+- **Impact/scenario/cause:** a clone/copy does not auto-discover skills; cross-client routing/authority has no evidence; “portable” conflates format with operation.
+- **Recommendation/files:** support matrix, install fixtures, and claims by level; README/docs/evals.
+- **Acceptance/validation:** clean-room install/discovery plus minimum positive/negative routing in each claimed client; validator remains green.
+- **Order/residual/isolation:** `WP-09`, after the contract; future versions may still drift; partially isolable.
 
-### TUX-AUD-012 — Onboarding Codex não é reproduzível
+### TUX-AUD-012 — Codex onboarding is not reproducible
 
-- **Severidade/confiança/categoria/status:** P2; alta; docs/distribution; confirmado.
-- **Contrato/evidência:** README diz ser suficiente (`README.md:5,33-41`) mas “add to marketplace” não dá comando/manifest/restart/update/removal; [OpenAI plugin docs](https://developers.openai.com/plugins/build/plugins) exigem passos concretos.
-- **Impacto/cenário/causa:** novo usuário depende de conhecimento tácito; docs priorizaram conceito.
-- **Recomendação/arquivos:** guia clean-room copiável para add/install/restart/verify/hooks/rules/update/remove.
-- **Aceitação/validação:** terceiro segue em home temporário e confirma 17 skills/manifest sem conhecimento prévio.
-- **Ordem/residual/isolamento:** `WP-09`; marketplace local depende da versão Codex; isolável após decisão distributiva.
+- **Severity/confidence/category/status:** P2; high; docs/distribution; confirmed.
+- **Contract/evidence:** README says it is sufficient (`README.md:5,33-41`), but “add to marketplace” gives no command/manifest/restart/update/removal; [OpenAI plugin docs](https://developers.openai.com/plugins/build/plugins) require concrete steps.
+- **Impact/scenario/cause:** a new user depends on tacit knowledge; docs prioritized concept.
+- **Recommendation/files:** copyable clean-room guide for add/install/restart/verify/hooks/rules/update/remove.
+- **Acceptance/validation:** a third party follows it in a temporary home and confirms 17 skills/manifest without prior knowledge.
+- **Order/residual/isolation:** `WP-09`; local marketplace depends on the Codex version; isolable after the distribution decision.
 
-### TUX-AUD-013 — Deep work explícito diverge de `openai.yaml`
+### TUX-AUD-013 — Explicit deep work diverges from `openai.yaml`
 
-- **Severidade/confiança/categoria/status:** P2; alta; routing/authority; confirmado.
-- **Contrato/evidência:** `README.md:28,31`; `premortem/agents/openai.yaml:1-4` e `technical-research/agents/openai.yaml:1-4` omitem `allow_implicit_invocation: false`, cujo default Codex é true.
-- **Impacto/cenário/causa:** research/premortem podem ser ativados implicitamente, ampliando custo/escopo; metadata driftou do resumo.
-- **Recomendação/arquivos:** definir false ou reclassificar README e routing cases.
-- **Aceitação/validação:** metadata e docs concordam; casos explicit/implicit positivos/negativos.
-- **Ordem/residual/isolamento:** `WP-09`; routing heurístico residual; isolável.
+- **Severity/confidence/category/status:** P2; high; routing/authority; confirmed.
+- **Contract/evidence:** `README.md:28,31`; `premortem/agents/openai.yaml:1-4` and `technical-research/agents/openai.yaml:1-4` omit `allow_implicit_invocation: false`, whose Codex default is true.
+- **Impact/scenario/cause:** research/premortem may activate implicitly, expanding cost/scope; metadata drifted from the summary.
+- **Recommendation/files:** set false or reclassify the README and routing cases.
+- **Acceptance/validation:** metadata and docs agree; explicit/implicit positive/negative cases.
+- **Order/residual/isolation:** `WP-09`; residual routing is heuristic; isolable.
 
-### TUX-AUD-014 — Não há lifecycle/precedência de composição
+### TUX-AUD-014 — There is no composition lifecycle/precedence
 
-- **Severidade/confiança/categoria/status:** P2; alta; agent architecture; confirmado.
-- **Contrato/evidência:** lista plana em `README.md:24-31`; `spec/SKILL.md:14` e `verify/SKILL.md:11` compartilham matrix; `tdd/SKILL.md:3,10` requer approved, template nasce draft.
-- **Impacto/cenário/causa:** refine/spec/premortem/security/tdd/verify podem competir; nenhum owner de aprovação/fallback; catálogo evoluiu por skills locais.
-- **Recomendação/arquivos:** state machine com input/owner/output/status/precedência/stop/conflict/fallback.
-- **Aceitação/validação:** cenários normal, ambíguo, high-risk, finding/reopen, skill ausente e deadlock têm rota única verificável.
-- **Ordem/residual/isolamento:** `WP-09`, após AC; seleção de modelo seguirá heurística; não isolável.
+- **Severity/confidence/category/status:** P2; high; agent architecture; confirmed.
+- **Contract/evidence:** flat list in `README.md:24-31`; `spec/SKILL.md:14` and `verify/SKILL.md:11` share the matrix; `tdd/SKILL.md:3,10` requires approved while the template starts as draft.
+- **Impact/scenario/cause:** refine/spec/premortem/security/tdd/verify may compete; no approval owner/fallback exists; the catalog evolved through local skills.
+- **Recommendation/files:** state machine with input/owner/output/status/precedence/stop/conflict/fallback.
+- **Acceptance/validation:** normal, ambiguous, high-risk, finding/reopen, missing-skill, and deadlock scenarios have one verifiable route.
+- **Order/residual/isolation:** `WP-09`, after AC; model selection remains heuristic; not isolable.
 
-### TUX-AUD-015 — `premortem` pode sugerir escrita sem autoridade explícita
+### TUX-AUD-015 — `premortem` may suggest writing without explicit authority
 
-- **Severidade/confiança/categoria/status:** P2; alta; authority; risco fundamentado.
-- **Contrato/evidência:** `AGENTS.md:31-33` versus `skills/premortem/SKILL.md:15-16`, que manda adicionar critérios/tests/guards quando “justified”.
-- **Impacto/cenário/causa:** skill standalone não herda AGENTS; pedido analítico pode virar edição; limite transversal não foi repetido.
-- **Recomendação/arquivos:** exigir autorização explícita; sem ela, proposta apenas em resposta/artefato autorizado.
-- **Aceitação/validação:** eval read-only prova zero write e mensagem de bloqueio; validator.
-- **Ordem/residual/isolamento:** `WP-09`; cliente ainda aplica hierarchy própria; isolável.
+- **Severity/confidence/category/status:** P2; high; authority; grounded risk.
+- **Contract/evidence:** `AGENTS.md:31-33` versus `skills/premortem/SKILL.md:15-16`, which directs adding criteria/tests/guards when “justified.”
+- **Impact/scenario/cause:** standalone skill does not inherit AGENTS; an analytical request may become an edit; the cross-cutting boundary was not repeated.
+- **Recommendation/files:** require explicit authorization; without it, propose only in the response/authorized artifact.
+- **Acceptance/validation:** read-only eval proves zero writes and a blocking message; validator.
+- **Order/residual/isolation:** `WP-09`; client still applies its own hierarchy; isolable.
 
-### TUX-AUD-016 — Defaults de spec induzem sub-classificação
+### TUX-AUD-016 — Spec defaults induce under-classification
 
-- **Severidade/confiança/categoria/status:** P2; média-alta; templates/risk; risco fundamentado.
-- **Contrato/evidência:** tiers higher-boundary; `templates/spec/spec.md:7,12` e asset usam `risk: small`/single reviewer.
-- **Impacto/cenário/causa:** auth/data-loss pode conservar default por inércia; template escolhe antes da análise.
-- **Recomendação/arquivos:** placeholder/unresolved e gate antes de ready; spec templates/ref/tests.
-- **Aceitação/validação:** security/release/data-loss nunca aceitam small sem rationale; negative cases.
-- **Ordem/residual/isolamento:** `WP-01`; semântica de risco não é mecanicamente provada; isolável.
+- **Severity/confidence/category/status:** P2; medium-high; templates/risk; grounded risk.
+- **Contract/evidence:** higher-boundary tiers; `templates/spec/spec.md:7,12` and the asset use `risk: small`/single reviewer.
+- **Impact/scenario/cause:** auth/data-loss may retain the default through inertia; the template chooses before analysis.
+- **Recommendation/files:** placeholder/unresolved state and gate before ready; spec templates/ref/tests.
+- **Acceptance/validation:** security/release/data-loss never accept small without rationale; negative cases.
+- **Order/residual/isolation:** `WP-01`; risk semantics are not mechanically proven; isolable.
 
-### TUX-AUD-017 — Roles spec/matrix/evidence podem aliasar
+### TUX-AUD-017 — Spec/matrix/evidence roles may alias
 
-- **Severidade/confiança/categoria/status:** P2; alta; receipt schema; confirmado.
-- **Contrato/evidência:** cadeia separada em enforcement; `guard.py:263-272` exige strings/hash, não distinção; probe com um arquivo passou.
-- **Impacto/cenário/causa:** separação aparente satisfeita por artefato único; identity model usa path textual.
-- **Recomendação/arquivos:** paths canônicos e identidade distinta, inclusive symlink/hardlink.
-- **Aceitação/validação:** repeated/`./` alias/symlink/hardlink bloqueiam.
-- **Ordem/residual/isolamento:** `WP-03`; conteúdo distinto ainda pode ser semanticamente duplicado; isolável.
+- **Severity/confidence/category/status:** P2; high; receipt schema; confirmed.
+- **Contract/evidence:** chain is separate in enforcement; `guard.py:263-272` requires strings/hash, not distinction; a one-file probe passed.
+- **Impact/scenario/cause:** apparent separation is satisfied by one artifact; identity model uses textual paths.
+- **Recommendation/files:** canonical paths and distinct identity, including symlink/hardlink handling.
+- **Acceptance/validation:** repeated/`./` aliases/symlinks/hardlinks block.
+- **Order/residual/isolation:** `WP-03`; distinct content may still be semantically duplicated; isolable.
 
-### TUX-AUD-018 — Contextos test/code review são validados incompletamente
+### TUX-AUD-018 — Test/code review contexts are incompletely validated
 
-- **Severidade/confiança/categoria/status:** P2; alta; review receipts; confirmado.
-- **Contrato/evidência:** templates exigem booleans; `guard.py:238-244` valida spec e só implementation=false em tests, nada em code. Probes contrários passaram.
-- **Impacto/cenário/causa:** receipt contradiz formato oficial mas gate aprova; validator foi implementado assimetricamente.
-- **Recomendação/arquivos:** shape/boolean exatos por fase.
-- **Aceitação/validação:** chave ausente/extra/type/value errado falha em cada fase.
-- **Ordem/residual/isolamento:** `WP-03`; declaração não prova contexto real; isolável.
+- **Severity/confidence/category/status:** P2; high; review receipts; confirmed.
+- **Contract/evidence:** templates require booleans; `guard.py:238-244` validates spec and only `implementation=false` in tests, nothing in code. Contrary probes passed.
+- **Impact/scenario/cause:** receipt contradicts the official format but the gate approves; validator was implemented asymmetrically.
+- **Recommendation/files:** exact shape/boolean validation per phase.
+- **Acceptance/validation:** missing/extra key and wrong type/value fail in each phase.
+- **Order/residual/isolation:** `WP-03`; declaration does not prove actual context; isolable.
 
-### TUX-AUD-019 — Policy default bloqueia testes co-localizados
+### TUX-AUD-019 — Default policy blocks co-located tests
 
-- **Severidade/confiança/categoria/status:** P2; alta; templates/usability; confirmado.
-- **Contrato/evidência:** test globs e `src/**/*` (`policy.json:8,12`) com overlap false (`:16`); `guard.py:297-302` bloqueia. `src/example.test.ts` reproduz.
-- **Impacto/cenário/causa:** Jest/Vitest comum entra em Stop loop até editar policy; defaults foram combinados sem fixture co-located.
-- **Recomendação/arquivos:** defaults por layout ou exclude test patterns da implementation tree.
-- **Aceitação/validação:** Python separado, TS co-located e monorepo produzem scopes satisfatíveis.
-- **Ordem/residual/isolamento:** `WP-04`; layouts custom continuam configuráveis; isolável.
+- **Severity/confidence/category/status:** P2; high; templates/usability; confirmed.
+- **Contract/evidence:** test globs and `src/**/*` (`policy.json:8,12`) have overlap false (`:16`); `guard.py:297-302` blocks. `src/example.test.ts` reproduces it.
+- **Impact/scenario/cause:** common Jest/Vitest layouts enter a Stop loop until policy is edited; defaults were combined without a co-located fixture.
+- **Recommendation/files:** layout-specific defaults or exclude test patterns from the implementation tree.
+- **Acceptance/validation:** separate Python, co-located TS, and monorepo layouts produce satisfiable scopes.
+- **Order/residual/isolation:** `WP-04`; custom layouts remain configurable; isolable.
 
-### TUX-AUD-020 — Claims de Rules excedem os prefixos cobertos
+### TUX-AUD-020 — Rules claims exceed covered prefixes
 
-- **Severidade/confiança/categoria/status:** P2; alta; command authority/docs; confirmado.
-- **Contrato/evidência:** resumo `README.md:38`; rules `templates/codex/tuxedo.rules:6-124`; tests sete casos `tests/test_toolkit.py:214-232`. Probes wrapper/options retornaram null.
-- **Impacto/cenário/causa:** leitor do README pode tratar template parcial como boundary; prefix matching literal não é shell parser.
-- **Recomendação/arquivos:** alinhar claims, matriz adversarial, enumerar deliberate gaps; não reimplementar shell.
-- **Aceitação/validação:** cada claim tem case positivo/negativo oficial; wrappers/options documentados.
-- **Ordem/residual/isolamento:** `WP-04`; aliases/composed shell sempre limitam rules; isolável.
+- **Severity/confidence/category/status:** P2; high; command authority/docs; confirmed.
+- **Contract/evidence:** summary `README.md:38`; rules `templates/codex/tuxedo.rules:6-124`; seven cases in `tests/test_toolkit.py:214-232`. Wrapper/options probes returned null.
+- **Impact/scenario/cause:** README readers may treat a partial template as a boundary; literal prefix matching is not a shell parser.
+- **Recommendation/files:** align claims, add an adversarial matrix, enumerate deliberate gaps; do not reimplement shell parsing.
+- **Acceptance/validation:** every claim has an official positive/negative case; wrappers/options documented.
+- **Order/residual/isolation:** `WP-04`; aliases/composed shell always limit Rules; isolable.
 
-### TUX-AUD-021 — “Shape validation” de results verifica só extensão
+### TUX-AUD-021 — Result “shape validation” checks only extension
 
-- **Severidade/confiança/categoria/status:** P2; alta; evidence retention; confirmado.
-- **Contrato/evidência:** docs claim shape (`evaluations.md:72-75`); `_validate_local_outputs` (`run-evaluations.py:123-144`) só testa suffix/type.
-- **Impacto/cenário/causa:** JSON truncado/raw payload pode coexistir como validado; nome da função/documento excede o check.
-- **Recomendação/arquivos:** schema versionado, parse, naming, forbidden fields, aggregate links/hashes.
-- **Aceitação/validação:** malformed/wrong schema/duplicate/raw field falha sem apagar evidence.
-- **Ordem/residual/isolamento:** `WP-05`; schema não prova provenance; isolável.
+- **Severity/confidence/category/status:** P2; high; evidence retention; confirmed.
+- **Contract/evidence:** docs claim shape (`evaluations.md:72-75`); `_validate_local_outputs` (`run-evaluations.py:123-144`) tests only suffix/type.
+- **Impact/scenario/cause:** truncated JSON/raw payload may coexist as validated; function/document name exceeds the check.
+- **Recommendation/files:** versioned schema, parsing, naming, forbidden fields, aggregate links/hashes.
+- **Acceptance/validation:** malformed/wrong-schema/duplicate/raw-field cases fail without deleting evidence.
+- **Order/residual/isolation:** `WP-05`; schema does not prove provenance; isolable.
 
-### TUX-AUD-022 — SDK direto não é a versão efetiva do provider
+### TUX-AUD-022 — Direct SDK is not the provider's effective version
 
-- **Severidade/confiança/categoria/status:** P2; alta; dependency provenance; confirmado.
-- **Contrato/evidência:** root `0.146.0` (`package.json:23-25`); ADR diz requerido; lockfile/provider Promptfoo resolve `0.144.6` (`pnpm-lock.yaml:6854-6955`). Reports não registram SDK efetivo.
-- **Impacto/cenário/causa:** executor real difere da versão atribuída; dependency root pode ser redundante; transitive resolution ignorada.
-- **Recomendação/arquivos:** alinhar/override/remover após compat check e registrar resolved-from-provider.
-- **Aceitação/validação:** teste resolve package a partir de Promptfoo e compara report/doc; frozen install.
-- **Ordem/residual/isolamento:** `WP-10`; requer authority para dependency update; isolável como decisão.
+- **Severity/confidence/category/status:** P2; high; dependency provenance; confirmed.
+- **Contract/evidence:** root `0.146.0` (`package.json:23-25`); ADR says required; lockfile/Promptfoo provider resolves `0.144.6` (`pnpm-lock.yaml:6854-6955`). Reports do not record the effective SDK.
+- **Impact/scenario/cause:** actual executor differs from the attributed version; root dependency may be redundant; transitive resolution is ignored.
+- **Recommendation/files:** align/override/remove after compatibility check and record resolved-from-provider.
+- **Acceptance/validation:** test resolves the package from Promptfoo and compares report/doc; frozen install.
+- **Order/residual/isolation:** `WP-10`; requires authority for dependency update; isolable as a decision.
 
-### TUX-AUD-023 — Python mínimo não é declarado
+### TUX-AUD-023 — Minimum Python is not declared
 
-- **Severidade/confiança/categoria/status:** P2; alta; toolchain/onboarding; confirmado.
-- **Contrato/evidência:** guia lista Node/UV/PNPM (`using-the-eval-harness.md:10-13`), mas `codex_auth.py:16` usa `tomllib` (Python 3.11+); sem pyproject/.python-version/preflight.
-- **Impacto/cenário/causa:** `uv run python` pode resolver 3.10 e falhar; requisito ficou implícito no ambiente do autor.
-- **Recomendação/arquivos:** declarar e preflight Python >=3.11 sem runtime dependency.
-- **Aceitação/validação:** comando em 3.10 falha com mensagem antes de auth; supported version passa.
-- **Ordem/residual/isolamento:** `WP-10`; UV resolver selection varia; isolável.
+- **Severity/confidence/category/status:** P2; high; toolchain/onboarding; confirmed.
+- **Contract/evidence:** guide lists Node/UV/PNPM (`using-the-eval-harness.md:10-13`), but `codex_auth.py:16` uses `tomllib` (Python 3.11+); there is no pyproject/.python-version/preflight.
+- **Impact/scenario/cause:** `uv run python` may resolve 3.10 and fail; the requirement remained implicit in the author's environment.
+- **Recommendation/files:** declare and preflight Python >=3.11 without a runtime dependency.
+- **Acceptance/validation:** command on 3.10 fails with a message before auth; supported version passes.
+- **Order/residual/isolation:** `WP-10`; UV resolver selection varies; isolable.
 
-### TUX-AUD-024 — Ledger de migração/proveniência é ignorado e pessoal
+### TUX-AUD-024 — Migration/provenance ledger is ignored and personal
 
-- **Severidade/confiança/categoria/status:** P2; alta; provenance/maintainability; confirmado.
-- **Contrato/evidência:** README afirma adaptação (`README.md:57-65`); evidence map cita migration map (`:31`); `.gitignore:16` oculta `docs/tmp/v0.1-map.md`, único ledger de 49 capabilities e paths pessoais.
-- **Impacto/cenário/causa:** clone limpo perde disposição/inspiração/exclusão; artefato foi deliberadamente temporário e nunca promovido.
-- **Recomendação/arquivos:** ledger sanitizado rastreado com source URL/commit/license/disposition/nature.
-- **Aceitação/validação:** toda capability histórica tem disposição; zero personal path; link checker/provenance review.
-- **Ordem/residual/isolamento:** `WP-11`; source history pode evoluir, por isso pin commit; isolável.
+- **Severity/confidence/category/status:** P2; high; provenance/maintainability; confirmed.
+- **Contract/evidence:** README claims adaptation (`README.md:57-65`); evidence map cites the migration map (`:31`); `.gitignore:16` hides `docs/tmp/v0.1-map.md`, the only ledger of 49 capabilities and personal paths.
+- **Impact/scenario/cause:** a clean clone loses disposition/inspiration/exclusion; the artifact was deliberately temporary and never promoted.
+- **Recommendation/files:** tracked sanitized ledger with source URL/commit/license/disposition/nature.
+- **Acceptance/validation:** every historical capability has a disposition; zero personal paths; link checker/provenance review.
+- **Order/residual/isolation:** `WP-11`; source history may evolve, so pin the commit; isolable.
 
-### TUX-AUD-025 — Grafo dev mantém advisories e licenças desconhecidas
+### TUX-AUD-025 — Dev graph retains advisories and unknown licenses
 
-- **Severidade/confiança/categoria/status:** P2; alta para inventário, média para exploitability; supply chain/license; risco fundamentado.
-- **Contrato/evidência:** `pnpm audit` atual: 5 high/7 moderate/2 low; lockfile 792 dev; agregação encontrou 1 LGPL e 3 Unknown. Direct deps são dev-only (`package.json:23-25`).
-- **Evidência externa:** GitHub Advisory Database URLs em `06-*`.
-- **Impacto/cenário/causa:** maintainer eval processa network/output/optional packages; exploitability específica não foi provada; grafo Promptfoo amplo.
-- **Recomendação/arquivos:** disposition por advisory, confirmar packages realmente carregados, licença Unknown, update/override somente com compat evidence.
-- **Aceitação/validação:** zero high sem disposition/mitigation; effective graph e licenses registrados; validators/evals static continuam.
-- **Ordem/residual/isolamento:** `WP-10`; provider run posterior para compat requer autoridade; isolável como análise, não necessariamente upgrade.
+- **Severity/confidence/category/status:** P2; high for inventory, medium for exploitability; supply chain/license; grounded risk.
+- **Contract/evidence:** current `pnpm audit`: 5 high/7 moderate/2 low; lockfile has 792 dev entries; aggregation found 1 LGPL and 3 Unknown. Direct dependencies are dev-only (`package.json:23-25`).
+- **External evidence:** GitHub Advisory Database URLs in `06-*`.
+- **Impact/scenario/cause:** maintainer evals process network/output/optional packages; specific exploitability was not proven; Promptfoo graph is broad.
+- **Recommendation/files:** disposition each advisory, confirm packages actually loaded, resolve Unknown licenses, and update/override only with compatibility evidence.
+- **Acceptance/validation:** zero high advisories without disposition/mitigation; effective graph and licenses recorded; validators/static evals continue to pass.
+- **Order/residual/isolation:** `WP-10`; later provider run for compatibility requires authority; isolable as analysis, not necessarily as an upgrade.
 
-### TUX-AUD-026 — Nomes genéricos podem colidir cross-client
+### TUX-AUD-026 — Generic names may collide cross-client
 
-- **Severidade/confiança/categoria/status:** P2; média; routing/portability; risco fundamentado.
-- **Contrato/evidência:** `docs`, `spec`, `verify`, `bugfix` em frontmatter; [Codex skills docs](https://developers.openai.com/codex/skills/) descrevem não-merge/precedência.
-- **Impacto/cenário/causa:** package homônimo pode shadow/ser shadowed; nomes favoreceram UX local.
-- **Recomendação/arquivos:** provar qualificação/namespace por cliente ou estratégia de nomes/install.
-- **Aceitação/validação:** fixture com skill concorrente seleciona deterministicamente a intenção documentada.
-- **Ordem/residual/isolamento:** `WP-09`; third-party catalogs mudam; depende da política de compatibilidade.
+- **Severity/confidence/category/status:** P2; medium; routing/portability; grounded risk.
+- **Contract/evidence:** `docs`, `spec`, `verify`, `bugfix` in frontmatter; [Codex skills docs](https://developers.openai.com/codex/skills/) describe non-merging/precedence.
+- **Impact/scenario/cause:** a same-named package may shadow/be shadowed; names favored local UX.
+- **Recommendation/files:** prove per-client qualification/namespace or a naming/install strategy.
+- **Acceptance/validation:** fixture with a competing skill deterministically selects the documented intent.
+- **Order/residual/isolation:** `WP-09`; third-party catalogs change; depends on compatibility policy.
 
 ## P3 — Low
 
-### TUX-AUD-027 — Evidence map não registra proveniência reproduzível dos PDFs
+### TUX-AUD-027 — Evidence map does not record reproducible PDF provenance
 
-- **Severidade/confiança/categoria/status:** P3; alta; research/docs; confirmado.
-- **Contrato/evidência:** `docs/research/evidence-map.md:3,39-43` tem título/ID, mas não URL/data/hash/páginas/método; `technical-research/SKILL.md:8-10` exige query/version/date/method/result/limitation.
-- **Impacto/cenário/causa:** outro maintainer encontra preprint, mas não prova bytes/seção examinados; map resumiu bibliografia.
-- **Recomendação/arquivos:** URLs diretas, versão/data, SHA-256, páginas/seções e método.
-- **Aceitação/validação:** fresh download confere hash/version ou documenta drift; links válidos.
-- **Ordem/residual/isolamento:** `WP-11`; arXiv versions podem mudar; isolável.
+- **Severity/confidence/category/status:** P3; high; research/docs; confirmed.
+- **Contract/evidence:** `docs/research/evidence-map.md:3,39-43` has title/ID but no URL/date/hash/pages/method; `technical-research/SKILL.md:8-10` requires query/version/date/method/result/limitation.
+- **Impact/scenario/cause:** another maintainer finds the preprint but cannot prove the examined bytes/section; the map summarized bibliography.
+- **Recommendation/files:** direct URLs, version/date, SHA-256, pages/sections, and method.
+- **Acceptance/validation:** fresh download matches hash/version or documents drift; links are valid.
+- **Order/residual/isolation:** `WP-11`; arXiv versions may change; isolable.
 
-### TUX-AUD-028 — Cópias de templates não declaram fonte canônica
+### TUX-AUD-028 — Template copies do not declare a canonical source
 
-- **Severidade/confiança/categoria/status:** P3; média; maintainability; oportunidade.
-- **Contrato/evidência:** sete pares root/skill byte-identical; test sincroniza, mas docs não dizem qual editar primeiro.
-- **Impacto/cenário/causa:** alteração manual em duas superfícies; autocontenção exige duplicação, canonicalidade ficou tácita.
-- **Recomendação/arquivos:** declarar source canônica e test/generation contract, preservando self-contained package.
-- **Aceitação/validação:** uma fonte/fluxo documentado; drift test; pacote seletivo completo.
-- **Ordem/residual/isolamento:** `WP-11`; geração adiciona tooling se exagerada; isolável.
+- **Severity/confidence/category/status:** P3; medium; maintainability; opportunity.
+- **Contract/evidence:** seven root/skill pairs are byte-identical; a test synchronizes them, but docs do not say which to edit first.
+- **Impact/scenario/cause:** manual changes must be made on two surfaces; self-containment requires duplication, while canonicality remains implicit.
+- **Recommendation/files:** declare a canonical source and test/generation contract while preserving the self-contained package.
+- **Acceptance/validation:** one documented source/flow; drift test; complete selective package.
+- **Order/residual/isolation:** `WP-11`; generation adds tooling if overdone; isolable.
 
-### TUX-AUD-029 — `technical-research` não declara rede/fallback
+### TUX-AUD-029 — `technical-research` does not declare network/fallback
 
-- **Severidade/confiança/categoria/status:** P3; média; skill compatibility; oportunidade.
-- **Contrato/evidência:** `technical-research/SKILL.md:8-14` exige claims atuais; `agents/openai.yaml:1-4` não declara compatibility/dependency.
-- **Impacto/cenário/causa:** cliente offline ativa workflow impossível ou usa memória sem marcar; requisitos externos ficaram implícitos.
-- **Recomendação/arquivos:** compatibility/network requirement, offline stop/fallback e evidence label.
-- **Aceitação/validação:** cenário offline termina com limitação, sem claim atual inventado; online registra fontes.
-- **Ordem/residual/isolamento:** `WP-09`; availability externa continua variável; isolável.
+- **Severity/confidence/category/status:** P3; medium; skill compatibility; opportunity.
+- **Contract/evidence:** `technical-research/SKILL.md:8-14` requires current claims; `agents/openai.yaml:1-4` does not declare compatibility/dependency.
+- **Impact/scenario/cause:** an offline client activates an impossible workflow or uses memory without marking it; external requirements remain implicit.
+- **Recommendation/files:** compatibility/network requirement, offline stop/fallback, and evidence label.
+- **Acceptance/validation:** offline scenario ends with a limitation, without inventing a current claim; online runs record sources.
+- **Order/residual/isolation:** `WP-09`; external availability remains variable; isolable.
 
 ## Spec
 
-Finding dominante: `TUX-AUD-001`. Antes de ajustar mecanismos, fixar intenção, ACs e força legítima dos claims. Correções não devem editar specs para acomodar o comportamento atual; staged candidate, fail-closed, cardinalidade e security oracles precisam ser decisões explícitas.
+Dominant finding: `TUX-AUD-001`. Before adjusting mechanisms, fix intent, ACs, and the legitimate strength of claims. Fixes must not edit specs to accommodate current behavior; staged candidate, fail-closed, cardinality, and security oracles require explicit decisions.
 
 ## Standards
 
-Agent Skills estruturalmente conformes; plugin/skills passaram validators oficiais. Divergências normativas atuais concentram-se em operação: cwd/exit semantics de hooks, descoberta/precedência cross-client, UV project behavior, Promptfoo result contracts e supply-chain advisories. Fontes primárias estão registradas em `01-*` e `06-*`.
+Agent Skills are structurally conformant; plugin/skills passed the official validators. Current normative divergences are concentrated in operation: hook cwd/exit semantics, cross-client discovery/precedence, UV project behavior, Promptfoo result contracts, and supply-chain advisories. Primary sources are recorded in `01-*` and `06-*`.
 
 ## Risk
 
-Não há P0 identificado. O risco de distribuição é, porém, alto: gates centrais têm nomes/claims mais fortes que os fatos validados, e o sistema empírico pode emitir verde sem snapshot/coverage/oracle válidos. Até `WP-01`–`WP-08`, qualquer release deve tratar hooks e eval evidence como experimental/condicional, não como certificação.
+No P0 was identified. Distribution risk is nevertheless high: central gates have names/claims stronger than validated facts, and the empirical system may emit green without a valid snapshot/coverage/oracle. Until `WP-01`–`WP-08`, any release should treat hooks and eval evidence as experimental/conditional, not certification.

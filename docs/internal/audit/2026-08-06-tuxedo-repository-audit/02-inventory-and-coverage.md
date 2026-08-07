@@ -1,10 +1,10 @@
-# 02 — Inventário e coverage ledger
+# 02 — Inventory and coverage ledger
 
-## Resumo mecânico
+## Mechanical summary
 
-| Superfície rastreada | Arquivos |
+| Tracked surface | Files |
 | --- | ---: |
-| Raiz/manifest/licença/toolchain | 8 |
+| Root/manifest/license/toolchain | 8 |
 | `docs/` | 11 |
 | `evals/` | 34 |
 | `hooks/` | 2 |
@@ -13,20 +13,20 @@
 | `tests/` | 4 |
 | **Total** | **126** |
 
-O total recalculado foi 16.387 linhas. Não há PDF, shell script, symlink ou arquivo binário rastreado. `rg --files -uu` encontrou aproximadamente 108 mil entradas por causa de `node_modules/`; essa árvore ocupava aproximadamente 3,8 GiB e não é produto distribuído.
+The recalculated total was 16,387 lines. No PDF, shell script, symlink, or binary file was tracked. `rg --files -uu` found approximately 108,000 entries because of `node_modules/`; that tree occupied approximately 3.8 GiB and is not distributed product content.
 
-## Legenda de disposição
+## Disposition legend
 
-- `RI`: revisado integralmente, com leitura de conteúdo e confronto contextual.
-- `FH`: revisado como membro de família homogênea, com inventário total, parse/schema, comparação mecânica e amostras explícitas.
-- `GO`: placeholder/gerado; validado por origem, convenção e invariantes, sem conteúdo semântico para ler.
-- `NE`: não revisado. **Nenhum arquivo rastreado ficou nesta categoria.**
+- `RI`: reviewed in full, with content reading and contextual comparison.
+- `FH`: reviewed as a member of a homogeneous family, with complete inventory, parsing/schema, mechanical comparison, and explicit samples.
+- `GO`: placeholder/generated; validated by origin, convention, and invariants, with no semantic content to read.
+- `NE`: not reviewed. **No tracked file was in this category.**
 
-## Coverage ledger completo
+## Complete coverage ledger
 
-Cada linha abaixo representa um arquivo rastreado e sua disposição. A listagem foi derivada de `git ls-files`, não de `rg --files`.
+Each line below represents a tracked file and its disposition. The list was derived from `git ls-files`, not `rg --files`.
 
-### Raiz, plugin e toolchain
+### Root, plugin, and toolchain
 
 ```text
 RI  .codex-plugin/plugin.json
@@ -39,9 +39,9 @@ FH  pnpm-lock.yaml
 RI  pnpm-workspace.yaml
 ```
 
-O lockfile foi parseado integralmente como YAML, agregado por packages/snapshots/integrity/license e amostrado nos nós diretos de Promptfoo e Codex SDK. Não foi feita leitura manual linha a linha das 792 entradas dev.
+The lockfile was parsed in full as YAML, aggregated by packages/snapshots/integrity/license, and sampled at the direct Promptfoo and Codex SDK nodes. The 792 dev entries were not read manually line by line.
 
-### Documentação
+### Documentation
 
 ```text
 RI  docs/README.md
@@ -57,9 +57,9 @@ RI  docs/internal/skill-creator-limitations.md
 RI  docs/research/evidence-map.md
 ```
 
-Os links locais de todos os documentos Markdown rastreados foram validados, incluindo anchors. Os três documentos de eval modificados antes da auditoria foram lidos como estado real, e o diff contra `HEAD` foi preservado como evidência de procedência.
+Local links in all tracked Markdown documents were validated, including anchors. The three eval documents modified before the audit were read as actual state, and the diff against `HEAD` was preserved as provenance evidence.
 
-### Evals — harness, assertions, configs e fixtures
+### Evals — harness, assertions, configs, and fixtures
 
 ```text
 FH  evals/fixtures/catalog.json
@@ -98,7 +98,7 @@ FH  evals/tasks/spec-inconsistent.json
 RI  evals/verifiers.py
 ```
 
-Todos os JSON/YAML foram parseados; os oito tasks e seis configs foram comparados ao catálogo de 48 dry-runs e à matriz 34/40/12. Amostras semânticas explícitas: `spec-inconsistent`, `post-hoc-contamination`, `security-authority`; routing positivo, negativo e colisão; primeiro/último probe de segurança; configs smoke, full behavior e red-team. Assertions e três runners foram lidos integralmente.
+All JSON/YAML files were parsed; the eight tasks and six configs were compared with the catalog of 48 dry-runs and the 34/40/12 matrix. Explicit semantic samples: `spec-inconsistent`, `post-hoc-contamination`, `security-authority`; positive, negative, and collision routing; the first and last security probes; and smoke, full behavior, and red-team configs. Assertions and all three runners were read in full.
 
 ### Hooks
 
@@ -107,9 +107,9 @@ RI  hooks/hooks.json
 RI  hooks/scripts/guard.py
 ```
 
-Além da leitura, foram exercitados em fixtures temporárias: ausência/má-formação/policy symlink, host cwd com projeto UV, overlap de scopes, alias de artifacts/reviews, staged index divergente e formas de comando Git.
+In addition to reading, they were exercised with temporary fixtures for missing/malformed policy symlinks, a host cwd with a UV project, scope overlap, artifact/review aliases, a divergent staged index, and Git command forms.
 
-### Skills — todos os 58 arquivos
+### Skills — all 58 files
 
 ```text
 RI  skills/brainstorming/SKILL.md
@@ -172,7 +172,7 @@ RI  skills/verify/references/review-contract.md
 RI  skills/verify/references/scope-tiers.md
 ```
 
-Cada `SKILL.md`, referência e asset foi lido individualmente. Os 17 YAML foram parseados e confrontados em família com nome, descrição, `allow_implicit_invocation`, dependências e o respectivo `SKILL.md`. Todos passaram pelo validator oficial.
+Each `SKILL.md`, reference, and asset was read individually. The 17 YAML files were parsed and compared as a family by name, description, `allow_implicit_invocation`, dependencies, and the corresponding `SKILL.md`. All passed the official validator.
 
 ### Templates
 
@@ -188,9 +188,9 @@ RI  templates/spec/evidence.md
 RI  templates/spec/spec.md
 ```
 
-Os templates foram confrontados com hooks, skills/assets, documentação e casos normal, bloqueado e autorizado. Os sete pares de cópia foram comparados byte a byte; estavam idênticos no snapshot.
+The templates were compared with hooks, skills/assets, documentation, and normal, blocked, and authorized cases. The seven copy pairs were compared byte for byte; they were identical in the snapshot.
 
-### Testes
+### Tests
 
 ```text
 FH  tests/fixtures/hooks/pretool-malformed.json
@@ -199,29 +199,29 @@ FH  tests/fixtures/hooks/pretool-valid.json
 RI  tests/test_toolkit.py
 ```
 
-`pretool-malformed.json` é intencionalmente JSON inválido; por isso foi excluído, com justificativa, da validação global de JSON. O arquivo de 65 testes foi lido por famílias e executado integralmente.
+`pretool-malformed.json` is intentionally invalid JSON; it was therefore excluded, with justification, from global JSON validation. The 65-test file was read by family and executed in full.
 
-## Superfícies não rastreadas/ignoradas relevantes
+## Relevant untracked/ignored surfaces
 
-| Superfície | Estado observado | Disposição e risco |
+| Surface | Observed state | Disposition and risk |
 | --- | --- | --- |
-| `node_modules/` | ~107.529 arquivos; ~3,8 GiB | Inventário mecânico e supply-chain via lockfile/package metadata; não distribuído. |
-| `evals/promptfoo/results/*.json` | 127 relatórios/1.618.535 bytes no checkpoint; contagem cresceu durante execução externa | Todos os 127 parseados e agregados; amostra explícita. Novos arquivos finais inventariados, mas não usados como evidência. |
-| `evals/promptfoo/generated/` | somente `.gitkeep` no checkpoint | Sem probes gerados persistidos. |
-| `evals/results/` | somente `.gitkeep` | Sem relatório legado ignorado no checkpoint. |
-| `docs/tmp/v0.1-map.md` | 89 linhas, ignorado por `.gitignore:16` | Lido integralmente; único disposition ledger da migração, contém paths pessoais e `never-commit`; finding `TUX-AUD-024`. |
-| `__pycache__/`, `*.pyc` | artefatos preexistentes ignorados | Não removidos; checks foram executados com `PYTHONDONTWRITEBYTECODE=1`. |
-| Dedicated eval home | fora do checkout | Não inspecionado para não tocar auth/credenciais; somente código de validação e fixtures sintéticas foram auditados. |
-| PDFs do contexto | ausentes localmente | Reconstruídos de URLs arXiv em temp externo; bytes originais não verificáveis. |
+| `node_modules/` | ~107,529 files; ~3.8 GiB | Mechanical inventory and supply-chain review through lockfile/package metadata; not distributed. |
+| `evals/promptfoo/results/*.json` | 127 reports/1,618,535 bytes at checkpoint; count grew during external execution | All 127 parsed and aggregated; explicit sample. Final new files inventoried, but not used as evidence. |
+| `evals/promptfoo/generated/` | only `.gitkeep` at checkpoint | No generated probes persisted. |
+| `evals/results/` | only `.gitkeep` | No ignored legacy report at checkpoint. |
+| `docs/tmp/v0.1-map.md` | 89 lines, ignored by `.gitignore:16` | Read in full; only migration disposition ledger, containing personal paths and `never-commit`; finding `TUX-AUD-024`. |
+| `__pycache__/`, `*.pyc` | pre-existing ignored artifacts | Not removed; checks were run with `PYTHONDONTWRITEBYTECODE=1`. |
+| Dedicated eval home | outside the checkout | Not inspected to avoid touching auth/credentials; only validation code and synthetic fixtures were audited. |
+| Context PDFs | absent locally | Reconstructed from arXiv URLs in an external temp directory; original bytes unverifiable. |
 
-## Integridade, secrets e paths pessoais
+## Integrity, secrets, and personal paths
 
-- Nenhum path pessoal absoluto foi encontrado em arquivo rastreado.
-- Ocorrências de `OPENAI_API_KEY`, `CODEX_API_KEY`, auth e canaries em arquivos rastreados são contratos/testes, não valores reais.
-- Nenhum segredo real foi identificado pelo scan textual orientado a padrões; isso não equivale a secret scanning criptográfico completo.
-- O único path pessoal observado fica no `docs/tmp/v0.1-map.md` ignorado.
-- Todos os 595 snapshots do lockfile observados tinham integrity quando aplicável; o lockfile não foi alterado.
+- No absolute personal path was found in a tracked file.
+- Occurrences of `OPENAI_API_KEY`, `CODEX_API_KEY`, auth, and canaries in tracked files are contracts/tests, not real values.
+- No real secret was identified by the pattern-oriented text scan; this is not equivalent to complete cryptographic secret scanning.
+- The only personal path observed is in the ignored `docs/tmp/v0.1-map.md`.
+- All 595 observed lockfile snapshots had integrity where applicable; the lockfile was not changed.
 
-## Risco residual de cobertura
+## Residual coverage risk
 
-Não há arquivo rastreado sem disposição. O risco residual concentra-se em: interpretação jurídica das licenças transitivas; comportamento real de clientes não executados; sandbox/rede/auth que não puderam ser empiricamente exercidos; e resultados ignored criados concorrentemente após o checkpoint.
+No tracked file lacks a disposition. Residual risk is concentrated in: legal interpretation of transitive licenses; actual behavior of clients that were not executed; sandbox/network/auth surfaces that could not be exercised empirically; and ignored results created concurrently after the checkpoint.

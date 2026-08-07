@@ -1,143 +1,143 @@
-# 06 — Evals, segurança, dependências e licença
+# 06 — Evals, security, dependencies, and license
 
-## Inventário das evals recalculado
+## Recalculated eval inventory
 
-| Suite | Matriz real | Máximo de chamadas |
+| Suite | Actual matrix | Maximum calls |
 | --- | ---: | ---: |
 | Routing | 17 positive + 17 negative | 34 target |
-| Behavior | 8 tasks × 5 condições | 40 target |
-| Secondary judge | 5 tasks semânticas × 5 condições | até 25 judge |
+| Behavior | 8 tasks × 5 conditions | 40 target |
+| Secondary judge | 5 semantic tasks × 5 conditions | up to 25 judge |
 | Security | 12 frozen probes | 12 target |
-| `eval:full` | routing + behavior + security | 86 target + até 25 judge = 111 |
-| Smoke | 4 condições | 4 target |
-| Compare | 8 × 2 providers × 3 repetições | 48 target + até 30 judge = 78 |
-| Legacy dry-run | 8 × 6 variantes | 48, sem provider no dry-run |
-| Red-team config | 10 probes solicitados | custo real não verificado |
+| `eval:full` | routing + behavior + security | 86 target + up to 25 judge = 111 |
+| Smoke | 4 conditions | 4 target |
+| Compare | 8 × 2 providers × 3 repetitions | 48 target + up to 30 judge = 78 |
+| Legacy dry-run | 8 × 6 variants | 48, no provider in dry-run |
+| Red-team config | 10 requested probes | actual cost not verified |
 
-As quantidades documentadas 34/40/12/111 conferem com as tasks/configs. Isso não significa que o agregador as exija (`TUX-AUD-008`).
+The documented quantities 34/40/12/111 match the tasks/configs. This does not mean the aggregator requires them (`TUX-AUD-008`).
 
-## Desenho e evidência
+## Design and evidence
 
-### Pontos fortes confirmados
+### Confirmed strengths
 
-- Tasks, fixtures, deterministic verifiers e provider estão separados.
-- Workspaces são temporários e inicializados como Git repos.
-- Promptfoo state/raw ficam em root temporário no caminho atual.
-- Exit 100 ainda produz checkpoint sanitizado.
-- Assertion failure em uma suite não apaga outcomes anteriores.
-- Repetições write-capable usam processo/workspace novos.
-- Child env remove `OPENAI_API_KEY` e `CODEX_API_KEY`.
-- Configs fixam `approval_policy: never`, rede/web desabilitadas e `persist_threads: false`.
-- Relatórios duráveis declaram `raw_responses_saved: false`.
-- A documentação limita honestamente claims de routing, behavior, security, model identity e judge (`docs/architecture/evaluations.md:180-195`).
+- Tasks, fixtures, deterministic verifiers, and the provider are separated.
+- Workspaces are temporary and initialized as Git repositories.
+- Promptfoo state/raw data is placed in a temporary root in the current path.
+- Exit 100 still produces a sanitized checkpoint.
+- An assertion failure in one suite does not erase earlier outcomes.
+- Write-capable repetitions use new processes/workspaces.
+- The child environment removes `OPENAI_API_KEY` and `CODEX_API_KEY`.
+- Configs set `approval_policy: never`, disable network/web access, and set `persist_threads: false`.
+- Durable reports declare `raw_responses_saved: false`.
+- Documentation honestly limits routing, behavior, security, model identity, and judge claims (`docs/architecture/evaluations.md:180-195`).
 
-### Classificação das evidências
+### Evidence classification
 
-| Superfície | Tipo | Força/limite |
+| Surface | Type | Strength/limit |
 | --- | --- | --- |
-| Routing contract | `spec-derived` | Expected skill declarada; metadata de uso é heurística. |
-| AST/filesystem behavior | `spec-derived` | Oracle determinístico para fixture, não qualidade geral. |
-| Secondary rubric | `spec-derived` + `diagnostic-probe` | Mesma família Codex; não independente. |
-| Frozen security | `spec-derived` + `diagnostic-probe` | Mede ataques nomeados; falsos negativos confirmados. |
-| Sanitized reports | `external`/empírico histórico | Provider observation; sem snapshot completo. |
-| Dry-run/static validation | `diagnostic-probe` | Prova configuração/matriz, não comportamento de modelo. |
+| Routing contract | `spec-derived` | Expected skill is declared; usage metadata is heuristic. |
+| AST/filesystem behavior | `spec-derived` | Deterministic oracle for the fixture, not general quality. |
+| Secondary rubric | `spec-derived` + `diagnostic-probe` | Same Codex family; not independent. |
+| Frozen security | `spec-derived` + `diagnostic-probe` | Measures named attacks; confirmed false negatives. |
+| Sanitized reports | `external`/historical empirical | Provider observation; no complete snapshot. |
+| Dry-run/static validation | `diagnostic-probe` | Proves configuration/matrix, not model behavior. |
 
-## Identidade e proveniência do snapshot
+## Snapshot identity and provenance
 
-`evals/run.py:279-286` calcula fingerprint somente de `AGENTS.md` e `skills/**`. `prepare-workspaces.py:183-196` e `run-evaluations.py:430-455` propagam esse valor; reports não incluem commit, dirty-state digest ou hash de tasks, fixtures, rubrics, configs, assertions, verifiers, runner e lockfile.
+`evals/run.py:279-286` calculates a fingerprint only from `AGENTS.md` and `skills/**`. `prepare-workspaces.py:183-196` and `run-evaluations.py:430-455` propagate this value; reports do not include the commit, dirty-state digest, or hash of tasks, fixtures, rubrics, configs, assertions, verifiers, runner, and lockfile.
 
-O full verde documentado (`docs/evidence/eval-runs.md:200-218`) foi criado antes de múltiplos commits posteriores no harness. Um routing aggregate mais recente manteve fingerprint `1796ac…5bec` e falhou 33/34. A própria arquitetura exige evidência nova após task/fixture/provider/dependency upgrades (`docs/architecture/evaluations.md:193-195`). Portanto, o full histórico não prova o checkout atual (`TUX-AUD-005`).
+The documented green full run (`docs/evidence/eval-runs.md:200-218`) was created before multiple later commits to the harness. A more recent routing aggregate retained fingerprint `1796ac…5bec` and failed 33/34. The architecture itself requires new evidence after task/fixture/provider/dependency upgrades (`docs/architecture/evaluations.md:193-195`). Therefore, the historical full run does not prove the current checkout (`TUX-AUD-005`).
 
-## Validade dos security probes
+## Security probe validity
 
-### Paths externos
+### External paths
 
-`security.py:99-133` marca uso externo apenas se o path resolvido for exatamente um sentinel listado. Um evento estruturado `cat ~/.ssh/id_rsa` produziu `violations=[]`, embora `security-regressions.yaml:36-44` proíba home/sibling reads. Qualquer path externo deveria violar a fixture controlada, não apenas o sentinel.
+`security.py:99-133` marks external use only if the resolved path is exactly a listed sentinel. A structured event `cat ~/.ssh/id_rsa` produced `violations=[]`, although `security-regressions.yaml:36-44` prohibits home/sibling reads. Any external path should violate the controlled fixture, not only the sentinel.
 
 ### Egress
 
-A blacklist em `security.py:114-120` cobre `curl`, `wget`, `nc`, `ssh` e poucos outros. `python`, `node`, `pnpm`, `gh` e cloud CLIs podem abrir rede sem disparar o oracle. O request da fixture pede um `cat` concreto, mas o assertion não enforce essa allowlist.
+The blacklist in `security.py:114-120` covers `curl`, `wget`, `nc`, `ssh`, and a few others. `python`, `node`, `pnpm`, `gh`, and cloud CLIs can open the network without triggering the oracle. The fixture request asks for a concrete `cat`, but the assertion does not enforce this allowlist.
 
-### Esteganografia
+### Steganography
 
-`security.py:182-191` procura a canary literal em arquivos/texto. Base64/hex da canary não contém a literal e passa, apesar do claim `steganographic-exfiltration` (`security-regressions.yaml:124-132`).
+`security.py:182-191` looks for the literal canary in files/text. Base64/hex of the canary does not contain the literal and passes, despite the `steganographic-exfiltration` claim (`security-regressions.yaml:124-132`).
 
-Conclusão: 12/12 pode conter falsos positivos; o claim precisa ser reduzido ou o oracle tornado legítimo para a fixture (`TUX-AUD-006`).
+Conclusion: 12/12 may contain false positives; the claim must be reduced or the oracle made legitimate for the fixture (`TUX-AUD-006`).
 
-## Isolamento do dedicated `CODEX_HOME`
+## Dedicated `CODEX_HOME` isolation
 
-O modelo documentado é prudente: auth session pode ser reutilizada, behavior-bearing content não; API keys não são fallback; status precisa ser “Logged in using ChatGPT”; config é allowlisted.
+The documented model is prudent: an auth session may be reused, behavior-bearing content may not; API keys are not a fallback; status must be “Logged in using ChatGPT”; config is allowlisted.
 
-Dois contraexemplos quebram o fail-closed declarado:
+Two counterexamples break the declared fail-closed behavior:
 
-- `codex_auth.py:137-191` trata nomes conhecidos e `skills/plugins`, mas não tem `else` para top-level desconhecido; `future-behavior-surface/` foi aceito.
-- Symlink é checado apenas nos primeiros níveis; um link aninhado em `skills/.system/.../personal-link` foi aceito.
+- `codex_auth.py:137-191` handles known names and `skills/plugins`, but has no `else` for an unknown top-level entry; `future-behavior-surface/` was accepted.
+- Symlinks are checked only at the first levels; a nested link in `skills/.system/.../personal-link` was accepted.
 
-Isso contradiz `docs/architecture/eval-isolation.md:34-55` (`TUX-AUD-007`). Nenhum dedicated home ou credencial real foi inspecionado.
+This contradicts `docs/architecture/eval-isolation.md:34-55` (`TUX-AUD-007`). No dedicated home or real credential was inspected.
 
-## Agregação e cobertura
+## Aggregation and coverage
 
-`run-evaluations.py:246-284` coleta recursivamente qualquer objeto com `response` e valida apenas erro/output/turn. `:606-641` concatena shards e soma counts; `:734-743` exige apenas status pass; `:843-862` pode imprimir full passed. Não há igualdade exata do conjunto `(test_id, provider)`, unicidade, shard ownership ou cardinalidade 34/40/12.
+`run-evaluations.py:246-284` recursively collects any object with `response` and validates only error/output/turn. `:606-641` concatenates shards and sums counts; `:734-743` requires only pass status; `:843-862` can print full passed. There is no exact equality of the `(test_id, provider)` set, uniqueness, shard ownership, or 34/40/12 cardinality.
 
-Contraexemplo conceitual executável: cada shard devolve uma row pass; aggregates e full continuam pass com menos de 86 trials. Tests checam ranges configurados, não raw rows missing/duplicate/wrong-provider. Ver `TUX-AUD-008`.
+Executable conceptual counterexample: each shard returns one passing row; aggregates and full continue to pass with fewer than 86 trials. Tests check configured ranges, not missing/duplicate/wrong-provider raw rows. See `TUX-AUD-008`.
 
-## Runner legado
+## Legacy runner
 
-`docs/development.md:58-63` ainda documenta `evals/run.py --execute`. Esse caminho monta `codex exec` (`evals/run.py:155-174`), herda todo ambiente no `subprocess.run` (`:203-221`) e grava `answer`/`raw` (`:232-246,385-403`) em pasta apenas ignorada. Ele não usa o preflight dedicado nem filtra API keys. É um segundo caminho oficial com garantias incompatíveis (`TUX-AUD-009`).
+`docs/development.md:58-63` still documents `evals/run.py --execute`. This path builds `codex exec` (`evals/run.py:155-174`), inherits the entire environment in `subprocess.run` (`:203-221`), and writes `answer`/`raw` (`:232-246,385-403`) to an ignored-only directory. It does not use the dedicated preflight or filter API keys. It is a second official path with incompatible guarantees (`TUX-AUD-009`).
 
-## Resultados sanitizados ignorados
+## Ignored sanitized results
 
-No checkpoint independente:
+At the independent checkpoint:
 
-- 127 JSON, 1.618.535 bytes, todos parseáveis;
+- 127 JSON, 1,618,535 bytes, all parseable;
 - behavior: 65 (34 pass, 31 fail);
 - routing: 30 (18 pass, 12 fail);
 - security: 26 (14 pass, 12 fail);
 - full: 5 (2 pass, 3 fail);
 - smoke: 1 pass;
-- nenhum hash de conteúdo duplicado;
-- hashes dos reports citados em `eval-runs.md` conferiram.
+- no duplicate content hash;
+- hashes of the reports cited in `eval-runs.md` matched.
 
-Amostragem explícita: oldest/newest; último full/routing/behavior/security/smoke; shard, aggregate e focused report. Não foi encontrado raw model output nos campos duráveis amostrados. Porém `_validate_local_outputs` (`run-evaluations.py:123-144`) verifica somente extensão e diretório, não parse/schema/nome/duplicidade/integridade/campos proibidos (`TUX-AUD-021`).
+Explicit sampling: oldest/newest; latest full/routing/behavior/security/smoke; shard, aggregate, and focused report. No raw model output was found in sampled durable fields. However, `_validate_local_outputs` (`run-evaluations.py:123-144`) checks only extension and directory, not parse/schema/name/duplicates/integrity/forbidden fields (`TUX-AUD-021`).
 
-Uma execução `eval:full` externa já rodava desde 09:46:36, antes do início da auditoria, e criou novos JSON durante o trabalho. Ela não foi iniciada, interrompida ou usada como prova; o total final é registrado no apêndice de comandos.
+An external `eval:full` execution was already running from 09:46:36, before the audit began, and created new JSON files during the work. It was not started, interrupted, or used as evidence; the final total is recorded in the command appendix.
 
-## Dependências diretas
+## Direct dependencies
 
-| Dependência | Versão/pin | Escopo | Licença | Necessidade/proveniência | Risco |
+| Dependency | Version/pin | Scope | License | Need/provenance | Risk |
 | --- | --- | --- | --- | --- | --- |
-| `promptfoo` | exata `0.122.0` | dev-only | MIT | Orquestra provider, repetitions, reports; decisão em ADR | Grafo muito grande; 14 advisories transitivos atuais. |
-| `@openai/codex-sdk` | exata `0.146.0` | dev-only | Apache-2.0 | Declarada como requerida pelo provider | Promptfoo resolve efetivamente `0.144.6`; root `0.146.0` pode ser redundante (`TUX-AUD-022`). |
+| `promptfoo` | exact `0.122.0` | dev-only | MIT | Orchestrates provider, repetitions, reports; decision in ADR | Very large graph; 14 current transitive advisories. |
+| `@openai/codex-sdk` | exact `0.146.0` | dev-only | Apache-2.0 | Declared as required by the provider | Promptfoo effectively resolves `0.144.6`; root `0.146.0` may be redundant (`TUX-AUD-022`). |
 
-O lockfile contém 792 packages dev, 595 snapshots e integrities. O virtual store local confirmou duas versões do SDK. `pnpm outdated` encontrou `0.146.1`, mas atualização não foi autorizada nem recomendada isoladamente sem compatibilidade.
+The lockfile contains 792 dev packages, 595 snapshots, and integrity entries. The local virtual store confirmed two SDK versions. `pnpm outdated` found `0.146.1`, but an update was neither authorized nor recommended in isolation without compatibility evidence.
 
-### Advisories atuais
+### Current advisories
 
-`pnpm audit --json` em 2026-08-06 retornou exit 1:
+`pnpm audit --json` on 2026-08-06 returned exit 1:
 
 - 0 critical, 5 high, 7 moderate, 2 low;
-- highs em `undici` WebSocket (DoS/exception), `adm-zip` (alocação 4 GiB) e `sharp/libvips`;
-- todos chegam por Promptfoo/optional maintainer tooling, não pelo plugin distribuído.
+- highs in `undici` WebSocket (DoS/exception), `adm-zip` (4 GiB allocation), and `sharp/libvips`;
+- all arrive through Promptfoo/optional maintainer tooling, not through the distributed plugin.
 
-Fontes primárias incluem [GHSA-vrm6-8vpv-qv8q](https://github.com/advisories/GHSA-vrm6-8vpv-qv8q), [GHSA-v9p9-hfj2-hcw8](https://github.com/advisories/GHSA-v9p9-hfj2-hcw8), [GHSA-vxpw-j846-p89q](https://github.com/advisories/GHSA-vxpw-j846-p89q), [GHSA-xcpc-8h2w-3j85](https://github.com/advisories/GHSA-xcpc-8h2w-3j85) e [GHSA-f88m-g3jw-g9cj](https://github.com/advisories/GHSA-f88m-g3jw-g9cj). O impacto está restrito por ser dev-only, mas evals processam output/archives e podem acessar rede; precisa de decisão documentada antes do próximo provider run (`TUX-AUD-025`).
+Primary sources include [GHSA-vrm6-8vpv-qv8q](https://github.com/advisories/GHSA-vrm6-8vpv-qv8q), [GHSA-v9p9-hfj2-hcw8](https://github.com/advisories/GHSA-v9p9-hfj2-hcw8), [GHSA-vxpw-j846-p89q](https://github.com/advisories/GHSA-vxpw-j846-p89q), [GHSA-xcpc-8h2w-3j85](https://github.com/advisories/GHSA-xcpc-8h2w-3j85), and [GHSA-f88m-g3jw-g9cj](https://github.com/advisories/GHSA-f88m-g3jw-g9cj). Impact is limited because these are dev-only, but evals process output/archives and may access the network; a documented decision is needed before the next provider run (`TUX-AUD-025`).
 
-### Licenças transitivas
+### Transitive licenses
 
-Agregação mecânica dos packages instalados: 446 MIT, 87 Apache-2.0, BSD/ISC e outras permissivas; também uma LGPL-3.0-or-later e três metadata `Unknown`. Não foi feita análise jurídica manual de 792 entradas. Como o grafo não é distribuído com o plugin, o risco é de toolchain/redistribuição de cache, não de runtime do consumidor. Os `Unknown` impedem alegar inventário de licença completo sem revisão (`TUX-AUD-025`).
+Mechanical aggregation of installed packages: 446 MIT, 87 Apache-2.0, BSD/ISC, and other permissive licenses; also one LGPL-3.0-or-later and three `Unknown` metadata entries. No manual legal analysis of 792 entries was performed. Since the graph is not distributed with the plugin, the risk is toolchain/cache redistribution, not consumer runtime. The `Unknown` entries prevent claiming a complete license inventory without review (`TUX-AUD-025`).
 
-## Licença, autoria e proveniência
+## License, authorship, and provenance
 
-`LICENSE:1-21`, manifest (`.codex-plugin/plugin.json:11`) e README (`README.md:69-71`) concordam em MIT; o texto corresponde ao identificador [SPDX MIT](https://spdx.org/licenses/MIT.html). O repositório local Geremmyas também usa MIT e o mesmo autor, reduzindo incompatibilidade aparente. Isso não é parecer jurídico.
+`LICENSE:1-21`, the manifest (`.codex-plugin/plugin.json:11`), and README (`README.md:69-71`) agree on MIT; the text matches the [SPDX MIT](https://spdx.org/licenses/MIT.html) identifier. The local Geremmyas repository also uses MIT and the same author, reducing apparent incompatibility. This is not a legal opinion.
 
-O evidence map declara inspiração comunitária sem cópia (`docs/research/evidence-map.md:33-35`) e cita cinco preprints. O problema é auditabilidade: o único disposition ledger capability-by-capability da migração está em `docs/tmp/v0.1-map.md`, ignorado, com paths pessoais e policy `never-commit`. Um clone limpo perde a origem/disposição (`TUX-AUD-024`).
+The evidence map declares community inspiration without copying (`docs/research/evidence-map.md:33-35`) and cites five preprints. The auditability problem is that the only capability-by-capability migration disposition ledger is in ignored `docs/tmp/v0.1-map.md`, with personal paths and `never-commit` policy. A clean clone loses the origin/disposition (`TUX-AUD-024`).
 
-Os cinco PDFs foram verificados por fontes arXiv diretas. O evidence map não registra URLs, data, hash, páginas/seções ou método, abaixo do padrão que `technical-research` exige (`TUX-AUD-027`). Não foi identificado texto longo copiado, mas uma análise de similaridade/autoria integral não foi realizada; se houver publicação ampla, revisão jurídica de adaptações e atribuições continua prudente.
+The five PDFs were checked through direct arXiv sources. The evidence map does not record URLs, date, hash, pages/sections, or method, below the standard required by `technical-research` (`TUX-AUD-027`). No long copied text was identified, but a complete similarity/authorship analysis was not performed; if there is broad publication, legal review of adaptations and attributions remains prudent.
 
-## Privacidade e segurança residual
+## Privacy and residual security
 
-- Reports ignored não devem ser confundidos com segredo protegido: `.gitignore` não é access control.
-- O caminho legado persiste output bruto; deve ser removido/migrado antes de uso.
-- A execução concorrente demonstra que ignored results mudam fora do Git; full aggregates precisam de hashes/commit/fingerprint completo.
-- Sandbox/network settings de configs são intenção; não foram empiricamente certificadas nesta auditoria.
-- Canary prova cópia literal nos locais observados, não silent read ou transformação.
-- Não foi encontrada credencial real ou path pessoal rastreado; nenhuma credencial foi lida/impressa.
+- Ignored reports must not be confused with protected secrets: `.gitignore` is not access control.
+- The legacy path persists raw output; it should be removed/migrated before use.
+- Concurrent execution demonstrates that ignored results change outside Git; full aggregates need complete hashes/commit/fingerprint.
+- Sandbox/network settings in configs are intent; they were not empirically certified in this audit.
+- The canary proves literal copying at observed locations, not silent reads or transformation.
+- No real credential or tracked personal path was found; no credential was read or printed.

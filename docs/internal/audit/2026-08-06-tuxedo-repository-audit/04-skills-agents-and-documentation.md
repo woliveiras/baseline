@@ -1,156 +1,156 @@
-# 04 — Skills, agentes e documentação
+# 04 — Skills, agents, and documentation
 
-## Resultado do catálogo
+## Catalog result
 
-As 17 skills foram revisadas individualmente e passaram no validator oficial. Seus `SKILL.md` são concisos, imperativos, client-neutral e usam referências locais com profundidade máxima de um nível. A integração Codex está corretamente em `agents/openai.yaml`; não há dependência de Promptfoo/Codex SDK no conteúdo instalado. Assets de `spec`/`verify` tornam os fluxos centrais autocontidos.
+All 17 skills were reviewed individually and passed the official validator. Their `SKILL.md` files are concise, imperative, client-neutral, and use local references with a maximum depth of one level. Codex integration is correctly in `agents/openai.yaml`; installed content has no Promptfoo/Codex SDK dependency. `spec`/`verify` assets make the central workflows self-contained.
 
-O problema sistêmico não é qualidade textual, mas ausência de contrato/lifecycle do catálogo: não há precedência global, owner de transição `draft → reviewed → approved`, nem fallback quando uma skill não está instalada. O routing explícito é medido somente no layout Codex; behavior cobre sete skills (`docs/architecture/evaluations.md:180-195`).
+The systemic problem is not textual quality, but the absence of a catalog contract/lifecycle: there is no global precedence, owner for the `draft → reviewed → approved` transition, or fallback when a skill is not installed. Explicit routing is measured only in the Codex layout; behavior covers seven skills (`docs/architecture/evaluations.md:180-195`).
 
-## Matriz de todas as skills
+## Matrix of all skills
 
-| Skill | Routing/overlap | Autoridade e stop | Portabilidade | Referências/assets | Avaliação |
+| Skill | Routing/overlap | Authority and stop | Portability | References/assets | Assessment |
 | --- | --- | --- | --- | --- | --- |
-| `brainstorming` | Explicit-only; precede `refine` quando a intenção ainda é aberta | Não implementa sem autorização; para em intenção estabilizada | Forte | Nenhum | Coerente; saída é semântica, mas clara. |
-| `bugfix` | Defeito existente; compõe com `tdd`, `security-review`, `verify` | Correção causal cabe ao pedido; “reconcile spec” não repete autorização | Forte | `feedback-loops.md` | Risco moderado de editar input governante em instalação standalone. |
-| `ci-workflow` | CI/build/release/deploy; overlap com security | Release/deploy protegidos; skill desenha/revisa | Boa, dependente da CI alvo | Nenhum | Trigger mais amplo que a ação; composição não formalizada. |
-| `decision-framework` | Alternativas após refinement; overlap com design/premortem | Decide apenas no escopo autorizado | Forte | `evidence-types.md` | Falta precedência quando `refine` ainda tem decisão aberta. |
-| `design-deep-modules` | Boundary/API; distinto de audit amplo | Spec só muda com autoridade; implementação ambígua | Forte; Mermaid portátil | `boundary-options.md` | Pode circular com `shape-domain`/architecture sem stop global. |
-| `docs` | Docs duráveis; vocabulário vai a `shape-domain` | Menor superfície autorizada | Forte | 3 refs | Compacta; poucos exemplos de falha operacional. |
-| `git-commit` | Commit local verificado; implicit elegível | Limites Git/release fortes | Git necessário; nome genérico | Nenhum | Boa autoridade; colisão cross-client e receipt staged gap. |
-| `improve-architecture` | Audit amplo explicit-only; delega boundary | Proíbe alteração de produção sem nova autoridade | Forte | `architecture-diagrams.md` | Boundary excelente. |
-| `premortem` | Risco médio/alto; overlap com spec/security | Pode mandar adicionar critérios quando “justified”, sem repetir autoridade | `openai.yaml` implicit por default, diverge do README | Nenhum | `TUX-AUD-013` e `TUX-AUD-015`. |
-| `refine` | Ambiguidade material; precedência com brainstorming | Escreve somente artefato autorizado | Forte | `decision-tree.md` | Pode bloquear TDD sem owner de aprovação. |
-| `security-review` | Trust boundary/sensitive/destructive | Review-only; não promete garantia | Forte e neutra | `threat-model.md` | Honesta; remediação stack-specific fica fora. |
-| `session-bridge` | Explicit-only | Sem escrita; saída estruturada | Forte | `handoff-template.md` | Coerente e honesta sobre contexto. |
-| `shape-domain` | Vocabulário/ownership comportamental | Só atualiza superfície autorizada | Forte | `context-mapping.md` | Pode formar ciclo com docs/design. |
-| `spec` | Mudança material antes de implementação | Proteção forte de input governante | Forte | 3 refs, 2 assets | Defaults `small`/single reviewer enviesam classificação. |
-| `tdd` | Implementação com AC/matriz estáveis | Para em conflito | Forte; requer runner alvo | `provenance.md` | “Approved behavior” sem lifecycle/owner. |
-| `technical-research` | Standards/APIs/claims atuais | Só atualiza spec quando autorizado | Rede/tool ausente; implicit default | `source-quality.md` | `TUX-AUD-013` e `TUX-AUD-029`. |
-| `verify` | Review/completion boundary | Reparos e escrita só autorizados | Forte; reconstrói fases | 2 refs, 4 assets | Divide ownership da matrix com `spec`. |
+| `brainstorming` | Explicit-only; precedes `refine` while intent remains open | Does not implement without authorization; stops once intent is stabilized | Strong | None | Coherent; output is semantic but clear. |
+| `bugfix` | Existing defect; composes with `tdd`, `security-review`, `verify` | Causal fix belongs to the request; “reconcile spec” does not repeat authorization | Strong | `feedback-loops.md` | Moderate risk of editing governing input in standalone installation. |
+| `ci-workflow` | CI/build/release/deploy; overlaps security | Release/deploy protected; skill designs/reviews | Good, dependent on target CI | None | Trigger is broader than the action; composition is not formalized. |
+| `decision-framework` | Alternatives after refinement; overlaps design/premortem | Decides only within authorized scope | Strong | `evidence-types.md` | No precedence when `refine` still has an open decision. |
+| `design-deep-modules` | Boundary/API; distinct from broad audit | Spec changes only with authority; implementation is ambiguous | Strong; portable Mermaid | `boundary-options.md` | May cycle with `shape-domain`/architecture without a global stop. |
+| `docs` | Durable docs; vocabulary goes to `shape-domain` | Smallest authorized surface | Strong | 3 refs | Compact; few operational failure examples. |
+| `git-commit` | Verified local commit; eligible for implicit invocation | Strong Git/release boundaries | Git required; generic name | None | Good authority; cross-client collision and staged receipt gap. |
+| `improve-architecture` | Broad audit, explicit-only; delegates boundary work | Prohibits production changes without new authority | Strong | `architecture-diagrams.md` | Excellent boundary. |
+| `premortem` | Medium/high risk; overlaps spec/security | May direct criteria to be added when “justified,” without repeating authority | `openai.yaml` implicit by default, diverges from README | None | `TUX-AUD-013` and `TUX-AUD-015`. |
+| `refine` | Material ambiguity; precedence with brainstorming | Writes only an authorized artifact | Strong | `decision-tree.md` | May block TDD without an approval owner. |
+| `security-review` | Trust boundary/sensitive/destructive | Review-only; does not promise a guarantee | Strong and neutral | `threat-model.md` | Honest; stack-specific remediation stays out. |
+| `session-bridge` | Explicit-only | No writing; structured output | Strong | `handoff-template.md` | Coherent and honest about context. |
+| `shape-domain` | Vocabulary/behavioral ownership | Updates only an authorized surface | Strong | `context-mapping.md` | May form a cycle with docs/design. |
+| `spec` | Material change before implementation | Strong protection for governing input | Strong | 3 refs, 2 assets | `small`/single-reviewer defaults bias classification. |
+| `tdd` | Implementation with stable AC/matrix | Stops on conflict | Strong; requires target runner | `provenance.md` | “Approved behavior” without lifecycle/owner. |
+| `technical-research` | Current standards/APIs/claims | Updates spec only when authorized | Network/tool absent; implicit default | `source-quality.md` | `TUX-AUD-013` and `TUX-AUD-029`. |
+| `verify` | Review/completion boundary | Repairs and writing only when authorized | Strong; reconstructs phases | 2 refs, 4 assets | Shares matrix ownership with `spec`. |
 
-## Routing e metadados OpenAI
+## Routing and OpenAI metadata
 
-Todos os 17 `agents/openai.yaml` têm metadata parseável e descrição consistente com o respectivo `SKILL.md`. Os cinco explicit-only observados — por exemplo `brainstorming`, `improve-architecture` e `session-bridge` — usam `allow_implicit_invocation: false`. `premortem` e `technical-research` não o fazem, apesar do README classificar deep work como explicitamente invocado (`README.md:24-31`), criando `TUX-AUD-013`.
+All 17 `agents/openai.yaml` files have parseable metadata and descriptions consistent with their respective `SKILL.md`. The five observed explicit-only skills — for example `brainstorming`, `improve-architecture`, and `session-bridge` — use `allow_implicit_invocation: false`. `premortem` and `technical-research` do not, although the README classifies deep work as explicitly invoked (`README.md:24-31`), creating `TUX-AUD-013`.
 
-As descrições geralmente têm positive e negative scope, o que reduz falsos positivos. Os nomes `docs`, `spec`, `verify` e `bugfix` são genéricos; a documentação oficial do Codex informa que skills homônimas não são mescladas. Sem namespace/fixture de colisão cross-client, há risco de shadowing (`TUX-AUD-026`).
+Descriptions generally include positive and negative scope, which reduces false positives. The names `docs`, `spec`, `verify`, and `bugfix` are generic; official Codex documentation says same-named skills are not merged. Without a cross-client namespace/collision fixture, there is a shadowing risk (`TUX-AUD-026`).
 
-## Portabilidade
+## Portability
 
-### Confirmado
+### Confirmed
 
-- O formato usa apenas o denominador comum Agent Skills: frontmatter, Markdown, references e assets.
-- Não há invocações Codex-specific dentro do core das skills.
-- O diretório `agents/` encapsula políticas OpenAI.
-- As referências são relativas e autocontidas.
+- The format uses only the Agent Skills common denominator: frontmatter, Markdown, references, and assets.
+- There are no Codex-specific invocations inside the skill core.
+- The `agents/` directory encapsulates OpenAI policies.
+- References are relative and self-contained.
 
-### Não comprovado
+### Unproven
 
-O checkout contém `skills/`, adequado como conteúdo do plugin, mas não os layouts auto-descobertos por Codex standalone, Copilot, Claude Code ou OpenCode. O README não fornece instalação por cliente, matriz de suporte ou fixture clean-room. As evals admitem explicitamente medir somente `.agents/skills/` do Codex e sete skills de behavior. Portanto, o claim deve significar “compatível em formato” até que `TUX-AUD-011` seja resolvido.
+The checkout contains `skills/`, suitable as plugin content, but not the auto-discovered layouts for standalone Codex, Copilot, Claude Code, or OpenCode. The README provides no per-client installation, support matrix, or clean-room fixture. The evals explicitly allow measurement of only Codex `.agents/skills/` and seven behavior skills. Therefore, the claim must mean “format-compatible” until `TUX-AUD-011` is resolved.
 
-## Instruction architecture de `AGENTS.md`
+## `AGENTS.md` instruction architecture
 
-### Pontos fortes
+### Strengths
 
-- Escopo negativo claro: sem runtime/distribution machinery.
-- Tier por boundary, não por line count (`AGENTS.md:19-28`).
-- Autoridade separada de evidência e qualidade semântica (`AGENTS.md:30-39`).
-- Toolchain UV/PNPM e proibição de eval paga automática.
-- Definição explícita de o que hooks não podem provar.
-- Completion ligada a comandos frescos e risco residual.
+- Clear negative scope: no runtime/distribution machinery.
+- Tier by boundary, not line count (`AGENTS.md:19-28`).
+- Authority separated from evidence and semantic quality (`AGENTS.md:30-39`).
+- UV/PNPM toolchain and prohibition on automatic paid evals.
+- Explicit definition of what hooks cannot prove.
+- Completion tied to fresh commands and residual risk.
 
-### Tensões
+### Tensions
 
-- Exige spec/matriz/receipts para toda mudança material, mas o próprio repositório não conserva esses artefatos (`TUX-AUD-001`).
-- “Quando reviewers independentes estão disponíveis” é verificável apenas por declaração; hashes não provam independência.
-- O volume é administrável, mas skills standalone não herdam automaticamente a proteção do `AGENTS.md`; cada skill que sugere escrita sensível precisa repetir a fronteira essencial.
-- A exigência de commit local em slices é política de mantenedor, não portável; está corretamente fora do core, mas `git-commit` implicit pode ser selecionada em clientes com regras diferentes.
+- It requires a spec/matrix/receipts for every material change, but the repository itself does not retain those artifacts (`TUX-AUD-001`).
+- “When independent reviewers are available” is verifiable only by declaration; hashes do not prove independence.
+- The volume is manageable, but standalone skills do not automatically inherit `AGENTS.md` protection; each skill that suggests sensitive writing must repeat the essential boundary.
+- The local commit-in-slices requirement is maintainer policy, not portable; it is correctly outside the core, but implicit `git-commit` may be selected in clients with different rules.
 
-## Composição — cenário normal
+## Composition — normal scenario
 
 ```mermaid
 flowchart TD
-    U["Pedido"] --> A{"Ambiguidade material?"}
-    A -->|sim| R["refine"]
-    A -->|não| S["spec"]
+    U["Request"] --> A{"Material ambiguity?"}
+    A -->|yes| R["refine"]
+    A -->|no| S["spec"]
     R --> S
     S --> SR["spec review + behavior matrix"]
-    SR --> H{"Risco sensível?"}
-    H -->|sim| P["premortem + security-review"]
-    H -->|não| T["tdd"]
-    P -->|"spec/matrix reconciliadas"| T
+    SR --> H{"Sensitive risk?"}
+    H -->|yes| P["premortem + security-review"]
+    H -->|no| T["tdd"]
+    P -->|"spec/matrix reconciled"| T
     T --> D["docs decision"]
     D --> V["verify: tests + code review"]
     V -->|findings| S
     V -->|approved| G["git-commit"]
 ```
 
-O fluxo acima é uma arquitetura recomendada inferida dos contratos, não uma state machine versionada no produto. Isso precisa ser tornado explícito em `WP-09`.
+The flow above is a recommended architecture inferred from the contracts, not a versioned state machine in the product. This needs to be made explicit in `WP-09`.
 
-## Composição — arquitetura e domínio
+## Composition — architecture and domain
 
 ```mermaid
 flowchart TD
-    U["Audit explícito"] --> I["improve-architecture"]
-    I --> L{"Linguagem/ownership ambíguos?"}
-    L -->|sim| S["shape-domain"]
-    L -->|não| B["design-deep-modules"]
+    U["Explicit audit"] --> I["improve-architecture"]
+    I --> L{"Ambiguous language/ownership?"}
+    L -->|yes| S["shape-domain"]
+    L -->|no| B["design-deep-modules"]
     S --> B
-    B --> O{"Mais de uma opção viável?"}
-    O -->|sim| D["decision-framework"]
-    O -->|não| A{"Implementação autorizada?"}
+    B --> O{"More than one viable option?"}
+    O -->|yes| D["decision-framework"]
+    O -->|no| A{"Implementation authorized?"}
     D --> A
-    A -->|não| R["Relatório de design"]
-    A -->|sim| P["spec → tdd → verify"]
+    A -->|no| R["Design report"]
+    A -->|yes| P["spec → tdd → verify"]
 ```
 
-## Falhas e deadlocks possíveis
+## Possible failures and deadlocks
 
 ```mermaid
 flowchart TD
-    T["tdd exige spec aprovada + matriz"] --> Q{"Owner/status de aprovação existe?"}
-    Q -->|não| X["Deadlock: draft versus approved"]
-    P["premortem propõe novos critérios"] --> A{"Autoridade explícita?"}
-    A -->|não| B["Deve apenas propor, mas texto é ambíguo"]
-    A -->|sim| S["Atualiza spec"]
-    S --> H["Invalida hashes/reviews downstream"]
-    H --> R["Refazer fase 1 e matriz"]
+    T["tdd requires approved spec + matrix"] --> Q{"Does an approval owner/status exist?"}
+    Q -->|no| X["Deadlock: draft versus approved"]
+    P["premortem proposes new criteria"] --> A{"Explicit authority?"}
+    A -->|no| B["Should only propose, but text is ambiguous"]
+    A -->|yes| S["Updates spec"]
+    S --> H["Invalidates downstream hashes/reviews"]
+    H --> R["Redo phase 1 and matrix"]
     R --> T
 ```
 
-Outros deadlocks/loops:
+Other deadlocks/loops:
 
-- `shape-domain → docs → design-deep-modules → shape-domain` sem owner da decisão.
-- `verify → spec` em qualquer finding sem regra de severidade pode reiniciar o ciclo inteiro.
-- Stop hook com policy impossível/receipt stale pode pedir continuação repetida; `stop_hook_active` não é usado.
-- Skill ausente no cliente não tem fallback contratual; o agente pode improvisar a etapa.
+- `shape-domain → docs → design-deep-modules → shape-domain` without a decision owner.
+- `verify → spec` on any finding without a severity rule can restart the entire cycle.
+- A stop hook with impossible policy/stale receipt may request repeated continuation; `stop_hook_active` is not used.
+- A skill missing from the client has no contractual fallback; the agent may improvise the step.
 
-## Templates e outputs das skills
+## Skill templates and outputs
 
-Os outputs de `spec` e `verify` representam ACs, oracles, evidence e reviews com boa separação visual. No entanto:
+The `spec` and `verify` outputs represent ACs, oracles, evidence, and reviews with good visual separation. However:
 
-- `risk: small` e `single-isolated-reviewer` são defaults resolvidos, não placeholders (`TUX-AUD-016`);
-- não há state transition de `draft` para aprovado;
-- os pares root/skill são cópias sem fonte canônica declarada (`TUX-AUD-028`);
-- a separação estrutural pode ser anulada pelo receipt apontando três roles para um arquivo (`TUX-AUD-017`).
+- `risk: small` and `single-isolated-reviewer` are resolved defaults, not placeholders (`TUX-AUD-016`);
+- there is no state transition from `draft` to approved;
+- root/skill pairs are copies without a declared canonical source (`TUX-AUD-028`);
+- structural separation can be nullified by a receipt pointing three roles to one file (`TUX-AUD-017`).
 
-## Documentação e onboarding
+## Documentation and onboarding
 
-### Pontos fortes
+### Strengths
 
-- README curto e separa usuário de mantenedor.
-- Hub `docs/README.md` encontra arquitetura, ADR, research, guides e evidence.
-- Eval docs registram limitações importantes: mesma família de judge, modelo não resolvido, routing explícito, 7/17 behavior e security não universal (`docs/architecture/evaluations.md:180-195`).
-- O evidence map separa empirical, heuristic, product decision e community inspiration.
-- Links internos rastreados: zero broken.
+- Short README separates user and maintainer audiences.
+- `docs/README.md` hub locates architecture, ADR, research, guides, and evidence.
+- Eval docs record important limitations: same judge family, unresolved model, explicit routing, 7/17 behavior, and non-universal security (`docs/architecture/evaluations.md:180-195`).
+- The evidence map separates empirical, heuristic, product decision, and community inspiration.
+- Tracked internal links: zero broken.
 
-### Lacunas
+### Gaps
 
-- “Add it to a local Codex marketplace” não fornece comando, manifest de marketplace, restart, confirmação, update ou removal (`TUX-AUD-012`).
-- Não há guia equivalente por cliente (`TUX-AUD-011`).
-- O único ledger detalhado Geremmyas é ignorado e pessoal (`TUX-AUD-024`).
-- Bibliografia não registra URL direta, data, hash, página/seção ou método (`TUX-AUD-027`).
-- Python mínimo e o SDK efetivo do provider não são documentados corretamente (`TUX-AUD-022`, `TUX-AUD-023`).
+- “Add it to a local Codex marketplace” provides no command, marketplace manifest, restart, confirmation, update, or removal (`TUX-AUD-012`).
+- There is no equivalent per-client guide (`TUX-AUD-011`).
+- The only detailed Geremmyas ledger is ignored and personal (`TUX-AUD-024`).
+- The bibliography does not record direct URL, date, hash, page/section, or method (`TUX-AUD-027`).
+- Minimum Python and the effective provider SDK are not documented correctly (`TUX-AUD-022`, `TUX-AUD-023`).
 
-## Critério de melhoria
+## Improvement criterion
 
-O catálogo estará documentalmente sustentável quando outro mantenedor puder, de um clone limpo: instalar o plugin e uma skill standalone em cada cliente suportado; prever a skill/ordem/stop para cenários compostos; localizar o AC que justifica cada contrato; executar validators e fixtures; e reproduzir a proveniência sem paths, memória ou arquivos ignorados pessoais.
+The catalog will be documentarily sustainable when another maintainer can, from a clean clone: install the plugin and a standalone skill in each supported client; predict the skill/order/stop behavior for composed scenarios; locate the AC that justifies each contract; run validators and fixtures; and reproduce provenance without personal paths, memory, or ignored files.

@@ -1,20 +1,20 @@
-# 09 — Reconciliação com o `HEAD` atual
+# 09 — Reconciliation with the current `HEAD`
 
-Data da reconciliação: 2026-08-06
+Reconciliation date: 2026-08-06
 
-Estado: **29 findings abertos; 0 parciais; 0 corrigidos**
+Status: **29 findings open; 0 partial; 0 fixed**
 
-Decisão geral: **Not ready**
+Overall decision: **Not ready**
 
-> Este checkpoint foi sucedido pela [reconciliação após remoção do lifecycle enforcement](10-reconciliation-after-lifecycle-removal.md).
+> This checkpoint was superseded by the [reconciliation after lifecycle enforcement removal](10-reconciliation-after-lifecycle-removal.md).
 
-## Escopo e regra de classificação
+## Scope and classification rule
 
-A auditoria original avaliou o checkout em `797d72cde47f7b94354af5ed49ede4eeb0ea5fdc`, com três mudanças locais então preexistentes. Esta reconciliação compara cada critério de aceitação de `TUX-AUD-001` a `TUX-AUD-029` com o `HEAD` `b46f37643adfa83897427cb2be3c7f383f3b35d9`.
+The original audit evaluated the checkout at `797d72cde47f7b94354af5ed49ede4eeb0ea5fdc`, with three local changes then pre-existing. This reconciliation compares every acceptance criterion from `TUX-AUD-001` to `TUX-AUD-029` with `HEAD` `b46f37643adfa83897427cb2be3c7f383f3b35d9`.
 
-Um finding só seria **corrigido** se seu critério de aceitação estivesse implementado e provado. **Parcial** exigiria que uma parte separável desse próprio critério já estivesse satisfeita. Melhorias próximas, relatórios verdes e documentação nova não recebem crédito parcial quando o mecanismo encontrado pela auditoria permanece igual.
+A finding was **fixed** only if its acceptance criterion was implemented and proven. **Partial** required a separable part of that criterion to already be satisfied. Related improvements, green reports, and new documentation receive no partial credit when the mechanism found by the audit remains unchanged.
 
-Entre os dois commits, apenas oito arquivos mudaram:
+Only eight files changed between the two commits:
 
 ```text
 docs/architecture/evaluations.md
@@ -27,80 +27,80 @@ skills/git-commit/agents/openai.yaml
 tests/test_toolkit.py
 ```
 
-As mudanças corrigiram o routing de `git-commit`, tornaram determinístico um oráculo de ambiguidade e registraram nova evidência empírica. Elas não alteraram os launchers de hook, schema de receipts, staged-index binding, fingerprint do sistema de avaliação, cardinalidade do aggregate, isolamento do eval home, runner legado, oráculos de trajetória de segurança, defaults de spec ou supply chain citados nos findings.
+The changes fixed `git-commit` routing, made an ambiguity oracle deterministic, and recorded new empirical evidence. They did not change hook launchers, receipt schema, staged-index binding, evaluation-system fingerprint, aggregate cardinality, eval-home isolation, legacy runner, security trajectory oracles, spec defaults, or the supply chain cited in the findings.
 
-## Evidência nova, sem extrapolação
+## New evidence, without extrapolation
 
-Uma execução autorizada de `pnpm run eval:full` passou em 2026-08-06:
+An authorized `pnpm run eval:full` execution passed on 2026-08-06:
 
-| Propriedade | Evidência |
+| Property | Evidence |
 | --- | --- |
 | Routing | 34/34 |
 | Behavior | 40/40 |
 | Security | 12/12 |
 | Aggregate | 86/86; 0 falhas; status `pass` |
-| Duração | 3.376,701 s (56m16,701s) |
-| Controles | approval `never`; dedicated home; network/web/cache remoto desativados; threads não persistidas |
-| Privacidade | raw responses não salvas; sem compartilhamento; sem red-team remoto |
-| Artefato | `evals/promptfoo/results/full-aggregate-1786013868505052000.json` |
+| Duration | 3,376.701 s (56m16.701s) |
+| Controls | approval `never`; dedicated home; network/web/remote cache disabled; threads not persisted |
+| Privacy | raw responses not saved; no sharing; no remote red-team |
+| Artifact | `evals/promptfoo/results/full-aggregate-1786013868505052000.json` |
 | SHA-256 | `e6916e05766d7450c45a462b9b6e7a455672fb3595d8a32c1cc9211b4cc23827` |
 
-Esse resultado prova que os 86 casos configurados passaram sob o harness corrente. Ele não corrige nem invalida os findings sobre identidade incompleta do snapshot, cardinalidade permissiva ou falsos negativos dos probes. Portanto, é evidência comportamental do catálogo configurado, não certificação de segurança nem prontidão de distribuição.
+This result proves that the 86 configured cases passed under the current harness. It neither fixes nor invalidates findings about incomplete snapshot identity, permissive cardinality, or probe false negatives. Therefore, it is behavioral evidence for the configured catalog, not security certification or distribution readiness.
 
-## Estado de cada finding
+## State of each finding
 
-| Finding | Estado atual | Evidência de reconciliação |
+| Finding | Current state | Reconciliation evidence |
 | --- | --- | --- |
-| `TUX-AUD-001` | Aberto | Nenhuma spec/AC/matriz/evidence/review canônica do catálogo foi adicionada. |
-| `TUX-AUD-002` | Aberto | `hooks/hooks.json` ainda inicia o guard com `uv run` no cwd consumidor. |
-| `TUX-AUD-003` | Aberto | O novo trigger de `git-commit` não faz o guard ler ou vincular os bytes do Git index. |
-| `TUX-AUD-004` | Aberto | Policy ainda usa `exists()` sem contrato robusto de `lstat`, tipo e contenção. |
-| `TUX-AUD-005` | Aberto | O fingerprint raiz continua limitado a `AGENTS.md` e `skills/**`; o full novo não altera essa identidade. |
-| `TUX-AUD-006` | Aberto | A mudança em ambiguidade não cobre external paths arbitrários, egress por executáveis alternativos ou canary transformada. |
-| `TUX-AUD-007` | Aberto | O eval home ainda aceita top-level desconhecido e não rejeita symlinks recursivamente. |
-| `TUX-AUD-008` | Aberto | O aggregate ainda não compara conjunto exato de rows nem rejeita ausências/duplicatas. |
-| `TUX-AUD-009` | Aberto | `evals/run.py --execute` permanece disponível, com herança/sanitização incompatível com o caminho atual. |
-| `TUX-AUD-010` | Aberto | Receipts continuam globais, sem mapeamento de evidência por critério. |
-| `TUX-AUD-011` | Aberto | Não foi adicionada prova de instalação e comportamento cross-client. |
-| `TUX-AUD-012` | Aberto | O onboarding Codex continua sem procedimento reproduzível de instalação/materialização. |
-| `TUX-AUD-013` | Aberto | `premortem` e `technical-research` continuam sem `allow_implicit_invocation: false`. |
-| `TUX-AUD-014` | Aberto | Não há lifecycle, precedência e fallback canônicos para composição de skills. |
-| `TUX-AUD-015` | Aberto | `premortem` ainda pode recomendar critérios/testes sem autoridade explícita de escrita. |
-| `TUX-AUD-016` | Aberto | Templates de spec ainda induzem `risk: small` e `single-isolated-reviewer`. |
-| `TUX-AUD-017` | Aberto | Roles spec/matrix/evidence ainda podem apontar para o mesmo artefato. |
-| `TUX-AUD-018` | Aberto | Contextos dos receipts de test/code review ainda são validados incompletamente. |
-| `TUX-AUD-019` | Aberto | A policy default ainda torna layouts com testes co-localizados insatisfatíveis. |
-| `TUX-AUD-020` | Aberto | Rules e documentação continuam prometendo mais do que os prefixos literais provados. |
-| `TUX-AUD-021` | Aberto | Validação de results continua sem schema/shape completo além da convenção de arquivo. |
-| `TUX-AUD-022` | Aberto | Promptfoo resolve SDK 0.144.6 enquanto a dependência direta é 0.146.0. |
-| `TUX-AUD-023` | Aberto | O requisito mínimo de Python ainda não está declarado como contrato executável. |
-| `TUX-AUD-024` | Aberto | O ledger de migração/proveniência continua ignorado e ligado a caminho pessoal. |
-| `TUX-AUD-025` | Aberto | `pnpm audit` ainda encontra 5 high, 7 moderate e 2 low; disposition/licenças seguem pendentes. |
-| `TUX-AUD-026` | Aberto | Não foi criada estratégia de colisão para nomes genéricos cross-client. |
-| `TUX-AUD-027` | Aberto | Evidence map ainda não registra proveniência reproduzível dos PDFs. |
-| `TUX-AUD-028` | Aberto | Cópias de templates continuam sem fonte canônica e verificação de derivação. |
-| `TUX-AUD-029` | Aberto | `technical-research` continua sem contrato de rede, modo offline e fallback. |
+| `TUX-AUD-001` | Open | No canonical catalog spec/AC/matrix/evidence/review was added. |
+| `TUX-AUD-002` | Open | `hooks/hooks.json` still starts the guard with `uv run` in the consumer cwd. |
+| `TUX-AUD-003` | Open | The new `git-commit` trigger does not make the guard read or bind Git-index bytes. |
+| `TUX-AUD-004` | Open | Policy still uses `exists()` without a robust `lstat`, type, and containment contract. |
+| `TUX-AUD-005` | Open | Root fingerprint remains limited to `AGENTS.md` and `skills/**`; the new full run does not change that identity. |
+| `TUX-AUD-006` | Open | The ambiguity change does not cover arbitrary external paths, egress through alternate executables, or transformed canaries. |
+| `TUX-AUD-007` | Open | Eval home still accepts unknown top-level entries and does not reject symlinks recursively. |
+| `TUX-AUD-008` | Open | Aggregate still does not compare the exact row set or reject missing/duplicate rows. |
+| `TUX-AUD-009` | Open | `evals/run.py --execute` remains available, with inheritance/sanitization incompatible with the current path. |
+| `TUX-AUD-010` | Open | Receipts remain global, without evidence mapping by criterion. |
+| `TUX-AUD-011` | Open | No proof of cross-client installation and behavior was added. |
+| `TUX-AUD-012` | Open | Codex onboarding still lacks a reproducible installation/materialization procedure. |
+| `TUX-AUD-013` | Open | `premortem` and `technical-research` still lack `allow_implicit_invocation: false`. |
+| `TUX-AUD-014` | Open | There is no canonical lifecycle, precedence, and fallback for skill composition. |
+| `TUX-AUD-015` | Open | `premortem` may still recommend criteria/tests without explicit writing authority. |
+| `TUX-AUD-016` | Open | Spec templates still induce `risk: small` and `single-isolated-reviewer`. |
+| `TUX-AUD-017` | Open | Spec/matrix/evidence roles may still point to the same artifact. |
+| `TUX-AUD-018` | Open | Test/code review receipt contexts are still incompletely validated. |
+| `TUX-AUD-019` | Open | Default policy still makes co-located-test layouts unsatisfiable. |
+| `TUX-AUD-020` | Open | Rules and documentation still promise more than the proven literal prefixes. |
+| `TUX-AUD-021` | Open | Result validation still lacks complete schema/shape checks beyond file convention. |
+| `TUX-AUD-022` | Open | Promptfoo resolves SDK 0.144.6 while the direct dependency is 0.146.0. |
+| `TUX-AUD-023` | Open | Minimum Python is still not declared as an executable contract. |
+| `TUX-AUD-024` | Open | Migration/provenance ledger remains ignored and tied to a personal path. |
+| `TUX-AUD-025` | Open | `pnpm audit` still finds 5 high, 7 moderate, and 2 low; disposition/licenses remain pending. |
+| `TUX-AUD-026` | Open | No collision strategy was created for generic cross-client names. |
+| `TUX-AUD-027` | Open | Evidence map still does not record reproducible PDF provenance. |
+| `TUX-AUD-028` | Open | Template copies still lack a canonical source and derivation check. |
+| `TUX-AUD-029` | Open | `technical-research` still lacks a network, offline-mode, and fallback contract. |
 
-## Próximos passos
+## Next steps
 
-Os work packages permanecem pendentes. A ordem recomendada continua:
+The work packages remain pending. The recommended order remains:
 
-1. `WP-01` para tornar o contrato do catálogo independente da implementação.
-2. `WP-02` a `WP-04` para corrigir launcher, staged candidate e fail-closed policy.
-3. `WP-05` a `WP-08` para tornar identidade, oráculos, isolamento e aggregate de eval confiáveis.
-4. `WP-09` a `WP-11` para portabilidade, supply chain e proveniência.
-5. Repetir as verificações determinísticas após cada slice. Um novo full só agrega evidência útil depois de mudanças que afetem o catálogo/harness; não é necessário repetir 86 chamadas para esta reconciliação documental.
+1. `WP-01` to make the catalog contract independent of implementation.
+2. `WP-02` through `WP-04` to fix the launcher, staged candidate, and fail-closed policy.
+3. `WP-05` through `WP-08` to make eval identity, oracles, isolation, and aggregation reliable.
+4. `WP-09` through `WP-11` for portability, supply chain, and provenance.
+5. Repeat deterministic checks after each slice. A new full run adds useful evidence only after changes affecting the catalog/harness; repeating 86 calls is not needed for this documentation reconciliation.
 
-## Revisão em três fases
+## Three-phase review
 
 ### Spec
 
-A decisão `Not ready` decorre dos critérios e claims públicos da auditoria, não da implementação nem do resultado do full. Nenhum critério de aceitação foi reduzido para acomodar o estado atual. O full verde foi classificado apenas dentro do que mede.
+The `Not ready` decision follows from the audit's public criteria and claims, not from the implementation or full-run result. No acceptance criterion was reduced to accommodate the current state. The green full run was classified only within what it measures.
 
 ### Standards
 
-Os 29 estados foram comparados individualmente com os critérios originais. A classificação evita tanto falso fechamento quanto “parcial” sem unidade de aceitação independente. O relatório preserva o snapshot histórico e adiciona esta reconciliação como overlay atual.
+All 29 states were compared individually with the original criteria. The classification avoids both false closure and “partial” without an independent acceptance unit. The report preserves the historical snapshot and adds this reconciliation as the current overlay.
 
 ### Risk
 
-Os riscos dominantes permanecem staged-index não verificado, side effects do launcher, identidade/cardinalidade incompletas e falsos negativos de segurança/isolamento. O principal risco de comunicação é confundir 86/86 com certificação desses mecanismos; esta reconciliação torna essa limitação explícita.
+Dominant risks remain an unverified staged index, launcher side effects, incomplete identity/cardinality, and security/isolation false negatives. The main communication risk is confusing 86/86 with certification of these mechanisms; this reconciliation makes that limitation explicit.

@@ -1,30 +1,30 @@
-# 03 — Produto, arquitetura e contratos
+# 03 — Product, architecture, and contracts
 
-## Produto e escopo
+## Product and scope
 
-### Fato observado
+### Observed fact
 
-`README.md:3-20` e `docs/development.md:7-11` apresentam o Tuxedo como toolkit portátil, spec-driven, orientado a agentes e composto pelo repositório, sem CLI, daemon, package manager, sync, telemetry, generator ou runtime dependency. O manifest (`.codex-plugin/plugin.json:1-12`) distribui o plugin; `skills/` contém o core portável; `agents/openai.yaml`, `hooks/` e `templates/codex/` isolam comportamento Codex; `evals/`, testes e dependências são de mantenedor.
+`README.md:3-20` and `docs/development.md:7-11` present Tuxedo as a portable, spec-driven, agent-oriented toolkit composed of the repository, with no CLI, daemon, package manager, sync, telemetry, generator, or runtime dependency. The manifest (`.codex-plugin/plugin.json:1-12`) distributes the plugin; `skills/` contains the portable core; `agents/openai.yaml`, `hooks/`, and `templates/codex/` isolate Codex behavior; `evals/`, tests, and dependencies are maintainer-only.
 
-### Interpretação
+### Interpretation
 
-O modelo mental é forte: conteúdo declarativo instalado, integração opcional por cliente e infraestrutura de validação fora do artefato consumido. Não foi encontrada maquinaria acidental de CLI/runtime na superfície distribuída. Promptfoo e Codex SDK aparecem apenas em dev tooling.
+The mental model is strong: installed declarative content, optional per-client integration, and validation infrastructure outside the consumed artifact. No accidental CLI/runtime machinery was found in the distributed surface. Promptfoo and the Codex SDK appear only in dev tooling.
 
-### Limite
+### Limit
 
-“Portátil” é verdadeiro no sentido de formato e neutralidade textual; não está comprovado no sentido de instalação, descoberta, routing e composição nos clientes alegados (`TUX-AUD-011`). “Sem runtime dependency” é verdadeiro para o conteúdo das skills, mas falso para a operação atual dos hooks porque o launcher usa UV no projeto consumidor (`TUX-AUD-002`).
+“Portable” is true in the sense of format and textual neutrality; it is not proven in the sense of installation, discovery, routing, and composition in the claimed clients (`TUX-AUD-011`). “No runtime dependency” is true for skill content, but false for the current hook operation because the launcher uses UV in the consumer project (`TUX-AUD-002`).
 
-## Arquitetura atual
+## Current architecture
 
 ```mermaid
 flowchart TB
-    U["Usuário ou mantenedor"]
+    U["User or maintainer"]
     P["Plugin Codex: manifest"]
-    C["Core portável: 17 skills + references/assets"]
+    C["Portable core: 17 skills + references/assets"]
     O["Adapter Codex: agents/openai.yaml"]
     H["Lifecycle Codex: hooks + Rules opt-in"]
     T["Templates de spec/policy/review"]
-    M["Manutenção: tests + evals + docs"]
+    M["Maintenance: tests + evals + docs"]
     D["Promptfoo e Codex SDK, dev-only"]
 
     U --> P
@@ -39,22 +39,22 @@ flowchart TB
     M --> D
 ```
 
-### Boundaries confirmados
+### Confirmed boundaries
 
-- O core das skills não referencia Promptfoo/Codex SDK.
-- Integração OpenAI está em `agents/openai.yaml`; lifecycle está em `hooks/`.
-- Rules e policy são templates de adoção, não mutações automáticas do projeto.
-- `evals/` e `node_modules/` não fazem parte do conteúdo instalado.
-- Assets necessários a `spec` e `verify` são autocontidos no pacote da skill.
+- The skill core does not reference Promptfoo/the Codex SDK.
+- OpenAI integration is in `agents/openai.yaml`; lifecycle is in `hooks/`.
+- Rules and policy are adoption templates, not automatic project mutations.
+- `evals/` and `node_modules/` are not part of installed content.
+- Assets required by `spec` and `verify` are self-contained in the skill package.
 
-### Acoplamentos problemáticos
+### Problematic couplings
 
-- `hooks/hooks.json` acopla o lifecycle a UV e, por cwd, ao projeto consumidor.
-- O receipt acopla implementação, testes, docs e reviews por hashes, mas não ao índice Git nem a IDs de critérios.
-- O fingerprint de eval acopla identidade apenas a `AGENTS.md + skills/**`, enquanto o verdict depende também de tasks, fixtures, configs, assertions, runner, provider e lockfile.
-- A mesma behavior matrix tem ownership simultâneo em `spec` e `verify`, sem state machine de transição.
+- `hooks/hooks.json` couples lifecycle to UV and, through cwd, to the consumer project.
+- The receipt couples implementation, tests, docs, and reviews by hashes, but not to the Git index or criterion IDs.
+- The eval fingerprint binds identity only to `AGENTS.md + skills/**`, while the verdict also depends on tasks, fixtures, configs, assertions, runner, provider, and lockfile.
+- The same behavior matrix has simultaneous ownership in `spec` and `verify`, without a transition state machine.
 
-## Cadeia de fidelidade declarada e real
+## Declared and actual fidelity chain
 
 ```mermaid
 flowchart LR
@@ -65,14 +65,14 @@ flowchart LR
     E --> R["3-phase review"]
     R --> G["Gate/commit"]
 
-    X["Estado real do catálogo"] -.-> S
-    X --> K["SKILL.md é intenção e implementação"]
-    G -. "working tree, não staged index" .-> Z["Bytes do commit"]
+    X["Actual catalog state"] -.-> S
+    X --> K["SKILL.md is intent and implementation"]
+    G -. "working tree, not staged index" .-> Z["Commit bytes"]
 ```
 
-`AGENTS.md:7-17` exige a sequência, IDs estáveis, classificação de evidência e três fases. Os templates representam o formato. Porém, `git ls-files` não contém spec ou AC real do catálogo, behavior matrix do produto, evidence artifact ou review receipt. A implementação (o texto da skill) é também a principal fonte de intenção. Isso impede reconstruir fase 1 sem contaminação e constitui `TUX-AUD-001`.
+`AGENTS.md:7-17` requires the sequence, stable IDs, evidence classification, and three phases. The templates represent the format. However, `git ls-files` contains no actual catalog spec or AC, product behavior matrix, evidence artifact, or review receipt. The implementation (the skill text) is also the primary source of intent. This prevents reconstructing phase 1 without contamination and constitutes `TUX-AUD-001`.
 
-## Fluxo de enforcement
+## Enforcement flow
 
 ```mermaid
 sequenceDiagram
@@ -83,8 +83,8 @@ sequenceDiagram
     participant R as receipts/reviews/files
     participant I as Git index
 
-    C->>U: PreToolUse ou Stop no cwd do projeto
-    U->>U: Descobre/sincroniza projeto UV
+    C->>U: PreToolUse or Stop in the project cwd
+    U->>U: Discovers/syncs UV project
     U->>G: python guard.py mode
     G->>P: exists + parse
     alt policy ausente
@@ -93,19 +93,19 @@ sequenceDiagram
         G->>R: resolve, glob, hash, digest
         G-->>C: allow ou JSON deny
     end
-    Note over G,I: O índice staged não é lido
+    Note over G,I: The staged index is not read
 ```
 
-O guard usa apenas stdlib, canonical JSON e SHA-256; bloqueia traversal de artifacts e detecta hashes stale. Esses são pontos fortes reais. A força documental excede o mecanismo em quatro pontos: UV roda antes do guard; policy symlinks/tipos inesperados não falham pelo protocolo correto; roles podem aliasar; e o commit candidate não é o staged snapshot.
+The guard uses only stdlib, canonical JSON, and SHA-256; it blocks artifact traversal and detects stale hashes. These are real strengths. The documentary strength exceeds the mechanism in four areas: UV runs before the guard; policy symlinks/unexpected types do not fail according to the correct protocol; roles may alias; and the commit candidate is not the staged snapshot.
 
-## Fluxo das evals
+## Eval flow
 
 ```mermaid
 flowchart TD
-    A["Autoridade humana explícita"] --> P["Preflight dedicated CODEX_HOME"]
+    A["Explicit human authority"] --> P["Preflight dedicated CODEX_HOME"]
     P --> V["Validators + static config + fixtures"]
     V --> R["Routing: 34"]
-    V --> B["Behavior: 40 + até 25 judges"]
+    V --> B["Behavior: 40 + up to 25 judges"]
     V --> S["Security: 12"]
     R --> AR["Sanitized shard/aggregate"]
     B --> AB["Sanitized shard/aggregate"]
@@ -115,7 +115,7 @@ flowchart TD
     AS --> F
     F --> C{"status pass?"}
     C -->|sim| G["git status unchanged"]
-    C -->|não| X["failure"]
+    C -->|no| X["failure"]
 
     Q["Gaps"] -.-> P
     Q -. "unknown top-level + nested symlink" .-> P
@@ -123,23 +123,23 @@ flowchart TD
     Q -. "fingerprint omits harness" .-> AR
 ```
 
-O desenho de isolamento, state temporário, checkpointing após exit 100, reports sanitizados e continuação de suites após assertion failure é sólido. Os findings `TUX-AUD-005` a `TUX-AUD-009` mostram que identidade, isolamento, cobertura e o caminho legado ainda não satisfazem o contrato.
+The design of isolation, temporary state, checkpointing after exit 100, sanitized reports, and continuation of suites after assertion failure is solid. Findings `TUX-AUD-005` through `TUX-AUD-009` show that identity, isolation, coverage, and the legacy path still do not satisfy the contract.
 
-## Enforcement determinístico versus julgamento
+## Deterministic enforcement versus judgment
 
-| Claim | Mecanismo real | Força legítima |
+| Claim | Actual mechanism | Legitimate strength |
 | --- | --- | --- |
-| Artifact não mudou | SHA-256 sobre arquivo da working tree | Forte para bytes lidos naquele instante. |
-| Tree está completa | glob + comparação exata de paths/hashes | Forte para policy e cwd atuais; sensível a overlap/symlink/race. |
-| Critérios estão cobertos | Um par global fail-first/passing | Insuficiente; não há AC IDs. |
-| Revisões foram independentes | Booleans declarados + hashes | Declaração de contexto, não independência real; validação incompleta. |
-| Commit contém bytes revisados | Nenhuma leitura do índice | Não garantido. |
-| Skill foi usada | metadata/`skill-used` | Heurística do provider. |
-| Patch atende oracle | AST/filesystem checks | Forte para o fixture específico. |
-| Segurança foi preservada | Frozen probes + canary/trajectory | Diagnóstico limitado; falsos negativos confirmados. |
-| Full cobriu 86 trials | Soma de rows presentes | Não garantido sem matriz/cardinalidade. |
+| Artifact did not change | SHA-256 over a working-tree file | Strong for bytes read at that instant. |
+| Tree is complete | glob + exact path/hash comparison | Strong for current policy and cwd; sensitive to overlap/symlink/race. |
+| Criteria are covered | One global fail-first/passing pair | Insufficient; there are no AC IDs. |
+| Reviews were independent | Declared booleans + hashes | Context declaration, not actual independence; incomplete validation. |
+| Commit contains reviewed bytes | No index read | Not guaranteed. |
+| Skill was used | metadata/`skill-used` | Provider heuristic. |
+| Patch satisfies oracle | AST/filesystem checks | Strong for the specific fixture. |
+| Security was preserved | Frozen probes + canary/trajectory | Limited diagnostic; confirmed false negatives. |
+| Full covered 86 trials | Sum of present rows | Not guaranteed without a matrix/cardinality. |
 
-## Arquitetura recomendada
+## Recommended architecture
 
 ```mermaid
 flowchart TB
@@ -162,16 +162,16 @@ flowchart TB
     ISO -. "no project discovery or sync" .-> CX
 ```
 
-Mudanças essenciais:
+Essential changes:
 
-1. tornar spec/matriz do catálogo canônicas e versionadas;
-2. separar `candidate snapshot` de working tree e staged index;
-3. executar hooks em runtime autocontido/isolado do projeto consumidor;
-4. tornar policy parsing fail-closed por protocolo;
-5. dar identidade versionada a todas as entradas/oráculos das evals;
-6. validar conjunto exato de rows e reduzir claims dos probes ao que o oracle detecta;
-7. definir state machine de composição das skills e adapters/install fixtures por cliente.
+1. make the catalog spec/matrix canonical and versioned;
+2. separate the `candidate snapshot` from the working tree and staged index;
+3. run hooks in a self-contained runtime isolated from the consumer project;
+4. make policy parsing fail-closed by protocol;
+5. give all eval entries/oracles versioned identity;
+6. validate the exact row set and reduce probe claims to what the oracle detects;
+7. define a state machine for skill composition and per-client adapter/install fixtures.
 
-## Sustentabilidade e reversibilidade
+## Sustainability and reversibility
 
-A base é pequena e reversível: skills são arquivos, hooks são opt-in e o toolchain é dev-only. Os maiores custos futuros vêm de duplicações manuais e da ausência de ownership explícito, não de volume de código. Os work packages mantêm correções independentes: hook launcher, staged binding, policy parsing e eval validity podem avançar paralelamente depois que o contrato canônico define os fatos que cada mecanismo deve provar.
+The foundation is small and reversible: skills are files, hooks are opt-in, and the toolchain is dev-only. The largest future costs come from manual duplication and the absence of explicit ownership, not code volume. The work packages keep fixes independent: hook launcher, staged binding, policy parsing, and eval validity can proceed in parallel once the canonical contract defines the facts each mechanism must prove.

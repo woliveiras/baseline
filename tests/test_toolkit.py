@@ -279,9 +279,9 @@ class MarkdownLinkValidationTests(unittest.TestCase):
     def test_fragment_only_and_percent_encoded_local_link(self):
         self.write(
             "index.md",
-            "# Overview\n\n[Self](#overview)\n[Guide](guide%20one.md#instala%C3%A7%C3%A3o)\n",
+            "# Overview\n\n[Self](#overview)\n[Guide](guide%20one.md#installation)\n",
         )
-        self.write("guide one.md", "# Instalação\n")
+        self.write("guide one.md", "# Installation\n")
         self.assertEqual([], markdown_link_errors(self.package, self.package))
 
     def test_external_url_is_not_accessed(self):
