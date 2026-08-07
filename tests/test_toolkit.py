@@ -976,23 +976,47 @@ class CodexRulesTests(unittest.TestCase):
     @unittest.skipUnless(shutil.which("codex"), "Codex CLI is required to validate native rules")
     def test_rules_load_and_classify_direct_commands(self):
         cases = [
-            (["rm", "-rf", "/"], "forbidden"),
-            (["rm", "-r", "-f", "/"], "forbidden"),
-            (["git", "push", "origin", "main"], "prompt"),
-            (["gh", "release", "view", "v1.0.0"], None),
-            (["terraform", "destroy"], "prompt"),
-            (["rg", "push", "README.md"], None),
-            (["git", "-C", ".", "push"], None),
+            ("BASE-RM-01", ["rm", "-rf", "/"], "forbidden"),
+            ("BASE-RM-01", ["rm", "-r", "-f", "/"], "forbidden"),
+            ("BASE-GIT-01", ["git", "push", "origin", "main"], "prompt"),
+            ("BASE-GH-01", ["gh", "release", "view", "v1.0.0"], None),
+            ("BASE-TERRAFORM-01", ["terraform", "destroy"], "prompt"),
+            ("CLI-RULE-UV-01", ["uv", "publish"], "prompt"),
+            ("CLI-RULE-UV-01", ["uv", "publish", "--dry-run"], "prompt"),
+            ("CLI-RULE-UV-01", ["uv", "run", "python", "-m", "unittest"], None),
+            ("CLI-RULE-SUPABASE-01", ["supabase", "db", "push"], "prompt"),
+            ("CLI-RULE-SUPABASE-01", ["supabase", "db", "push", "--dry-run"], "prompt"),
+            ("CLI-RULE-SUPABASE-01", ["supabase", "db", "push", "--local"], "prompt"),
+            ("CLI-RULE-SUPABASE-01", ["supabase", "functions", "deploy", "api"], "prompt"),
+            ("CLI-RULE-SUPABASE-01", ["supabase", "functions", "delete", "api"], "prompt"),
+            ("CLI-RULE-SUPABASE-01", ["supabase", "projects", "create", "example"], "prompt"),
+            ("CLI-RULE-SUPABASE-01", ["supabase", "projects", "delete", "example"], "prompt"),
+            ("CLI-RULE-SUPABASE-01", ["supabase", "projects", "list"], None),
+            ("CLI-RULE-SUPABASE-01", ["supabase", "start"], None),
+            ("CLI-RULE-ADB-01", ["adb", "push", "build/app.apk", "/data/local/tmp/app.apk"], "prompt"),
+            ("CLI-RULE-ADB-01", ["adb", "push", "-n", "build/app.apk", "/data/local/tmp/app.apk"], "prompt"),
+            ("CLI-RULE-ADB-01", ["adb", "install", "build/app.apk"], "prompt"),
+            ("CLI-RULE-ADB-01", ["adb", "uninstall", "com.example.app"], "prompt"),
+            ("CLI-RULE-ADB-01", ["adb", "reboot", "bootloader"], "prompt"),
+            ("CLI-RULE-ADB-01", ["adb", "root"], "prompt"),
+            ("CLI-RULE-ADB-01", ["adb", "-d", "reboot", "bootloader"], "prompt"),
+            ("CLI-RULE-ADB-01", ["adb", "-e", "root"], "prompt"),
+            ("CLI-RULE-ADB-01", ["adb", "-s", "emulator-5554", "install", "build/app.apk"], None),
+            ("CLI-RULE-ADB-01", ["adb", "devices", "-l"], None),
+            ("CLI-RULE-ADB-01", ["adb", "pull", "/sdcard/report.txt", "."], None),
+            ("BASE-RG-01", ["rg", "push", "README.md"], None),
+            ("BASE-GIT-01", ["git", "-C", ".", "push"], None),
         ]
-        for command, expected in cases:
-            result = subprocess.run(
-                ["codex", "execpolicy", "check", "--rules", str(RULES), "--", *command],
-                text=True,
-                capture_output=True,
-                check=False,
-            )
-            self.assertEqual(0, result.returncode, result.stderr)
-            self.assertEqual(expected, json.loads(result.stdout).get("decision"), command)
+        for criterion, command, expected in cases:
+            with self.subTest(criterion=criterion, command=command):
+                result = subprocess.run(
+                    ["codex", "execpolicy", "check", "--rules", str(RULES), "--", *command],
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                )
+                self.assertEqual(0, result.returncode, result.stderr)
+                self.assertEqual(expected, json.loads(result.stdout).get("decision"), command)
 
 
 class EvaluationVerifierTests(unittest.TestCase):

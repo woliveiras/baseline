@@ -44,13 +44,20 @@ For the exact standard command forms listed in the template, it:
 
 - forbids a narrow set of broad recursive deletions;
 - prompts before push, destructive Git cleanup, release, package publication,
-  deployment, cluster mutation, and infrastructure mutation;
+   deployment, selected direct remote database and project mutations, cluster
+   and infrastructure mutation, and selected direct device mutations;
 - includes `match` and `not_match` examples validated by Codex.
 
 Rules do not validate TDD order, task scope, review quality, test adequacy, or
 commit ownership. Absolute executables, wrappers, global options, and complex
 shell programs can fall outside literal prefix coverage. Sandbox, project
 trust, approval configuration, and organizational policy remain authoritative.
+Because the most restrictive matching decision wins, non-mutating flags after
+a protected prefix still prompt; examples include `uv publish --dry-run`,
+`supabase db push --dry-run`, `supabase db push --local`, and `adb push -n`.
+The literal ADB selectors `-d` and `-e` are covered. Selectors with variable
+values, including `-s SERIAL` and `-t ID`, remain outside this template because
+the Rules pattern grammar has no wildcard argument.
 
 ## Real-task observation protocol
 

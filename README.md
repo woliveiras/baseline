@@ -2,7 +2,7 @@
 
 Tuxedo is an installable, spec-driven software engineering toolkit for coding agents. It is distributed as a Codex plugin and portable Agent Skills, and it keeps intent, behavioral oracles, implementation, evidence, and review connected throughout a change.
 
-If you want to *use* Tuxedo with your agent, this page is enough to get started. If you want to *work on* Tuxedo itself, go to the [documentation hub](docs/README.md).
+If you want to *use* Tuxedo with your agent, this page is enough to get started. If you want to *work on* Tuxedo itself, go to the [documentation hub](docs/README.md). I'll really appreciate your help, feedback, and contributions.
 
 ## Why Tuxedo
 
@@ -21,12 +21,14 @@ A spec can be corrected when evidence exposes ambiguity or contradiction, but th
 
 ## What's inside
 
-Tuxedo v0.1 distributes 17 workflow skills that your agent loads on demand:
+Tuxedo v0.1 distributes workflow skills that your agent loads on demand:
 
-- Change workflow: `refine`, `spec`, `tdd`, `bugfix`, `verify`, `git-commit`, `ci-workflow`, `docs`.
-- Design and architecture: `shape-domain`, `design-deep-modules`, `improve-architecture`, `decision-framework`.
-- Deep work (explicitly invoked): `brainstorming`, `premortem`, `session-bridge`, `technical-research`.
-- Safety: `security-review`.
+| Category | Skills |
+| --- | --- |
+| Change workflow | `refine`, `spec`, `tdd`, `bugfix`, `verify`, `git-commit`, `ci-workflow`, `docs` |
+| Design and architecture | `shape-domain`, `design-deep-modules`, `improve-architecture`, `decision-framework` |
+| Deep work (explicitly invoked) | `brainstorming`, `premortem`, `session-bridge`, `technical-research` |
+| Safety | `security-review` |
 
 Routine changes load only the smallest relevant workflow. `brainstorming`, `git-commit`, `improve-architecture`, `premortem`, `session-bridge`, and `technical-research` are explicit-only; the other workflows may be selected automatically when their descriptions match. The [catalog contract](plugins/tuxedo/skills/catalog.md) defines ownership, precedence, stop conditions, and composition without adding a runtime state machine.
 
@@ -36,7 +38,7 @@ Cloning the repository does not install Tuxedo. Choose either the plugin route f
 
 ### Option A: install the plugin
 
-This repository includes a local marketplace entry that points to the dedicated package at `plugins/tuxedo/`. That package contains only the plugin manifest and the 17 distributed skills; maintainer tests, evaluations, specifications, documentation, and `node_modules/` are outside it. No package-build or copy script is required.
+This repository includes a local marketplace entry that points to the dedicated package at `plugins/tuxedo/`. That package contains only the plugin manifest and the distributed skills; maintainer tests, evaluations, specifications, documentation, and `node_modules/` are outside it. No package-build or copy script is required.
 
 From a trusted clone:
 
@@ -47,7 +49,7 @@ codex plugin marketplace add "$(pwd)"
 codex plugin add tuxedo@tuxedo-local
 ```
 
-Start a new Codex session after installation. You can also open `/plugins` in Codex CLI, select the `tuxedo-local` marketplace, and install `tuxedo`. In Codex desktop, restart the app, open **Plugins**, choose **Tuxedo local**, install **Tuxedo**, and start a new task. The installed plugin exposes all 17 skills; you do not have to name the plugin in normal prompts.
+Start a new Codex session after installation. You can also open `/plugins` in Codex CLI, select the `tuxedo-local` marketplace, and install `tuxedo`. In Codex desktop, restart the app, open **Plugins**, choose **Tuxedo local**, install **Tuxedo**, and start a new task. The installed plugin exposes all distributed skills; you do not have to name the plugin in normal prompts.
 
 #### Update
 
@@ -87,12 +89,12 @@ Replace the example path with the absolute path to your clone and restart Codex.
 - **Implicit invocation:** Codex may select an installed skill when the request matches its frontmatter description and `agents/openai.yaml` permits it. Ask for the outcome normally; no plugin name is required.
 - **Explicit invocation:** use `$skill-name` in Codex CLI/IDE or choose the skill from the UI. Explicit-only Tuxedo workflows require this or an equally direct request.
 - If many skills are installed, Codex may shorten or omit entries from its initial skill list because of the context budget. Use explicit invocation when you need a particular workflow deterministically.
-- Clean-room Codex CLI evidence covers plugin installation, discovery of all 17 skills, removal, and reinstallation without credentials or model calls. It proves packaging and discovery, not that a model follows a skill correctly.
+- Clean-room Codex CLI evidence covers plugin installation, discovery of all distributed skills, removal, and reinstallation without credentials or model calls. It proves packaging and discovery, not that a model follows a skill correctly.
 - The plugin is supported by Codex CLI and Codex desktop. Codex IDE supports standalone skills but not plugin installation. Tuxedo follows the portable Agent Skills format, but installation, discovery, routing, and composition in other clients remain unverified until client-specific clean-room tests are recorded.
 
 ### Optional command rules
 
-Copy [`templates/codex/tuxedo.rules`](templates/codex/tuxedo.rules) to `.codex/rules/tuxedo.rules` in a trusted project and restart Codex. The rules ask for human approval before push, destructive Git cleanup, release, publication, deploy, and infrastructure mutations, and forbid a few literal broad-deletion forms.
+Copy [`templates/codex/tuxedo.rules`](templates/codex/tuxedo.rules) to `.codex/rules/tuxedo.rules` in a trusted project and restart Codex. The rules ask for human approval before push, destructive Git cleanup, release, publication, deploy, selected direct remote database and project mutations, infrastructure changes, and selected direct device mutations, and forbid a few literal broad-deletion forms.
 
 Once installed, work normally: start from the authorized task, define the oracle and run the appropriate verification fail-first, stay inside scope, review intent/tests/code separately, and inspect the staged candidate before a local commit. Each skill documents its own workflow in `SKILL.md`.
 
