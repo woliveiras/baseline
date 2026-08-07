@@ -72,7 +72,7 @@ When conditions disagree, use the higher tier. A familiar implementation does no
 - Use UV for anything involving Python: run scripts and tests with `uv run python ...`; do not introduce Python virtualenv or pip workflow instructions.
 - Use PNPM for anything involving Node.js: install with `pnpm install --frozen-lockfile` and run package commands with `pnpm run` or `pnpm exec`; do not use npm commands or maintain a `package-lock.json`.
 
-## Maintainer evaluations
+## Evaluations
 
 - Promptfoo and `@openai/codex-sdk` are development-only; never add them to the distributed plugin or installed skill content.
 - Discover official validators from the local Codex installation or `TUXEDO_PLUGIN_VALIDATOR`/`TUXEDO_SKILL_VALIDATOR`; use `TUXEDO_VALIDATOR_PYTHON` for an isolated validator interpreter when PyYAML is unavailable. Never version personal absolute paths.
