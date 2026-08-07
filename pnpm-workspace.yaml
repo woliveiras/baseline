@@ -1,3 +1,8 @@
 # Keep the exact, committed lockfile usable without inheriting a global
 # package-manager release-age policy. Dependency review remains required.
 minimumReleaseAge: 0
+
+overrides:
+  '@ai-sdk/provider-utils>undici': 6.28.0
+  '@huggingface/transformers>sharp': 0.35.3
+  'onnxruntime-node>adm-zip': 0.6.0

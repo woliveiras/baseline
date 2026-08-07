@@ -292,6 +292,60 @@ class MarkdownLinkValidationTests(unittest.TestCase):
 
 
 class ToolkitStructureTests(unittest.TestCase):
+    def test_maintainer_dependency_security_resolution(self):
+        """DS-002/DS-003/DS-004/DS-007/DS-008: constrain the reviewed maintainer graph."""
+        package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
+        self.assertEqual(
+            {
+                "@openai/codex-sdk": "0.146.0",
+                "promptfoo": "0.122.0",
+            },
+            package["devDependencies"],
+        )
+
+        workspace = (ROOT / "pnpm-workspace.yaml").read_text(encoding="utf-8")
+        override_lines = re.findall(r"^  '([^']+)': ([^\s#]+)$", workspace, re.MULTILINE)
+        self.assertEqual(
+            {
+                "@ai-sdk/provider-utils>undici": "6.28.0",
+                "@huggingface/transformers>sharp": "0.35.3",
+                "onnxruntime-node>adm-zip": "0.6.0",
+            },
+            dict(override_lines),
+        )
+        self.assertNotIn("allowBuilds:", workspace)
+
+        lockfile = (ROOT / "pnpm-lock.yaml").read_text(encoding="utf-8")
+        for fixed in ("undici@6.28.0:", "adm-zip@0.6.0:", "sharp@0.35.3:"):
+            self.assertIn(fixed, lockfile)
+        for vulnerable in ("undici@5.29.0:", "adm-zip@0.5.18:", "sharp@0.34.5:"):
+            self.assertNotIn(vulnerable, lockfile)
+        for effective_edge in ("undici: 6.28.0", "adm-zip: 0.6.0", "sharp: 0.35.3"):
+            self.assertIn(effective_edge, lockfile)
+
+        decision = (
+            ROOT / "docs" / "decisions" / "0001-use-promptfoo-as-evaluation-orchestrator.md"
+        ).read_text(encoding="utf-8")
+        for required in (
+            "Amendment: reviewed transitive advisory remediation",
+            "crosses the parent-declared range",
+            "remove the corresponding override",
+            "Native lifecycle scripts remain disabled and unverified",
+        ):
+            self.assertIn(required, decision)
+
+        tracked_plugin_paths = subprocess.run(
+            ["git", "ls-files", "plugins/tuxedo"],
+            cwd=ROOT,
+            capture_output=True,
+            check=True,
+            text=True,
+        ).stdout.splitlines()
+        tracked_top_level = {
+            Path(path).relative_to("plugins/tuxedo").parts[0] for path in tracked_plugin_paths
+        }
+        self.assertEqual({".codex-plugin", "skills"}, tracked_top_level)
+
     def test_full_evaluation_is_explicit_and_not_a_push_gate(self):
         package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
         scripts = package["scripts"]

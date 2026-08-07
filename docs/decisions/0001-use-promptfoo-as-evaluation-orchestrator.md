@@ -427,6 +427,46 @@ fresh authorized run passed routing 40/40, behavior 40/40, and security 12/12
 in 62m47.123s, with unchanged checkout status. Exact reports, hashes, focused
 evidence, and residual limitations are preserved in the run log.
 
+## Amendment: reviewed transitive advisory remediation
+
+On 2026-08-07, the previously recorded 14 dev/optional advisories were
+reproduced as five high, seven moderate, two low, and zero critical findings.
+The configured `openai:codex-sdk` evaluation path does not select the optional
+Hugging Face or ONNX providers, but Promptfoo installs those packages in its
+maintainer-only graph. Tuxedo therefore audits the complete installed graph
+rather than dismissing findings solely because a provider is not configured.
+
+The reviewed remediation keeps the direct dependencies unchanged at
+`promptfoo@0.122.0` and `@openai/codex-sdk@0.146.0`. It adds three
+parent-scoped PNPM resolutions:
+
+- `@ai-sdk/provider-utils@4.0.41` declares `undici@^5.29.0`; the override to
+  `undici@6.28.0` crosses the parent-declared range.
+- `@huggingface/transformers@4.2.0` declares `sharp@^0.34.5`; the override to
+  `sharp@0.35.3` crosses the parent-declared range.
+- `onnxruntime-node@1.24.3` declares `adm-zip@^0.5.16`; the override to
+  `adm-zip@0.6.0` crosses the parent-declared range.
+
+Current npm package metadata identifies Promptfoo, Undici, and adm-zip as MIT;
+the Codex SDK, AI SDK provider utilities, Transformers.js, and sharp as
+Apache-2.0; and ONNX Runtime Node as MIT. Their recorded repositories are,
+respectively, the official Promptfoo, OpenAI Codex, Node.js Undici, adm-zip,
+Vercel AI, Hugging Face Transformers.js, sharp, and Microsoft ONNX Runtime
+repositories. The committed lockfile retains registry integrity hashes. These
+facts establish provenance and declared licenses, not universal trust or
+cross-range compatibility.
+
+The exception is deliberately narrow and temporary. When an upstream parent
+declares and resolves a non-vulnerable child within its own supported range,
+remove the corresponding override, regenerate the lockfile, and repeat the
+audit and deterministic harness checks. Until then, a zero advisory count is
+accepted only together with exact graph tests and the compatibility limitation
+above. Native lifecycle scripts remain disabled and unverified; no native
+build approval, unused-provider compatibility, provider/model execution, or
+full evaluation is claimed by this amendment. The distributed plugin still
+contains only `.codex-plugin` and `skills`, so this maintainer remediation adds
+no consumer runtime dependency.
+
 Re-evaluate this decision if Promptfoo drops Codex support, the Codex SDK or App Server changes materially, Promptfoo requires cloud sharing, adapters duplicate more logic than they remove, hidden oracles cannot be integrated, workspace or credential isolation weakens, the full evaluation becomes impractical for empirical review, another framework provides superior integration with less evidence loss, or `evals/run.py` becomes demonstrably redundant.
 
 ## More Information
