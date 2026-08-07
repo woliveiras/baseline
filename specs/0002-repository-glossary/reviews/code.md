@@ -19,3 +19,25 @@ No finding. `AGENTS.md`, the glossary, and the root README consistently define a
 ## Decision
 
 Approved after three correction rounds and a final isolated read-only review reporting no findings under Spec, Standards, or Risk.
+
+## Identifier-prefix amendment
+
+### Spec
+
+No finding. `GLOSSARY.md` now expands the specification, workflow experiment,
+skill catalog, plugin package, remote marketplace, evaluation, audit, and work
+package prefixes. It separately expands ADR, MADR, RFC, C4, and TDD plus the
+technical abbreviations needed to understand their surrounding documentation.
+
+### Standards
+
+No finding. The existing canonical glossary remains the single definition
+surface. GL-006 and GL-007 are linked through the amended matrix, deterministic
+test, fail-first evidence, and reconstructed review contexts.
+
+### Risk
+
+No finding. The prose explicitly says prefixes are artifact-scoped and explains
+why `RM-001` in SPEC-0005 and `RM-01` in command-Rules fixtures are unrelated.
+The residual limitation remains that a glossary cannot enumerate every future
+external acronym or guarantee identical reader interpretation.

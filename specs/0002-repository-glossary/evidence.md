@@ -31,3 +31,16 @@
 
 - A structural test can prove the presence and organization of required concepts, but not that every reader will interpret prose identically.
 - Domain-specific specifications may define a more specific oracle; the glossary explicitly preserves that precedence.
+
+## Identifier-prefix amendment evidence
+
+| Criteria | Test-tree digest | Command | Result | Oracle provenance |
+| --- | --- | --- | --- | --- |
+| GL-006–GL-007 fail-first | `fc525638e95f2f1c700bb612d2274e4f9f4e9251` | `uv run python -m unittest -v tests.test_toolkit.ToolkitStructureTests.test_contract_links_to_canonical_glossary` before the glossary tables were added | 1/1 failed because `## Identifier and evidence prefixes` was absent | spec-derived |
+| GL-006–GL-007 passing | `fc525638e95f2f1c700bb612d2274e4f9f4e9251` | Same focused command after implementation and whitespace-aware prose validation | 1/1 passed; namespace expansions, ownership, contextual `RM` collision, and documentation abbreviations were present | spec-derived |
+
+The first post-implementation focused failure was a test-authoring issue: the
+test required a prose sentence on one physical Markdown line. The final oracle
+normalizes whitespace only for prose while retaining exact table-row checks.
+It therefore permits ordinary Markdown wrapping without relaxing any required
+prefix or expansion.

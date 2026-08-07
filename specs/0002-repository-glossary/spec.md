@@ -31,11 +31,14 @@ An agent or maintainer reading Tuxedo's engineering contract must not need prior
 - **GL-003** Given the phrase “behavior/oracle matrix”, when an agent reads its definition, then it learns that the matrix maps each acceptance criterion and scenario to its invariant, observable oracle, provenance, planned verification, and evidence.
 - **GL-004** Given adjacent Tuxedo workflow vocabulary, when an agent consults the glossary, then it distinguishes: acceptance criterion as obligation; invariant as rule; oracle as expected observable result; verification or test as the mechanism that evaluates an oracle; evidence as the record of what happened; provenance as the origin and implementation exposure of each oracle; fail-first as pre-implementation verification that fails for the expected reason; governing input as the authorized source of intent and scope; task-owned change as an authorized in-scope change; and three-phase review as deliberately separated information contexts.
 - **GL-005** Given maintainer documentation, when its navigation is inspected, then the glossary is discoverable without first reading `AGENTS.md`.
+- **GL-006** Given a repository identifier such as `DWT-003`, `DWF-05`, `RM-009`, `CP-004`, `SC-010`, or `EV-AGG-01`, when an agent consults the glossary, then it can expand the prefix, identify the artifact family that owns it, and learn that prefixes are scoped by their governing artifact rather than assumed to be globally unique.
+- **GL-007** Given a repository documentation abbreviation such as ADR, MADR, RFC, C4, or TDD, when an agent consults the glossary, then it can expand the abbreviation and understand its Tuxedo-specific use without requiring external context.
 
 # Explicit exclusions
 
 - Replacing precise domain language with less accurate wording.
 - Defining general software engineering terms that Tuxedo does not use as part of its workflow contract.
+- Exhaustively defining every command, protocol, product name, or fixture-only test label that appears in the repository.
 - Treating a passing test as proof that its oracle faithfully represents the governing requirement.
 
 # Evidence and review

@@ -541,7 +541,7 @@ class ToolkitStructureTests(unittest.TestCase):
             self.assertIn("outside the authorized workspace", normalized)
 
     def test_contract_links_to_canonical_glossary(self):
-        """GL-001–GL-005: specialized contract terms have one discoverable meaning."""
+        """GL-001–GL-007: contract terms and identifier prefixes are discoverable."""
         contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
         glossary_path = ROOT / "GLOSSARY.md"
         self.assertTrue(glossary_path.is_file())
@@ -564,10 +564,45 @@ class ToolkitStructureTests(unittest.TestCase):
             "## Task-owned change",
             "## Three-phase review",
             "## Verification",
+            "## Identifier and evidence prefixes",
+            "## Documentation abbreviations",
         )
         for heading in required_headings:
             self.assertIn(heading, glossary)
         self.assertEqual(set(), glossary_contract_errors(glossary))
+
+        for marker in (
+            "| `AC` | Acceptance Criterion |",
+            "| `SPEC` | Specification |",
+            "| `GL` | Glossary |",
+            "| `DW` | Declarative Workflow |",
+            "| `DWF` | Declarative Workflow Failure |",
+            "| `DWT` | Declarative Workflow Trial |",
+            "| `SC` | Skill Catalog |",
+            "| `CP` | Clean-room Plugin package |",
+            "| `RM` | Remote Marketplace |",
+            "| `EV` | Evaluation |",
+            "| `EV-AGG` | Evaluation Aggregate |",
+            "| `EV-ISO` | Evaluation Isolation |",
+            "| `EV-PRV` | Evaluation Privacy |",
+            "| `EV-RPT` | Evaluation Report |",
+            "| `EV-SHD` | Evaluation Shard |",
+            "| `TUX-AUD` | Tuxedo Audit |",
+            "| `WP` | Work Package |",
+            "| `ADR` | Architecture Decision Record |",
+            "| `MADR` | Markdown Architectural Decision Records |",
+            "| `RFC` | Request for Comments |",
+            "| `C4` | Context, Containers, Components, and Code |",
+            "| `TDD` | Test-Driven Development |",
+        ):
+            self.assertIn(marker, glossary, marker)
+        normalized_glossary = " ".join(glossary.split())
+        for marker in (
+            "Prefixes are scoped by their governing artifact, not globally unique",
+            "`RM-001` through `RM-009`",
+            "`RM-01` in command-Rules fixtures",
+        ):
+            self.assertIn(marker, normalized_glossary, marker)
 
         empty_definitions = "# Glossary\n\n" + "\n\n".join(required_headings)
         adversarial = {

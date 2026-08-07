@@ -11,3 +11,25 @@ The validation remains a deterministic contract check rather than a substitute f
 ## Decision
 
 Approved. The test failed before implementation because `GLOSSARY.md` was absent and passed after the canonical definitions and links were added.
+
+## Identifier-prefix amendment
+
+### Spec
+
+The focused oracle covers every GL-006 namespace family named by the current
+specification and every GL-007 documentation abbreviation. It also requires the
+scope rule and both sides of the contextual `RM` example.
+
+### Standards
+
+Table rows are matched exactly so an expansion cannot silently drift. Prose is
+checked after whitespace normalization so normal Markdown wrapping is not
+mistaken for a semantic failure. The initial absent-heading failure is valid
+fail-first evidence; the later line-wrap failure is recorded as test authoring,
+not product behavior.
+
+### Risk
+
+The test intentionally does not infer a namespace from every uppercase token in
+the repository. Such a scan would mix stable contracts with commands,
+protocols, and disposable fixtures and would create false obligations.
