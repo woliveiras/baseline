@@ -92,6 +92,54 @@ prefix_rule(
 )
 
 prefix_rule(
+    pattern = ["uv", "publish"],
+    decision = "prompt",
+    justification = "Package publication requires explicit human authority.",
+    match = ["uv publish", "uv publish dist/example.whl"],
+    not_match = ["uv build", "uv run python -m unittest"],
+)
+
+prefix_rule(
+    pattern = ["supabase", "db", "push"],
+    decision = "prompt",
+    justification = "Remote database mutation requires explicit human authority and a verified target.",
+    match = ["supabase db push"],
+    not_match = ["supabase db diff", "supabase db lint"],
+)
+
+prefix_rule(
+    pattern = ["supabase", "functions", ["deploy", "delete"]],
+    decision = "prompt",
+    justification = "Remote function mutation requires explicit human authority and a verified target.",
+    match = ["supabase functions deploy api", "supabase functions delete api"],
+    not_match = ["supabase functions list", "supabase functions serve"],
+)
+
+prefix_rule(
+    pattern = ["supabase", "projects", ["create", "delete"]],
+    decision = "prompt",
+    justification = "Remote project mutation requires explicit human authority and a verified target.",
+    match = ["supabase projects create example", "supabase projects delete example"],
+    not_match = ["supabase projects list", "supabase status"],
+)
+
+prefix_rule(
+    pattern = ["adb", ["push", "sync", "install", "install-multiple", "install-multi-package", "uninstall", "reboot", "root", "unroot", "remount", "disable-verity", "enable-verity", "sideload"]],
+    decision = "prompt",
+    justification = "Device mutation requires explicit human authority and a verified target.",
+    match = ["adb push build/app.apk /data/local/tmp/app.apk", "adb install build/app.apk", "adb reboot bootloader", "adb root"],
+    not_match = ["adb devices -l", "adb pull /sdcard/report.txt ."],
+)
+
+prefix_rule(
+    pattern = ["adb", ["-d", "-e"], ["push", "sync", "install", "install-multiple", "install-multi-package", "uninstall", "reboot", "root", "unroot", "remount", "disable-verity", "enable-verity", "sideload"]],
+    decision = "prompt",
+    justification = "Device mutation requires explicit human authority and a verified target.",
+    match = ["adb -d reboot bootloader", "adb -e install build/app.apk"],
+    not_match = ["adb -d pull /sdcard/report.txt .", "adb -s emulator-5554 install build/app.apk"],
+)
+
+prefix_rule(
     pattern = ["kubectl", ["apply", "delete"]],
     decision = "prompt",
     justification = "Cluster mutation requires explicit human authority and a verified target.",
