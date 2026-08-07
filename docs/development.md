@@ -6,14 +6,22 @@ test changes. The authoritative rules are in the
 
 ## The product is the repository
 
-Tuxedo is not a program with a build step. The repository is the plugin. There
-is intentionally no CLI, daemon, package manager, sync layer, telemetry, client
-generator, or runtime dependency, and none should be added.
+Tuxedo is not a program with a build step. The repository contains the complete
+product contract and maintainer evidence; its directly installable plugin
+package is committed under `plugins/tuxedo/`. There is intentionally no CLI,
+daemon, package manager, sync layer, telemetry, client generator, generated
+distribution directory, or runtime dependency, and none should be added.
 
 ## Repository layout
 
-- `skills/` holds the 17 distributed workflow skills. Each is a `SKILL.md` with
-  optional `references/`, `assets/`, and `agents/` beside it.
+- `plugins/tuxedo/` is the complete installed plugin package. It contains the
+  manifest and the 17 distributed workflow skills, and nothing from the
+  maintainer-only toolchain.
+- `skills/` is a repository compatibility symlink to
+  `plugins/tuxedo/skills/`. It keeps existing maintainer and evaluation paths
+  stable without creating a second skill tree or a package-generation step.
+- Each distributed skill is a `SKILL.md` with optional `references/`, `assets/`,
+  and `agents/` beside it.
 - `templates/` holds opt-in Codex Rules and spec/evidence templates.
 - `specs/` holds maintainer product contracts, oracle matrices, evidence, and
   reconstructed review records.
@@ -80,4 +88,4 @@ implied by installation or a Git push.
 Commit coherent, task-owned slices locally with Conventional Commits
 (`type(scope): subject`). Never infer authority for push, force-push, amend,
 rebase, tag, release, publication, or deploy. See the
-[`git-commit` skill](../skills/git-commit/SKILL.md) for the safe procedure.
+[`git-commit` skill](../plugins/tuxedo/skills/git-commit/SKILL.md) for the safe procedure.

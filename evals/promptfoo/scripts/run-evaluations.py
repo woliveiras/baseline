@@ -20,6 +20,7 @@ from typing import Any, Iterable, NamedTuple
 
 
 ROOT = Path(__file__).resolve().parents[3]
+PLUGIN_ROOT = ROOT / "plugins" / "tuxedo"
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROMPTFOO_ROOT = ROOT / "evals" / "promptfoo"
 PROMPTFOO = ROOT / "node_modules" / ".bin" / "promptfoo"
@@ -201,7 +202,11 @@ def _official_validators() -> None:
         raise RuntimeError(
             f"TUXEDO_VALIDATOR_PYTHON does not point to a Python executable: {validator_python}"
         )
-    _run([str(validator_executable), str(plugin_validator), str(ROOT)], timeout=120, label="official plugin validator")
+    _run(
+        [str(validator_executable), str(plugin_validator), str(PLUGIN_ROOT)],
+        timeout=120,
+        label="official plugin validator",
+    )
     for skill in sorted(path for path in (ROOT / "skills").iterdir() if path.is_dir()):
         _run([str(validator_executable), str(skill_validator), str(skill)], timeout=120, label=f"official skill validator: {skill.name}")
 

@@ -14,3 +14,5 @@ evals/promptfoo/*-codex-home/
 __pycache__/
 *.pyc
 tmp/
+
+.DS_Store

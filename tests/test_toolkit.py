@@ -6,10 +6,12 @@ import io
 import json
 import os
 import re
+import select
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
@@ -17,6 +19,7 @@ from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
+PLUGIN_ROOT = ROOT / "plugins" / "tuxedo"
 RULES = ROOT / "templates" / "codex" / "tuxedo.rules"
 EXPECTED_SKILLS = {
     "refine", "brainstorming", "spec", "tdd", "bugfix", "verify", "docs",
@@ -138,12 +141,173 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertFalse((ROOT / "evals" / "promptfoo" / "scripts" / "run-before-push.py").exists())
 
     def test_manifest_and_distributed_inventory(self):
-        manifest = json.loads((ROOT / ".codex-plugin" / "plugin.json").read_text())
+        manifest = json.loads((PLUGIN_ROOT / ".codex-plugin" / "plugin.json").read_text())
         self.assertEqual("tuxedo", manifest["name"])
         self.assertEqual("0.1.0", manifest["version"])
         self.assertNotIn("hooks", manifest, "the plugin does not distribute lifecycle hooks")
         actual = {path.name for path in (ROOT / "skills").iterdir() if path.is_dir()}
         self.assertEqual(EXPECTED_SKILLS, actual)
+
+    def test_plugin_package_boundary_and_canonical_skill_tree(self):
+        """CP-001/CP-002/CP-003: the marketplace installs only canonical product content."""
+        marketplace = json.loads(
+            (ROOT / ".agents" / "plugins" / "marketplace.json").read_text(encoding="utf-8")
+        )
+        source = marketplace["plugins"][0]["source"]
+        self.assertEqual({"source": "local", "path": "./plugins/tuxedo"}, source)
+
+        manifest_path = PLUGIN_ROOT / ".codex-plugin" / "plugin.json"
+        self.assertTrue(manifest_path.is_file())
+        self.assertEqual("tuxedo", json.loads(manifest_path.read_text())["name"])
+        self.assertEqual({".codex-plugin", "skills"}, {path.name for path in PLUGIN_ROOT.iterdir()})
+        self.assertFalse(any(path.is_symlink() for path in PLUGIN_ROOT.rglob("*")))
+        for forbidden in ("node_modules", "evals", "specs", "tests", "docs", "AGENTS.md"):
+            self.assertFalse((PLUGIN_ROOT / forbidden).exists(), forbidden)
+
+        compatibility = ROOT / "skills"
+        self.assertTrue(compatibility.is_symlink())
+        self.assertEqual("plugins/tuxedo/skills", os.readlink(compatibility))
+        self.assertEqual((PLUGIN_ROOT / "skills").resolve(), compatibility.resolve())
+        actual = {path.name for path in compatibility.iterdir() if path.is_dir()}
+        self.assertEqual(EXPECTED_SKILLS, actual)
+
+    @unittest.skipUnless(shutil.which("codex"), "Codex CLI is required for clean-room installation")
+    def test_codex_plugin_clean_room_install_discover_remove_and_reinstall(self):
+        """CP-004/CP-005/CP-006: exercise the real Codex plugin lifecycle without auth."""
+        marketplace = json.loads(
+            (ROOT / ".agents" / "plugins" / "marketplace.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual("./plugins/tuxedo", marketplace["plugins"][0]["source"]["path"])
+
+        with tempfile.TemporaryDirectory(prefix="tuxedo-clean-room-") as tmp:
+            clean_root = Path(tmp)
+            isolated_home = clean_root / "os-home"
+            isolated_codex_home = clean_root / "codex-home"
+            consumer = clean_root / "consumer"
+            for path in (isolated_home, isolated_codex_home, consumer):
+                path.mkdir()
+            environment = os.environ.copy()
+            environment.pop("OPENAI_API_KEY", None)
+            environment.pop("CODEX_API_KEY", None)
+            environment["HOME"] = str(isolated_home)
+            environment["CODEX_HOME"] = str(isolated_codex_home)
+
+            def run_cli(*arguments: str) -> subprocess.CompletedProcess[str]:
+                result = subprocess.run(
+                    ["codex", *arguments],
+                    cwd=consumer,
+                    env=environment,
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                    timeout=30,
+                )
+                self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+                return result
+
+            run_cli("plugin", "marketplace", "add", str(ROOT), "--json")
+            installed = json.loads(
+                run_cli("plugin", "add", "tuxedo@tuxedo-local", "--json").stdout
+            )
+            installed_path = Path(installed["installedPath"]).resolve()
+            self.assertTrue(installed_path.is_relative_to(isolated_codex_home.resolve()))
+            self.assertEqual(
+                {".codex-plugin", "skills"},
+                {path.name for path in installed_path.iterdir()},
+            )
+            self.assertFalse((isolated_codex_home / "auth.json").exists())
+
+            process = subprocess.Popen(
+                ["codex", "app-server", "--stdio"],
+                cwd=consumer,
+                env=environment,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                bufsize=1,
+            )
+            self.assertIsNotNone(process.stdin)
+            self.assertIsNotNone(process.stdout)
+            requests = (
+                {
+                    "method": "initialize",
+                    "id": 1,
+                    "params": {
+                        "clientInfo": {
+                            "name": "tuxedo-clean-room",
+                            "title": "Tuxedo clean-room",
+                            "version": "1.0.0",
+                        },
+                        "capabilities": {
+                            "experimentalApi": True,
+                            "requestAttestation": False,
+                        },
+                    },
+                },
+                {"method": "initialized"},
+                {
+                    "method": "skills/list",
+                    "id": 2,
+                    "params": {"cwds": [str(consumer)], "forceReload": True},
+                },
+            )
+            for request in requests:
+                process.stdin.write(json.dumps(request) + "\n")
+            process.stdin.flush()
+
+            response = None
+            deadline = time.monotonic() + 20
+            while time.monotonic() < deadline:
+                readable, _, _ = select.select([process.stdout], [], [], 0.5)
+                if not readable:
+                    continue
+                line = process.stdout.readline()
+                if not line:
+                    break
+                payload = json.loads(line)
+                if payload.get("id") == 2:
+                    response = payload
+                    break
+            process.terminate()
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(timeout=5)
+            app_server_stderr = ""
+            if response is None:
+                app_server_stderr = process.stderr.read() if process.stderr is not None else ""
+            for stream in (process.stdin, process.stdout, process.stderr):
+                if stream is not None:
+                    stream.close()
+            if response is None:
+                self.fail(f"skills/list did not respond: {app_server_stderr}")
+
+            entry = response["result"]["data"][0]
+            self.assertEqual([], entry["errors"])
+            tuxedo_skills = [
+                skill for skill in entry["skills"] if skill["name"].startswith("tuxedo:")
+            ]
+            self.assertEqual(
+                EXPECTED_SKILLS,
+                {skill["name"].removeprefix("tuxedo:") for skill in tuxedo_skills},
+            )
+            self.assertTrue(all(skill["enabled"] for skill in tuxedo_skills))
+            self.assertTrue(
+                all(
+                    Path(skill["path"]).resolve().is_relative_to(installed_path)
+                    for skill in tuxedo_skills
+                )
+            )
+
+            run_cli("plugin", "remove", "tuxedo@tuxedo-local", "--json")
+            listed = json.loads(run_cli("plugin", "list", "--json").stdout)
+            self.assertEqual([], listed["installed"])
+            reinstalled = json.loads(
+                run_cli("plugin", "add", "tuxedo@tuxedo-local", "--json").stdout
+            )
+            self.assertEqual("tuxedo@tuxedo-local", reinstalled["pluginId"])
 
     def test_distributed_product_has_no_lifecycle_runtime(self):
         """DW-001/DW-005: no dormant hook or receipt runtime remains installed."""
@@ -158,7 +322,7 @@ class ToolkitStructureTests(unittest.TestCase):
         for relative in absent:
             self.assertFalse((ROOT / relative).exists(), relative)
 
-        manifest = json.loads((ROOT / ".codex-plugin" / "plugin.json").read_text())
+        manifest = json.loads((PLUGIN_ROOT / ".codex-plugin" / "plugin.json").read_text())
         self.assertNotIn("hooks", manifest)
         self.assertNotIn("Lifecycle hooks", manifest["interface"]["capabilities"])
         self.assertNotIn("executable guardrails", manifest["description"].lower())
@@ -515,6 +679,9 @@ class ToolkitStructureTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         for marker in (
             "codex plugin marketplace add",
+            "codex plugin add tuxedo@tuxedo-local",
+            "plugins/tuxedo/",
+            "No package-build or copy script is required",
             "/plugins",
             ".agents/skills",
             "Implicit invocation",
@@ -532,10 +699,10 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertEqual("tuxedo-local", marketplace["name"])
         self.assertEqual("tuxedo", marketplace["plugins"][0]["name"])
         self.assertEqual(
-            {"source": "local", "path": "./"},
+            {"source": "local", "path": "./plugins/tuxedo"},
             marketplace["plugins"][0]["source"],
         )
-        self.assertTrue((ROOT / ".codex-plugin" / "plugin.json").is_file())
+        self.assertTrue((PLUGIN_ROOT / ".codex-plugin" / "plugin.json").is_file())
 
     def test_agents_contract_has_conventional_commit_examples(self):
         contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
@@ -563,7 +730,7 @@ class ToolkitStructureTests(unittest.TestCase):
                 self.assertTrue(resolved.exists(), f"{path}: {target}")
 
     def test_maintainer_content_is_not_referenced_as_installed_content(self):
-        manifest = (ROOT / ".codex-plugin" / "plugin.json").read_text()
+        manifest = (PLUGIN_ROOT / ".codex-plugin" / "plugin.json").read_text()
         for name in ("docs/", "tests/", "evals/"):
             self.assertNotIn(name, manifest)
         corpus = "\n".join(path.read_text(errors="ignore") for path in (ROOT / "skills").rglob("*") if path.is_file())

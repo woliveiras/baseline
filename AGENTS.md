@@ -52,6 +52,7 @@ When conditions disagree, use the higher tier. A familiar implementation does no
 
 ## Toolkit maintenance
 
+- Keep the installed plugin rooted at `plugins/tuxedo/`; its top level contains only `.codex-plugin/` and `skills/`. Keep root `skills/` as the relative compatibility symlink to that canonical skill tree, and point the repo marketplace at `./plugins/tuxedo`.
 - Keep each `SKILL.md` concise and imperative. Put optional detail one level down in `references/`.
 - Keep portable workflow logic client-neutral. Put Codex invocation policy in `agents/openai.yaml`.
 - Add deterministic tests for every mechanical invariant.

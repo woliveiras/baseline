@@ -16,7 +16,7 @@ decisions say why something was chosen, and evidence records what was measured.
   conventions, and the required checks. Read it before changing behavior.
 - [Repository glossary](../GLOSSARY.md) defines oracle, behavior/oracle matrix,
   oracle provenance, fail-first, task ownership, and the review phases.
-- [Skill catalog contract](../skills/catalog.md) defines ownership, composition,
+- [Skill catalog contract](../plugins/tuxedo/skills/catalog.md) defines ownership, composition,
   precedence, stop conditions, and fallback for all 17 installed workflows.
 - [Development guide](development.md) covers the repository layout, the
   toolchain, how to develop a change, and how to test it.

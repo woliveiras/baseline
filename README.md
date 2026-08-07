@@ -28,44 +28,54 @@ Tuxedo v0.1 distributes 17 workflow skills that your agent loads on demand:
 - Deep work (explicitly invoked): `brainstorming`, `premortem`, `session-bridge`, `technical-research`.
 - Safety: `security-review`.
 
-Routine changes load only the smallest relevant workflow. `brainstorming`, `git-commit`, `improve-architecture`, `premortem`, `session-bridge`, and `technical-research` are explicit-only; the other workflows may be selected automatically when their descriptions match. The [catalog contract](skills/catalog.md) defines ownership, precedence, stop conditions, and composition without adding a runtime state machine.
+Routine changes load only the smallest relevant workflow. `brainstorming`, `git-commit`, `improve-architecture`, `premortem`, `session-bridge`, and `technical-research` are explicit-only; the other workflows may be selected automatically when their descriptions match. The [catalog contract](plugins/tuxedo/skills/catalog.md) defines ownership, precedence, stop conditions, and composition without adding a runtime state machine.
 
 ## Install for Codex
 
-Cloning the repository does not install Tuxedo and the root `skills/` directory is not a standalone Codex discovery location. Choose either the plugin route for the complete bundle or the standalone route for direct Agent Skills. Neither route installs a Tuxedo runtime, Python, UV, or Node dependency in the consumer project.
+Cloning the repository does not install Tuxedo. Choose either the plugin route for the complete bundle or the standalone route for direct Agent Skills. Neither route installs a Tuxedo runtime, Python, UV, or Node dependency in the consumer project.
 
 ### Option A: install the plugin
 
-This repository includes a local marketplace entry. From a trusted clone:
+This repository includes a local marketplace entry that points to the dedicated package at `plugins/tuxedo/`. That package contains only the plugin manifest and the 17 distributed skills; maintainer tests, evaluations, specifications, documentation, and `node_modules/` are outside it. No package-build or copy script is required.
+
+From a trusted clone:
 
 ```bash
 git clone https://github.com/woliveiras/tuxedo.git
 cd tuxedo
 codex plugin marketplace add "$(pwd)"
-codex
+codex plugin add tuxedo@tuxedo-local
 ```
 
-Inside Codex CLI, open `/plugins`, select the `tuxedo-local` marketplace, install `tuxedo`, and start a new session. In Codex desktop, restart the app, open **Plugins**, choose **Tuxedo local**, install **Tuxedo**, and start a new task. The installed plugin exposes all 17 skills; you do not have to name the plugin in normal prompts.
+Start a new Codex session after installation. You can also open `/plugins` in Codex CLI, select the `tuxedo-local` marketplace, and install `tuxedo`. In Codex desktop, restart the app, open **Plugins**, choose **Tuxedo local**, install **Tuxedo**, and start a new task. The installed plugin exposes all 17 skills; you do not have to name the plugin in normal prompts.
 
 #### Update
 
-Pull the trusted clone, then uninstall and reinstall Tuxedo from `/plugins` or the desktop Plugins screen so the installed cache is refreshed.
+Pull the trusted clone, then refresh the installed cache:
+
+```bash
+codex plugin remove tuxedo@tuxedo-local
+codex plugin add tuxedo@tuxedo-local
+```
+
+Start a new session afterward. The same remove/install cycle is available through `/plugins` or the desktop Plugins screen.
 
 #### Remove
 
-Uninstall Tuxedo first, then remove the marketplace:
+Uninstall Tuxedo, then remove the marketplace:
 
 ```bash
+codex plugin remove tuxedo@tuxedo-local
 codex plugin marketplace remove tuxedo-local
 ```
 
 ### Option B: install standalone skills
 
-Codex discovers user skills under `$HOME/.agents/skills` and repository skills under `.agents/skills`. It follows symlinked skill directories. For a personal installation from an existing trusted clone:
+Codex discovers user skills under `$HOME/.agents/skills` and repository skills under `.agents/skills`. It follows symlinked skill directories. The canonical Tuxedo skill tree is `plugins/tuxedo/skills/`. For a personal installation from an existing trusted clone:
 
 ```bash
 mkdir -p "$HOME/.agents/skills"
-for skill_dir in "/absolute/path/to/tuxedo/skills"/*/; do
+for skill_dir in "/absolute/path/to/tuxedo/plugins/tuxedo/skills"/*/; do
   ln -s "$skill_dir" "$HOME/.agents/skills/$(basename "$skill_dir")"
 done
 ```
@@ -77,7 +87,8 @@ Replace the example path with the absolute path to your clone and restart Codex.
 - **Implicit invocation:** Codex may select an installed skill when the request matches its frontmatter description and `agents/openai.yaml` permits it. Ask for the outcome normally; no plugin name is required.
 - **Explicit invocation:** use `$skill-name` in Codex CLI/IDE or choose the skill from the UI. Explicit-only Tuxedo workflows require this or an equally direct request.
 - If many skills are installed, Codex may shorten or omit entries from its initial skill list because of the context budget. Use explicit invocation when you need a particular workflow deterministically.
-- The plugin is supported by Codex CLI and Codex desktop. Codex IDE supports standalone skills but not plugin installation. Tuxedo follows the portable Agent Skills format, but installation, discovery, routing, and composition in other clients remain unverified until clean-room client tests are recorded.
+- Clean-room Codex CLI evidence covers plugin installation, discovery of all 17 skills, removal, and reinstallation without credentials or model calls. It proves packaging and discovery, not that a model follows a skill correctly.
+- The plugin is supported by Codex CLI and Codex desktop. Codex IDE supports standalone skills but not plugin installation. Tuxedo follows the portable Agent Skills format, but installation, discovery, routing, and composition in other clients remain unverified until client-specific clean-room tests are recorded.
 
 ### Optional command rules
 
