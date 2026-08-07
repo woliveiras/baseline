@@ -15,6 +15,95 @@ This is Tuxedo's declarative transition model. It describes ownership and compos
 - `docs` owns durable explanatory surfaces, not specifications, domain vocabulary, decisions still under consideration, or implementation.
 - `verify` runs at the completion boundary before an explicitly authorized `git-commit`. A commit does not imply push, release, publication, or deploy authority.
 
+## Contract views
+
+These diagrams describe the catalog as an agent-mediated, declarative contract. Arrows represent decisions or artifact handoffs; they are not skill-to-skill runtime calls or a mechanically enforced state machine. Explicit-only workflows enter through direct invocation rather than broad similarity matching.
+
+### How skills communicate
+
+```mermaid
+flowchart LR
+    Request["Authorized task or direct request"] --> Route["Client routing by skill descriptions"]
+    Request --> Direct["Named or directly requested workflow"]
+    Route -->|matching implicit workflow| Read["Agent reads every applicable SKILL.md completely"]
+    Direct -->|explicit invocation| Read
+    Route -->|no match| Default["Repository instructions and normal scoped work"]
+    Read --> Contract["Catalog contract<br/>owner · input · output · precedence<br/>stop · fallback"]
+    Contract --> Handoff["Agent-mediated handoff<br/>through artifacts, decisions, and evidence"]
+    Handoff --> Next["Another applicable skill<br/>consumes the declared output"]
+
+    subgraph Examples["Composition examples"]
+        direction TB
+        Refine["refine"] -->|when ambiguity remains| Spec["spec"]
+        Spec -->|approved criteria and matrix| TDD["tdd"]
+        TDD -->|implementation and evidence| Verify["verify"]
+        Bugfix["bugfix"] -->|repair and regression evidence| Verify
+        Design["design-deep-modules"] -->|boundary options| Decision["decision-framework"]
+        CI["ci-workflow"] -.->|compose for a sensitive boundary| Security["security-review"]
+    end
+
+    Handoff -.-> Examples
+```
+
+### How work proceeds
+
+```mermaid
+flowchart TD
+    Start["Authorized governing input<br/>task · spec · plan · bug report"] --> Context["Read repository contract,<br/>relevant spec, code, and docs"]
+    Context --> Ambiguity{"Material ambiguity?"}
+    Ambiguity -->|yes| Refine["refine<br/>assumptions and remaining decision"]
+    Ambiguity -->|no| Scope["Confirm scope, exclusions,<br/>risk, authority, and verification seam"]
+    Refine --> Scope
+    Scope --> Shape{"Work shape"}
+    Shape -->|approved new behavior| Spec["spec<br/>criteria and behavior/oracle matrix"]
+    Shape -->|reported defect| Bugfix["bugfix<br/>reproduction and regression oracle"]
+    Shape -->|documentation or configuration| Docs["docs<br/>appropriate static or inspection oracle"]
+    Spec --> FailFirst["Run the suitable oracle fail-first<br/>before production behavior changes"]
+    Bugfix --> FailFirst
+    Docs --> DocsOracle["Define the suitable documentation,<br/>configuration, or inspection oracle"]
+    FailFirst --> Change["Make only the authorized<br/>task-owned change"]
+    DocsOracle --> Change
+    Change --> Evidence["Run relevant checks<br/>and record evidence"]
+    Evidence --> Reviews["Reconstruct three reviews<br/>spec · tests · code"]
+    Reviews --> Git["Inspect status, unstaged diff,<br/>staged diff, and untracked files"]
+    Git --> Authority{"Explicit local commit authority?"}
+    Authority -->|yes| Commit["git-commit<br/>stage only task-owned paths and commit"]
+    Authority -->|no| Report["Report result, evidence,<br/>and residual limitations"]
+    Commit --> Report
+    Scope -.-> Additional["New work discovered<br/>leave unchanged and request authority"]
+```
+
+### How agents interact with Tuxedo
+
+```mermaid
+sequenceDiagram
+    actor Human
+    participant Agent
+    participant Client as "Codex or another Agent Skills host"
+    participant Tuxedo as "Tuxedo plugin or standalone skill tree"
+    participant Repo as "Repository"
+    participant Checks as "Tests, CI, and optional Codex Rules"
+
+    Human->>Agent: Provides authorized task and constraints
+    Agent->>Repo: Reads AGENTS.md, glossary, governing input, code, and docs
+    Agent->>Client: Requests an outcome or explicitly invokes a workflow
+    Client->>Tuxedo: Routes by descriptions and host policy
+    Tuxedo-->>Client: Exposes applicable SKILL.md and references
+    Client-->>Agent: Supplies workflow guidance
+    Agent->>Repo: Defines the oracle and edits task-owned files
+    Agent->>Checks: Runs relevant validation
+    Checks-->>Agent: Returns evidence and failures
+    Agent->>Repo: Reviews intent, tests, code, and Git ownership
+    alt Protected or withheld action
+        Agent->>Client: Encounters the approval boundary
+        Client-->>Human: Requests human authority
+        Human-->>Agent: Grants or withholds authority
+    else Local scoped work
+        Agent-->>Human: Reports result and residual limitations
+    end
+    Note over Tuxedo,Checks: Tuxedo provides portable declarative guidance.<br/>It does not run lifecycle hooks or enforce chronology.
+```
+
 ## Per-skill boundaries
 
 | Skill | Owner | Input | Output | Precedence | Stop | Fallback |
