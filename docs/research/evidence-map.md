@@ -1,6 +1,6 @@
 # Engineering evidence map
 
-This maintainer-only map separates empirical results from engineering heuristics, product decisions, and community inspiration. The five supplied papers are preprints from 2026; their settings and limitations constrain every derived rule.
+We based Tuxedo workflows on established engineering practice, compared them for coverage with community engineering skills, and reviewed them against recent empirical studies. This evidence map records the results of that review and the derived rules.
 
 ## Empirical results
 
