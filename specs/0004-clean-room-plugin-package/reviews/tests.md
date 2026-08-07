@@ -21,3 +21,27 @@ Reviewed the new oracles against SPEC-0004 without treating the production layou
 
 - The tests intentionally do not call a model and therefore cannot prove routing quality or instruction adherence.
 - No assertion was weakened in response to the old package failure. No unresolved test finding remains.
+
+## 2026-08-07 link-integrity amendment
+
+### Review boundary
+
+Reviewed CP-008/CP-009, the amended matrix, the recorded existence-only fail-first run, and the link fixtures without using the strengthened validator implementation as justification.
+
+### Spec
+
+- The fail-first set maps directly to the requested valid link, absent destination, `../` escape, valid anchor, absent anchor, and external URL behaviors.
+- Additional fixtures cover fragment-only references, percent-decoded paths and fragments, and an encoded traversal, matching the specified edge behavior.
+- The installed-package test enters through the root `skills/` compatibility symlink while passing the canonical plugin root as the confinement boundary.
+
+### Standards
+
+- Missing target, outside-package, and missing-anchor results are distinguishable, so one failure mode cannot satisfy another criterion accidentally.
+- The external URL fixture points at an unreachable loopback endpoint and asserts that the standard-library connection seam is unused; it does not assert remote availability.
+- Six core fixtures were present for fail-first evidence. The fragment-only and percent-encoded edge fixtures were added after implementation inspection and are classified as implementation-aware supplemental coverage.
+
+### Risk
+
+- Direct and percent-encoded traversal fixtures prevent a plausible string-prefix-only implementation from satisfying CP-008.
+- The anchor fixtures cover deterministic heading lookup without claiming full CommonMark parsing or external fragment conformance.
+- No unresolved test finding remains.

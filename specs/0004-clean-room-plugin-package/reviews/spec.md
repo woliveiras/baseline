@@ -20,3 +20,25 @@ Reviewed the user request, the initial clean-room observations, SPEC-0004, its m
 
 - Remaining scope is explicit: Codex desktop UI, non-Codex clients, and actual model adherence are not established by this spec.
 - No unresolved spec finding remains.
+
+## 2026-08-07 link-integrity amendment
+
+### Review boundary
+
+Reviewed the new link-integrity objective, CP-008/CP-009, the installed-content boundary, compatibility requirement, and explicit dependency and network constraints without consulting new tests or implementation.
+
+### Spec
+
+- CP-008 distinguishes containment from existence, so an existing path outside `plugins/tuxedo/` cannot satisfy the package contract.
+- CP-009 makes heading anchors observable and keeps external reachability outside the deterministic oracle.
+- Fragment-only and percent-encoded local references are specified as edge behavior; external URL content remains an explicit exclusion.
+
+### Standards
+
+- The change remains maintainer-only validation and adds no distributed file, package generator, consumer runtime, or dependency.
+- CP-003 remains the compatibility contract: scanning through `skills/` must resolve to the canonical package without weakening confinement.
+
+### Risk
+
+- The amendment is medium because it strengthens a public installed-package contract and a compatibility seam, despite a localized implementation.
+- No unresolved specification finding remains.

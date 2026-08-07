@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import html
 import importlib.util
 import io
 import json
@@ -15,6 +16,7 @@ import time
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+from urllib.parse import unquote, urlsplit
 from unittest.mock import patch
 
 
@@ -128,6 +130,165 @@ def glossary_contract_errors(text: str) -> set[str]:
         if required_text not in sections[heading].lower():
             errors.add(error)
     return errors
+
+
+def _markdown_heading_anchors(text: str) -> set[str]:
+    """Return GitHub-style anchors for ATX and setext headings outside code fences."""
+    anchors: set[str] = set()
+    occurrences: dict[str, int] = {}
+    lines = text.splitlines()
+    in_frontmatter = bool(lines and lines[0].strip() == "---")
+    fence_character = ""
+    fence_length = 0
+    previous_line = ""
+
+    def add_heading(heading: str) -> None:
+        label = html.unescape(heading)
+        label = re.sub(r"!?\[([^\]]+)\]\([^)]+\)", r"\1", label)
+        label = re.sub(r"<[^>]+>", "", label)
+        slug = re.sub(r"[^\w\-\s]", "", label.lower(), flags=re.UNICODE)
+        slug = re.sub(r"\s+", "-", slug.strip())
+        duplicate = occurrences.get(slug, 0)
+        occurrences[slug] = duplicate + 1
+        anchors.add(slug if duplicate == 0 else f"{slug}-{duplicate}")
+
+    for line_number, line in enumerate(lines):
+        stripped = line.lstrip()
+        if in_frontmatter:
+            if line_number > 0 and stripped == "---":
+                in_frontmatter = False
+            continue
+
+        fence = re.match(r"^(`{3,}|~{3,})", stripped)
+        if fence_character:
+            if fence and fence.group(1)[0] == fence_character and len(fence.group(1)) >= fence_length:
+                fence_character = ""
+                fence_length = 0
+            continue
+        if fence:
+            fence_character = fence.group(1)[0]
+            fence_length = len(fence.group(1))
+            continue
+
+        atx = re.match(r"^[ \t]{0,3}#{1,6}(?:[ \t]+|$)(.*)$", line)
+        if atx:
+            heading = re.sub(r"[ \t]+#+[ \t]*$", "", atx.group(1)).strip()
+            add_heading(heading)
+        elif previous_line.strip() and re.match(r"^[ \t]{0,3}(?:=+|-+)[ \t]*$", line):
+            add_heading(previous_line.strip())
+        previous_line = line
+    return anchors
+
+
+def markdown_link_errors(markdown_root: Path, package_root: Path) -> list[str]:
+    """Return deterministic installed-package Markdown link errors without I/O beyond files."""
+    errors: list[str] = []
+    package_boundary = package_root.resolve()
+    scan_boundary = markdown_root.resolve()
+    try:
+        scan_boundary.relative_to(package_boundary)
+    except ValueError as error:
+        raise ValueError("Markdown scan root must be inside the installed package") from error
+
+    for path in sorted(markdown_root.rglob("*.md")):
+        text = path.read_text(encoding="utf-8")
+        source = path.relative_to(markdown_root).as_posix()
+        if re.search(r"\[TODO|TODO:", text):
+            errors.append(f"placeholder:{source}")
+        for target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", text):
+            parsed = urlsplit(target)
+            if parsed.scheme or parsed.netloc or target.startswith("//"):
+                continue
+            local_path = unquote(parsed.path)
+            resolved = (path.parent / local_path).resolve() if local_path else path.resolve()
+            try:
+                resolved.relative_to(package_boundary)
+            except ValueError:
+                errors.append(f"outside-package:{source}:{target}")
+                continue
+            if not resolved.is_file():
+                errors.append(f"missing-target:{source}:{target}")
+                continue
+            fragment = unquote(parsed.fragment)
+            if fragment and fragment not in _markdown_heading_anchors(resolved.read_text(encoding="utf-8")):
+                errors.append(f"missing-anchor:{source}:{target}")
+    return errors
+
+
+class MarkdownLinkValidationTests(unittest.TestCase):
+    """CP-008/CP-009: prove link confinement, targets, anchors, and offline URLs."""
+
+    def setUp(self):
+        self.temporary_directory = tempfile.TemporaryDirectory()
+        self.workspace = Path(self.temporary_directory.name)
+        self.package = self.workspace / "plugins" / "tuxedo"
+        self.package.mkdir(parents=True)
+
+    def tearDown(self):
+        self.temporary_directory.cleanup()
+
+    def write(self, relative_path: str, text: str) -> Path:
+        path = self.package / relative_path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+        return path
+
+    def test_valid_local_link(self):
+        self.write("index.md", "[Guide](guide.md)\n")
+        self.write("guide.md", "# Guide\n")
+        self.assertEqual([], markdown_link_errors(self.package, self.package))
+
+    def test_missing_local_target(self):
+        self.write("index.md", "[Missing](missing.md)\n")
+        self.assertEqual(
+            ["missing-target:index.md:missing.md"],
+            markdown_link_errors(self.package, self.package),
+        )
+
+    def test_local_link_cannot_escape_package(self):
+        outside = self.package.parent / "outside.md"
+        outside.write_text("# Outside\n", encoding="utf-8")
+        self.write("index.md", "[Outside](../outside.md)\n")
+        self.assertEqual(
+            ["outside-package:index.md:../outside.md"],
+            markdown_link_errors(self.package, self.package),
+        )
+
+    def test_percent_encoded_path_cannot_escape_package(self):
+        outside = self.package.parent / "outside.md"
+        outside.write_text("# Outside\n", encoding="utf-8")
+        self.write("nested/index.md", "[Outside](%2e%2e/%2e%2e/outside.md)\n")
+        self.assertEqual(
+            ["outside-package:nested/index.md:%2e%2e/%2e%2e/outside.md"],
+            markdown_link_errors(self.package, self.package),
+        )
+
+    def test_valid_heading_anchor(self):
+        self.write("index.md", "[Install](guide.md#installation)\n")
+        self.write("guide.md", "# Guide\n\n## Installation\n")
+        self.assertEqual([], markdown_link_errors(self.package, self.package))
+
+    def test_missing_heading_anchor(self):
+        self.write("index.md", "[Install](guide.md#installation)\n")
+        self.write("guide.md", "# Guide\n\n## Usage\n")
+        self.assertEqual(
+            ["missing-anchor:index.md:guide.md#installation"],
+            markdown_link_errors(self.package, self.package),
+        )
+
+    def test_fragment_only_and_percent_encoded_local_link(self):
+        self.write(
+            "index.md",
+            "# Overview\n\n[Self](#overview)\n[Guide](guide%20one.md#instala%C3%A7%C3%A3o)\n",
+        )
+        self.write("guide one.md", "# Instalação\n")
+        self.assertEqual([], markdown_link_errors(self.package, self.package))
+
+    def test_external_url_is_not_accessed(self):
+        self.write("index.md", "[External](https://127.0.0.1:9/unreachable#installation)\n")
+        with patch("socket.create_connection") as connect:
+            self.assertEqual([], markdown_link_errors(self.package, self.package))
+        connect.assert_not_called()
 
 
 class ToolkitStructureTests(unittest.TestCase):
@@ -719,15 +880,9 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertNotIn("local commit authority is present", description.group(1))
 
     def test_links_resolve_and_no_placeholders(self):
-        markdown = list((ROOT / "skills").rglob("*.md"))
-        for path in markdown:
-            text = path.read_text()
-            self.assertNotRegex(text, r"\[TODO|TODO:", str(path))
-            for target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", text):
-                if "://" in target or target.startswith("#"):
-                    continue
-                resolved = (path.parent / target.split("#", 1)[0]).resolve()
-                self.assertTrue(resolved.exists(), f"{path}: {target}")
+        """CP-003/CP-008/CP-009: validate installed links through the compatibility path."""
+        errors = markdown_link_errors(ROOT / "skills", PLUGIN_ROOT)
+        self.assertEqual([], errors, "\n".join(errors))
 
     def test_maintainer_content_is_not_referenced_as_installed_content(self):
         manifest = (PLUGIN_ROOT / ".codex-plugin" / "plugin.json").read_text()
