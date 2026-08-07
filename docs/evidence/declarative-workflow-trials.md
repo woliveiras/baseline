@@ -28,10 +28,28 @@ a compliance score.
 
 ## Trials
 
-No post-decision real tasks have been recorded yet.
-
 | Trial | Date | Client | Task class | Result | Observed categories | Existing control that caught it | Evidence note |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| `DWT-001` | 2026-08-07 | Codex desktop | `medium` | pass | none | `AGENTS.md` declarative flow, composed Tuxedo workflows, deterministic tests, and Git inspection | Commit `47148ab`; spec and matrix preceded implementation, the six-case fail-first run detected both target defects, three-phase review completed, and the task-owned commit excluded local contamination |
+
+### DWT-001 observations
+
+- Codex selected `spec`, `tdd`, and `verify` without the request naming those
+  workflows. The task proceeded through spec, matrix, fail-first tests,
+  implementation, evidence, and three reconstructed review phases.
+- The request explicitly required a local commit. Codex did not announce the
+  explicit-only `git-commit` workflow, but it followed the equivalent
+  task-owned staging and Conventional Commit requirements already present in
+  `AGENTS.md`. This is a composition observation, not a `DWF-05` failure;
+  retain it for recurrence analysis rather than treating skill invocation as a
+  compliance score.
+- An ignored `plugins/tuxedo/.DS_Store` caused the installed-package boundary
+  tests to reject the contaminated checkout. Codex preserved it outside the
+  package only while validating the tracked candidate, restored it unchanged,
+  excluded it from the commit, and reported both the 87/89 contaminated result
+  and the 89/89 tracked-candidate result.
+- The task completed in approximately 10 minutes 24 seconds. No push or
+  additional remediation was attempted.
 
 ## Decision checkpoint
 
