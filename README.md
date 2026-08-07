@@ -36,11 +36,74 @@ Routine changes load only the smallest relevant workflow. `brainstorming`, `git-
 
 Cloning the repository does not install Tuxedo. Choose either the plugin route for the complete bundle or the standalone route for direct Agent Skills. Neither route installs a Tuxedo runtime, Python, UV, or Node dependency in the consumer project.
 
-### Option A: install the plugin
+### Option A: install from the GitHub marketplace
 
-This repository includes a local marketplace entry that points to the dedicated package at `plugins/tuxedo/`. That package contains only the plugin manifest and the distributed skills; maintainer tests, evaluations, specifications, documentation, and `node_modules/` are outside it. No package-build or copy script is required.
+For another machine, install Tuxedo without keeping a local Tuxedo checkout. Codex fetches the GitHub marketplace snapshot, reads its committed `.agents/plugins/marketplace.json`, and then installs the package at `plugins/tuxedo/`:
 
-From a trusted clone:
+```bash
+codex plugin marketplace add woliveiras/tuxedo --ref main
+codex plugin add tuxedo@tuxedo-local
+```
+
+The `tuxedo-local` name is the committed marketplace name; it does not mean that the consumer must have a local clone. Start a new Codex session after installation. You can also open `/plugins` in Codex CLI, select the `tuxedo-local` marketplace, and install `tuxedo`. In Codex desktop, restart the app, open **Plugins**, choose **Tuxedo local**, install **Tuxedo**, and start a new task. The installed plugin exposes all distributed skills; you do not have to name the plugin in normal prompts.
+
+#### Optional sparse checkout
+
+To fetch only the two paths needed to resolve and install the plugin, repeat `--sparse` for the marketplace manifest and the package:
+
+```bash
+codex plugin marketplace add woliveiras/tuxedo --ref main \
+  --sparse .agents/plugins/marketplace.json \
+  --sparse plugins/tuxedo
+codex plugin add tuxedo@tuxedo-local
+```
+
+Do not omit either sparse path: the manifest selects the plugin and `plugins/tuxedo/` contains the manifest and distributed skills.
+
+#### Private repositories and credentials
+
+For a private repository or private fork, use an SSH Git URL after configuring the machine's GitHub SSH access:
+
+```bash
+codex plugin marketplace add git@github.com:woliveiras/tuxedo.git --ref main
+codex plugin add tuxedo@tuxedo-local
+```
+
+Codex account authentication and GitHub repository authentication are separate. The former is used by Codex itself; the latter is used by Git to fetch a private marketplace. A public repository does not require a GitHub credential for this fetch. No credential, token, private key, or credential-bearing URL belongs in commands committed to documentation or in the repository. Configure SSH keys, an agent, or an approved Git credential helper on the machine instead.
+
+#### Update
+
+Refresh the configured Git marketplace, then refresh the installed plugin cache:
+
+```bash
+codex plugin marketplace upgrade tuxedo-local
+codex plugin remove tuxedo@tuxedo-local
+codex plugin add tuxedo@tuxedo-local
+```
+
+Start a new session afterward. The same remove/install cycle is available through `/plugins` or the desktop Plugins screen. Updating `main` follows that mutable ref; it does not provide immutable or reproducible source selection.
+
+#### Reinstall and Remove
+
+To reinstall only Tuxedo:
+
+```bash
+codex plugin remove tuxedo@tuxedo-local
+codex plugin add tuxedo@tuxedo-local
+```
+
+To remove Tuxedo completely, uninstall the plugin before removing its marketplace:
+
+```bash
+codex plugin remove tuxedo@tuxedo-local
+codex plugin marketplace remove tuxedo-local
+```
+
+`main` is mutable, and no Git tags are published yet. Until an immutable ref is actually published, review the source changes brought by a marketplace upgrade. The supported remote route is marketplace-first. Do not use `codex plugin add <URL>`; `codex plugin add` receives the `plugin@marketplace` selector after the marketplace has been configured.
+
+### Option B: clone locally for maintainer development
+
+This repository includes a local marketplace entry that points to the dedicated package at `plugins/tuxedo/`. That package contains only the plugin manifest and the distributed skills; maintainer tests, evaluations, specifications, documentation, and `node_modules/` are outside it. No package-build or copy script is required. Preserve this flow for developing Tuxedo itself:
 
 ```bash
 git clone https://github.com/woliveiras/tuxedo.git
@@ -49,29 +112,9 @@ codex plugin marketplace add "$(pwd)"
 codex plugin add tuxedo@tuxedo-local
 ```
 
-Start a new Codex session after installation. You can also open `/plugins` in Codex CLI, select the `tuxedo-local` marketplace, and install `tuxedo`. In Codex desktop, restart the app, open **Plugins**, choose **Tuxedo local**, install **Tuxedo**, and start a new task. The installed plugin exposes all distributed skills; you do not have to name the plugin in normal prompts.
+This local-clone route is for maintainers working on the checkout. It is not required for the remote installation above.
 
-#### Update
-
-Pull the trusted clone, then refresh the installed cache:
-
-```bash
-codex plugin remove tuxedo@tuxedo-local
-codex plugin add tuxedo@tuxedo-local
-```
-
-Start a new session afterward. The same remove/install cycle is available through `/plugins` or the desktop Plugins screen.
-
-#### Remove
-
-Uninstall Tuxedo, then remove the marketplace:
-
-```bash
-codex plugin remove tuxedo@tuxedo-local
-codex plugin marketplace remove tuxedo-local
-```
-
-### Option B: install standalone skills
+### Option C: install standalone skills
 
 Codex discovers user skills under `$HOME/.agents/skills` and repository skills under `.agents/skills`. It follows symlinked skill directories. The canonical Tuxedo skill tree is `plugins/tuxedo/skills/`. For a personal installation from an existing trusted clone:
 

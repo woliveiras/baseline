@@ -865,6 +865,61 @@ class ToolkitStructureTests(unittest.TestCase):
         )
         self.assertTrue((PLUGIN_ROOT / ".codex-plugin" / "plugin.json").is_file())
 
+    def test_readme_documents_remote_marketplace_installation_contract(self):
+        """RM-001..RM-008: remote install, lifecycle, limits, and maintainer path are explicit."""
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        development = (ROOT / "docs" / "development.md").read_text(encoding="utf-8")
+
+        self.assertIn(
+            "codex plugin marketplace add woliveiras/tuxedo --ref main\n"
+            "codex plugin add tuxedo@tuxedo-local",
+            readme,
+        )
+        self.assertIn("without keeping a local Tuxedo checkout", readme)
+        sparse_command = "\n".join(
+            (
+                "codex plugin marketplace add woliveiras/tuxedo --ref main \\",
+                "  --sparse .agents/plugins/marketplace.json \\",
+                "  --sparse plugins/tuxedo",
+            )
+        )
+        self.assertIn(sparse_command, readme)
+        for marker in (
+            "--sparse .agents/plugins/marketplace.json",
+            "--sparse plugins/tuxedo",
+            "git@github.com:woliveiras/tuxedo.git",
+            "codex plugin marketplace upgrade tuxedo-local",
+            "codex plugin remove tuxedo@tuxedo-local",
+            "codex plugin marketplace remove tuxedo-local",
+            "Codex account authentication",
+            "GitHub repository authentication",
+            "`main` is mutable",
+            "no Git tags are published yet",
+            "Do not use `codex plugin add <URL>`",
+            "No credential, token, private key, or credential-bearing URL",
+        ):
+            self.assertIn(marker, readme, marker)
+
+        reinstall = (
+            "codex plugin remove tuxedo@tuxedo-local\n"
+            "codex plugin add tuxedo@tuxedo-local"
+        )
+        self.assertIn(reinstall, readme)
+        full_removal = (
+            "codex plugin remove tuxedo@tuxedo-local\n"
+            "codex plugin marketplace remove tuxedo-local"
+        )
+        self.assertIn(full_removal, readme)
+        self.assertNotRegex(readme, r"codex plugin add\s+(?:https?|ssh|git@)")
+        self.assertNotRegex(readme, r"https?://[^\s`]+:[^\s`]+@")
+        self.assertIn("maintainer development", readme.lower())
+        for marker in (
+            "git clone https://github.com/woliveiras/tuxedo.git",
+            'codex plugin marketplace add "$(pwd)"',
+            "codex plugin add tuxedo@tuxedo-local",
+        ):
+            self.assertIn(marker, development, marker)
+
     def test_agents_contract_has_conventional_commit_examples(self):
         contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
         self.assertIn("type(scope): imperative subject", contract)

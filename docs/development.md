@@ -56,6 +56,28 @@ UV, Python, PNPM, or Node.js in consumer projects.
 - Classify work by the highest applicable proportionality tier (see the
   contract), never by line count.
 
+## Maintainer development installation
+
+The supported consumer installation is documented in the [top-level README](../README.md):
+Codex can fetch `woliveiras/tuxedo` as a GitHub marketplace and install
+`tuxedo@tuxedo-local` without a Tuxedo checkout on the consumer machine. The
+remote ref is `main`, which is mutable; no Git tags are published yet.
+
+For maintainers developing the repository itself, keep the local marketplace
+flow so changes can be inspected directly from the checkout:
+
+```bash
+git clone https://github.com/woliveiras/tuxedo.git
+cd tuxedo
+codex plugin marketplace add "$(pwd)"
+codex plugin add tuxedo@tuxedo-local
+```
+
+This local clone is a development convenience, not a prerequisite for users.
+GitHub access for a private marketplace is configured through Git/SSH on the
+machine and remains separate from Codex account authentication. Do not put
+credentials in URLs or repository files.
+
 ## How to test
 
 Local deterministic checks are fast and make no model calls:
