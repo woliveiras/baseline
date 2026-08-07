@@ -106,7 +106,7 @@ Tuxedo separates command authority from workflow guidance:
 - **`AGENTS.md` and skills** define the strict spec-first, oracle-first, scoped, reviewed workflow.
 - **Tests and CI** provide executable evidence for product behavior.
 
-Tuxedo does not install lifecycle hooks or require UV or Python in consumer projects. The workflow requirements are declarative rather than mechanically enforced. The maintainer is validating them across real tasks before deciding whether any narrow gate is necessary. See [the workflow boundary](docs/architecture/enforcement.md) for responsibilities and the observation protocol.
+Tuxedo does not install lifecycle hooks or require external dependencies in consumer projects. The workflow requirements are declarative rather than mechanically enforced. The maintainer is validating them across real tasks before deciding whether any narrow gate is necessary. See [the workflow boundary](docs/architecture/enforcement.md) for responsibilities and the observation protocol.
 
 ## Documentation
 
@@ -114,15 +114,15 @@ Tuxedo does not install lifecycle hooks or require UV or Python in consumer proj
 - **Learn the vocabulary:** the [repository glossary](GLOSSARY.md) defines oracle, evidence, provenance, fail-first, and the three review phases.
 - **Work on it:** the [documentation hub](docs/README.md) links the development guide, architecture, decisions (ADRs), research evidence, and the maintainer evaluation harness.
 
-## From Geremmyas to Tuxedo
+## History: from Geremmyas to Tuxedo
 
-Tuxedo is the successor to Geremmyas, an earlier project that explored spec-driven development with coding agents by combining specifications, tests, reviews, workflow guidance, and executable guardrails. Tuxedo carries that purpose forward as a portable, evidence-driven toolkit and drops the CLI and distribution machinery. It selectively adapts content from Geremmyas (MIT-licensed, same author).
+Tuxedo is the successor to [Geremmyas](https://github.com/woliveiras/geremmyas), an earlier project that explored spec-driven development with coding agents by combining specifications, tests, reviews, workflow guidance, and executable guardrails. Tuxedo carries that purpose forward as a portable, evidence-driven toolkit and drops the CLI and distribution machinery. It selectively adapts content from Geremmyas (MIT-licensed, same author).
 
 The project is named after Geremmyas, my tuxedo cat and the namesake of the toolkit that preceded it.
 
 ## Provenance and influences
 
-The workflows were informed by established engineering practice, compared for coverage with community engineering skills (including Matt Pocock's), and reviewed against recent empirical studies. No third-party skill text or procedure is copied. Recognized design references include John Ousterhout's *A Philosophy of Software Design* and Andrew Hunt and David Thomas's *The Pragmatic Programmer*, translated into operational checks such as interface comparison, information hiding, locality, reversibility, and evidence before broad change.
+The workflows were informed by established engineering practice, compared for coverage with community engineering skills (including [Superpowers](https://github.com/obra/superpowers), [Spec Kit](https://github.com/github/spec-kit) and [Matt Pocock's](https://github.com/mattpocock/skills)), and reviewed against recent empirical studies. No third-party skill text or procedure is copied. Recognized design references include John Ousterhout's *A Philosophy of Software Design* and Andrew Hunt and David Thomas's *The Pragmatic Programmer*, translated into operational checks such as interface comparison, information hiding, locality, reversibility, and evidence before broad change.
 
 Rules are labeled as empirical results, engineering heuristics, product decisions, or community inspiration; a citation does not imply that a rule is scientifically proven. Details and limitations live in [the evidence map](docs/research/evidence-map.md).
 
