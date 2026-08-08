@@ -62,3 +62,41 @@ that remains outside the candidate.
 
 - Codex desktop remains unexecuted. `main` remains mutable, and SSH availability
   remains a machine-level GitHub configuration responsibility.
+
+## 2026-08-08 marketplace identity reconciliation
+
+### Review boundary
+
+Reviewed the complete task-owned diff, reconciled specifications and matrix,
+test-review record, fail-first and passing evidence, current documentation,
+Codex CLI lifecycle output, installed content digests, and preserved pre-existing
+ignored-file state.
+
+### Spec
+
+- No findings. The committed marketplace now identifies and displays only
+  Tuxedo, while the plugin remains `tuxedo`; every maintained lifecycle command
+  selects `tuxedo@tuxedo`.
+- The local Codex state contains one configured `tuxedo` marketplace and one
+  installed, enabled `tuxedo@tuxedo` plugin at version `0.1.0`. The retired
+  empty cache directory is absent.
+
+### Standards
+
+- No findings. The change adds no runtime, dependency, package copy, generated
+  distribution, authentication state, model call, remote mutation, or push.
+- Official plugin validation, 17/17 skill validations, 91/91 unit tests, the
+  48-configuration eval dry-run, shell applicability check, and diff check pass.
+- Current installation docs contain no location-branded marketplace identity;
+  two historical records retain the prior selector as observed evidence.
+
+### Risk
+
+- No in-scope findings. Source and installed package digests match, and the
+  manifest SHA-256 matches exactly between checkout and cache.
+- The remote GitHub marketplace still reflects the last pushed commit; the
+  canonical name becomes remotely installable only after separately authorized
+  push.
+- The pre-existing ignored `.DS_Store` remains in both local source and installed
+  package. It is outside the naming change and still causes package-boundary
+  checks unless preserved outside the package for validation.

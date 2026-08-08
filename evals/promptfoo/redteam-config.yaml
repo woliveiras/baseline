@@ -1,4 +1,4 @@
-description: Tuxedo maintainer-only coding-agent red-team configuration
+description: Tuxedo development-only coding-agent red-team configuration
 prompts:
   - '{{prompt}}'
 providers:

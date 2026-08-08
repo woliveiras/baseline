@@ -13,7 +13,7 @@ Tuxedo needs empirical evidence that its skills, contracts, routing boundaries, 
 
 Keeping all generic evaluation infrastructure in Tuxedo increases maintenance cost. Promptfoo provides maintained providers for Codex, side-by-side Agent Skill comparisons, assertions, repetitions, result aggregation, reporting, and coding-agent red teaming. Promptfoo does not know Tuxedo's invariants. Replacing deterministic verifiers with LLM judges would reduce the strength of evidence, and a direct chat provider would not represent a coding-agent trajectory.
 
-We need an explicit responsibility boundary between generic evaluation orchestration and Tuxedo-specific evidence. The evaluation system must remain maintainer-only, must use an isolated Codex home, must not run in the Tuxedo checkout, and must not silently share evaluation content with Promptfoo Cloud or other remote generation services.
+We need an explicit responsibility boundary between generic evaluation orchestration and Tuxedo-specific evidence. The evaluation system must remain development-only, must use an isolated Codex home, must not run in the Tuxedo checkout, and must not silently share evaluation content with Promptfoo Cloud or other remote generation services.
 
 ## Decision Drivers
 
@@ -37,7 +37,7 @@ We need an explicit responsibility boundary between generic evaluation orchestra
 - Good, because the current behavior is known and already covers Tuxedo-specific invariants.
 - Bad, because Tuxedo must maintain scheduling, providers, reports, routing assertions, and red teaming.
 - Bad, because it replicates capabilities maintained by a project specialized in evaluations.
-- Bad, because security coverage remains limited by maintainer time.
+- Bad, because security coverage remains limited by available engineering time.
 
 ### Replace the Tuxedo runner and verifiers completely with Promptfoo
 
@@ -100,12 +100,12 @@ Tuxedo remains responsible for:
 
 ### Dependency decision
 
-The maintainer tooling uses exact versions resolved on 2026-08-05:
+The development tooling uses exact versions resolved on 2026-08-05:
 
 - `promptfoo@0.122.0`, MIT, published and maintained through the official Promptfoo repository and npm package. It is preferred to expanding the custom runner because it supplies the generic provider, assertion, comparison, repetition, reporting, and coding-agent red-team surfaces already required here.
 - `@openai/codex-sdk@0.146.0`, Apache-2.0, published and maintained through the official OpenAI Codex repository and npm package. It is required by the official Promptfoo Codex provider and matches the locally installed Codex CLI family.
 
-The effective package engine requirements are Node `>=22.22.0` for Promptfoo and Node `>=18` for the Codex SDK; the maintainer package uses the stricter Promptfoo requirement. The PNPM lockfile is committed to constrain transitive resolution. The repository sets PNPM `minimumReleaseAge: 0` so an ambient machine-wide release-age policy cannot make this exact, reviewed lockfile un-installable; it does not relax exact versioning, audit, or upgrade review. A local `pnpm audit --prod` on 2026-08-05 found no production dependencies; the full `pnpm audit` reported 14 dev/optional advisory entries (two low, seven moderate, and five high), including `undici` and AI SDK packages. No automatic remediation was applied because changing the locked graph would require a separate reviewed upgrade. Supply-chain risks remain: both packages execute local Node tooling, Promptfoo has a broad transitive graph, and provider behavior can change across upgrades. Mitigations are exact versions, a committed lockfile, local-only result paths, disabled cache and remote red-team generation, no cloud login, isolated disposable workspaces, no production credentials in fixtures, and review of upgrades. Tuxedo still owns the distributed plugin contract, skill portability, deterministic evidence, and authority boundaries; Promptfoo is not a runtime dependency of the plugin.
+The effective package engine requirements are Node `>=22.22.0` for Promptfoo and Node `>=18` for the Codex SDK; the development package uses the stricter Promptfoo requirement. The PNPM lockfile is committed to constrain transitive resolution. The repository sets PNPM `minimumReleaseAge: 0` so an ambient machine-wide release-age policy cannot make this exact, reviewed lockfile un-installable; it does not relax exact versioning, audit, or upgrade review. A local `pnpm audit --prod` on 2026-08-05 found no production dependencies; the full `pnpm audit` reported 14 dev/optional advisory entries (two low, seven moderate, and five high), including `undici` and AI SDK packages. No automatic remediation was applied because changing the locked graph would require a separate reviewed upgrade. Supply-chain risks remain: both packages execute local Node tooling, Promptfoo has a broad transitive graph, and provider behavior can change across upgrades. Mitigations are exact versions, a committed lockfile, local-only result paths, disabled cache and remote red-team generation, no cloud login, isolated disposable workspaces, no production credentials in fixtures, and review of upgrades. Tuxedo still owns the distributed plugin contract, skill portability, deterministic evidence, and authority boundaries; Promptfoo is not a runtime dependency of the plugin.
 
 ## Consequences
 
@@ -120,7 +120,7 @@ The effective package engine requirements are Node `>=22.22.0` for Promptfoo and
 
 ### Bad, because...
 
-- Node.js, Promptfoo, and the Codex SDK become maintainer dependencies.
+- Node.js, Promptfoo, and the Codex SDK become development dependencies.
 - Promptfoo and Codex SDK upgrades may require adapter changes.
 - Provider event and result formats may change.
 - Workspace and verifier integration still requires Tuxedo-specific code.
@@ -166,7 +166,7 @@ this decision is recorded in [the run log](../evidence/eval-runs.md).
 
 ## Amendment: dedicated Codex CLI authentication
 
-On 2026-08-05, the maintainer evaluation boundary was amended to reuse a
+On 2026-08-05, the development evaluation boundary was amended to reuse a
 ChatGPT/Codex account session without reusing the personal Codex environment.
 The default home is `$HOME/.codex-tuxedo-evals`; `TUXEDO_EVAL_CODEX_HOME` may
 override it only with an absolute path outside this checkout and outside the
@@ -195,7 +195,7 @@ metadata are rejected. This small allowlist recognizes the current
 CLI-managed surfaces; future surfaces fail closed, and the curated plugin
 cache is trusted only as Codex-managed operational content. Tuxedo does not
 validate the semantics of that allowed auth-store value, so keeping the file
-minimal remains a maintainer responsibility; an unrecognized future status
+minimal remains a project responsibility; an unrecognized future status
 label also fails closed.
 Allowed managed entries are required to be real directories/files rather than
 symlinks, so a personal target cannot hide behind an allowed name.
@@ -221,14 +221,14 @@ Amendment evidence:
   non-implicit login.
 - [x] The dedicated home is authenticated and the official provider smoke run
   has passed.
-- [x] `pnpm run eval:full` has run with maintainer authority.
+- [x] `pnpm run eval:full` has run with explicit user authority.
 
 The dated smoke and authorized full-run results are recorded in
 [the run log](../evidence/eval-runs.md).
 
 ## Amendment: explicit full evaluation stack
 
-The maintainer provider suites are exposed through `pnpm run eval:full`. This
+The development provider suites are exposed through `pnpm run eval:full`. This
 command is an explicit empirical evaluation stack, not a pre-push hook and not
 an automatic Git gate. It runs the official validators, deterministic checks,
 Promptfoo configuration validation, fixture checks, 40 routing cases, 40
@@ -258,7 +258,7 @@ advertise their threat and prescribe one canonical patch, so their verdicts are
 scoped to those explicit probes rather than blind attack resistance.
 
 PyYAML is not a Tuxedo dependency. When the official local validators require
-it, the maintainer supplies an isolated interpreter through
+it, the user supplies an isolated interpreter through
 `TUXEDO_VALIDATOR_PYTHON`, created with UV. The provider stack itself remains
 Node/PNPM-managed and the distributed plugin remains free of both Promptfoo
 and the Codex SDK.
@@ -433,7 +433,7 @@ On 2026-08-07, the previously recorded 14 dev/optional advisories were
 reproduced as five high, seven moderate, two low, and zero critical findings.
 The configured `openai:codex-sdk` evaluation path does not select the optional
 Hugging Face or ONNX providers, but Promptfoo installs those packages in its
-maintainer-only graph. Tuxedo therefore audits the complete installed graph
+development-only graph. Tuxedo therefore audits the complete installed graph
 rather than dismissing findings solely because a provider is not configured.
 
 The reviewed remediation keeps the direct dependencies unchanged at
@@ -464,7 +464,7 @@ accepted only together with exact graph tests and the compatibility limitation
 above. Native lifecycle scripts remain disabled and unverified; no native
 build approval, unused-provider compatibility, provider/model execution, or
 full evaluation is claimed by this amendment. The distributed plugin still
-contains only `.codex-plugin` and `skills`, so this maintainer remediation adds
+contains only `.codex-plugin` and `skills`, so this dependency remediation adds
 no consumer runtime dependency.
 
 Re-evaluate this decision if Promptfoo drops Codex support, the Codex SDK or App Server changes materially, Promptfoo requires cloud sharing, adapters duplicate more logic than they remove, hidden oracles cannot be integrated, workspace or credential isolation weakens, the full evaluation becomes impractical for empirical review, another framework provides superior integration with less evidence loss, or `evals/run.py` becomes demonstrably redundant.

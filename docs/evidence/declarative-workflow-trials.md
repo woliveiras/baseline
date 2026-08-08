@@ -1,6 +1,6 @@
 # Declarative workflow trial log
 
-This log records the 10–20 real maintainer tasks required by
+This log records the 10–20 real repository tasks required by
 [SPEC-0001](../../specs/0001-declarative-workflow/spec.md) before Tuxedo
 reconsiders lifecycle hooks. It is empirical evidence, not a task queue and not
 a compliance score.

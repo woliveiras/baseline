@@ -1,10 +1,10 @@
 ---
 id: SPEC-0006
-title: Remediate vulnerable maintainer-only dependency paths
+title: Remediate vulnerable development-only dependency paths
 summary: Remove the 14 audited dev/optional advisories with narrow PNPM overrides while preserving direct provider versions and documenting compatibility limits.
 status: approved
 scope:
-  - maintainer-only Node dependency graph
+  - development-only Node dependency graph
   - PNPM overrides and committed lockfile
   - dependency audit and effective-resolution tests
   - Promptfoo evaluation harness compatibility checks
@@ -12,8 +12,8 @@ scope:
 risk: large/high-risk
 risk_domains: [security, supply-chain, dependency-compatibility, evaluation-integrity]
 reversibility: easy
-change_surfaces: [pnpm-workspace.yaml, pnpm-lock.yaml, tests/test_toolkit.py, docs/decisions/0001-use-promptfoo-as-evaluation-orchestrator.md, specs/0006-maintainer-dependency-security]
-contracts: [maintainer evaluation toolchain, committed lockfile, no consumer runtime dependency]
+change_surfaces: [pnpm-workspace.yaml, pnpm-lock.yaml, tests/test_toolkit.py, docs/decisions/0001-use-promptfoo-as-evaluation-orchestrator.md, specs/0006-development-dependency-security]
+contracts: [development evaluation toolchain, committed lockfile, no consumer runtime dependency]
 review_policy: reconstructed-three-phase-review
 test_provenance: [spec-derived, external, diagnostic-probe]
 documentation: required
@@ -25,7 +25,7 @@ dependencies: []
 
 # Intent
 
-Remove the 14 advisories reproduced in the maintainer-only PNPM graph without
+Remove the 14 advisories reproduced in the development-only PNPM graph without
 upgrading unrelated direct dependencies or changing the distributed Tuxedo
 plugin. Use explicit parent-scoped overrides because the current upstream
 Promptfoo graph still requests vulnerable versions. Treat those overrides as a
@@ -40,7 +40,7 @@ universally safe.
 - Full and production dependency audits report zero advisories for the committed graph.
 - A frozen install succeeds with lifecycle scripts disabled. This task does not approve or claim native build execution.
 - Deterministic Tuxedo tests, official validators, eval dry-run, and Promptfoo configuration validation remain green without provider or model calls.
-- The overrides affect maintainer tooling only. The installed plugin remains limited to `.codex-plugin` and `skills` and gains no Node dependency.
+- The overrides affect development tooling only. The installed plugin remains limited to `.codex-plugin` and `skills` and gains no Node dependency.
 - The decision record states why overrides were selected, which declared parent ranges they cross, how to remove them, and what remains unverified.
 
 # Acceptance criteria
@@ -67,7 +67,7 @@ universally safe.
 
 - An audit can become green while a parent package remains incompatible with an overridden child. Harness checks reduce that risk only for Tuxedo's configured Codex path.
 - A future Promptfoo graph may adopt fixed child ranges. The corresponding override must then be removed and the lockfile/audit evidence regenerated.
-- Optional Hugging Face packages remain installed in the maintainer graph even though Tuxedo does not configure their providers. Their native behavior is outside this task because scripts are disabled.
+- Optional Hugging Face packages remain installed in the development graph even though Tuxedo does not configure their providers. Their native behavior is outside this task because scripts are disabled.
 - A PNPM install that writes placeholder `allowBuilds` entries is not acceptable evidence; those entries are neither approval nor a deliberate deny policy.
 
 # Evidence and review

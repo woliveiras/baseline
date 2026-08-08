@@ -1,4 +1,4 @@
-# Maintainer-only behavior evaluation. Promptfoo is not part of the plugin runtime.
+# Development-only behavior evaluation. Promptfoo is not part of the plugin runtime.
 description: Tuxedo behavior evaluation through the local Codex SDK
 prompts:
   - file://prompts.py:create_prompt

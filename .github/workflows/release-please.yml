@@ -1,0 +1,108 @@
+name: Release Please
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: release-please-main
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    name: Prepare or publish release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      pr-number: ${{ steps.release-pr.outputs.number }}
+      pr-head-sha: ${{ steps.release-pr.outputs.head-sha }}
+    steps:
+      - name: Run Release Please
+        id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - name: Resolve generated Release PR head
+        id: release-pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PRS_CREATED: ${{ steps.release.outputs.prs_created }}
+          RELEASE_PR_JSON: ${{ steps.release.outputs.pr }}
+        run: |
+          set -euo pipefail
+          if [[ "$PRS_CREATED" != "true" ]]; then
+            exit 0
+          fi
+          number="$(jq -r '.number' <<<"$RELEASE_PR_JSON")"
+          if [[ ! "$number" =~ ^[0-9]+$ ]]; then
+            echo "Release Please returned an invalid PR number" >&2
+            exit 1
+          fi
+          head_sha="$(gh api "repos/$GITHUB_REPOSITORY/pulls/$number" --jq '.head.sha')"
+          if [[ ! "$head_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "GitHub returned an invalid Release PR head SHA" >&2
+            exit 1
+          fi
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+          echo "head-sha=$head_sha" >> "$GITHUB_OUTPUT"
+
+  validate-release-pr:
+    name: Validate generated Release PR
+    needs: release-please
+    if: needs.release-please.outputs.pr-head-sha != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Check out generated Release PR
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: refs/pull/${{ needs.release-please.outputs.pr-number }}/head
+          persist-credentials: false
+
+      - name: Confirm resolved candidate
+        env:
+          EXPECTED_HEAD_SHA: ${{ needs.release-please.outputs.pr-head-sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD_SHA"
+
+      - name: Validate repository
+        uses: ./.github/actions/validate
+
+  report-release-pr-status:
+    name: Report generated Release PR status
+    needs: [release-please, validate-release-pr]
+    if: always() && needs.release-please.outputs.pr-head-sha != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      statuses: write
+    steps:
+      - name: Publish Validate status for exact candidate
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_SHA: ${{ needs.release-please.outputs.pr-head-sha }}
+          VALIDATION_RESULT: ${{ needs.validate-release-pr.result }}
+        run: |
+          set -euo pipefail
+          state=failure
+          description="Tuxedo release candidate validation failed"
+          if [[ "$VALIDATION_RESULT" == "success" ]]; then
+            state=success
+            description="Tuxedo release candidate validation passed"
+          fi
+          gh api --method POST "repos/$GITHUB_REPOSITORY/statuses/$HEAD_SHA" \
+            -f state="$state" \
+            -f context=Validate \
+            -f description="$description" \
+            -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"

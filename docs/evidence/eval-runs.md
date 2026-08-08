@@ -1,6 +1,6 @@
 # Evaluation run evidence
 
-Dated, append-only record of maintainer evaluation runs. Reference material (how
+Dated, append-only record of local evaluation runs. Reference material (how
 the harness works) lives in [`docs/architecture/`](../architecture/evaluations.md);
 decisions and rationale live in
 [`docs/decisions/`](../decisions/0001-use-promptfoo-as-evaluation-orchestrator.md).

@@ -1,0 +1,74 @@
+name: Validate Tuxedo
+description: Run deterministic repository and official Codex package validation
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      with:
+        node-version: 22.22.0
+
+    - name: Set up UV
+      uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+      with:
+        version: 0.9.5
+
+    - name: Install development dependencies
+      shell: bash
+      run: |
+        set -euo pipefail
+        corepack enable
+        corepack prepare pnpm@11.13.1 --activate
+        pnpm install --frozen-lockfile --ignore-scripts
+
+    - name: Fetch official Codex validators
+      shell: bash
+      run: |
+        set -euo pipefail
+        validator_root="$RUNNER_TEMP/tuxedo-codex-validators"
+        mkdir -p "$validator_root"
+        git -C "$validator_root" init --quiet
+        git -C "$validator_root" remote add origin https://github.com/openai/codex.git
+        git -C "$validator_root" fetch --quiet --depth=1 --filter=blob:none origin e363b08c9175ac1cbe5893615dd2cb9ddf95043b
+        git -C "$validator_root" checkout --quiet FETCH_HEAD -- \
+          codex-rs/skills/src/assets/samples/plugin-creator/scripts/validate_plugin.py \
+          codex-rs/skills/src/assets/samples/skill-creator/scripts/quick_validate.py
+
+    - name: Run official plugin and skill validators
+      shell: bash
+      run: |
+        set -euo pipefail
+        validator_root="$RUNNER_TEMP/tuxedo-codex-validators/codex-rs/skills/src/assets/samples"
+        plugin_validator="$validator_root/plugin-creator/scripts/validate_plugin.py"
+        skill_validator="$validator_root/skill-creator/scripts/quick_validate.py"
+        uv run --no-project --with 'pyyaml==6.0.2' python "$plugin_validator" plugins/tuxedo
+        for skill in plugins/tuxedo/skills/*/; do
+          uv run --no-project --with 'pyyaml==6.0.2' python "$skill_validator" "$skill"
+        done
+
+    - name: Run deterministic tests
+      shell: bash
+      run: |
+        set -euo pipefail
+        uv run python -m unittest discover -s tests -v
+        uv run python evals/run.py --dry-run
+
+    - name: Check shell syntax
+      shell: bash
+      run: |
+        set -euo pipefail
+        while IFS= read -r -d '' script; do
+          bash -n "$script"
+        done < <(find . -path './node_modules' -prune -o -type f -name '*.sh' -print0)
+
+    - name: Check repository cleanliness
+      shell: bash
+      run: |
+        set -euo pipefail
+        git diff --check
+        status="$(git status --porcelain --untracked-files=all)"
+        if [[ -n "$status" ]]; then
+          printf '%s\n' "$status"
+          exit 1
+        fi

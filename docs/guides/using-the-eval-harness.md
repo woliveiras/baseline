@@ -1,6 +1,6 @@
-# Using the maintainer evaluation harness
+# Using the development evaluation harness
 
-The evaluation harness is maintainer-only. It is not installed with the plugin
+The evaluation harness is development-only. It is not installed with the plugin
 and is not a runtime dependency of any skill. This is the step-by-step path; see
 [the evaluation architecture](../architecture/evaluations.md) for how it works,
 [ADR 0001](../decisions/0001-use-promptfoo-as-evaluation-orchestrator.md) for
@@ -44,7 +44,7 @@ an earlier trial.
 
 ## 4. Full stack (explicit and expensive)
 
-To run only routing, use `pnpm run eval:routing`. Maintainers diagnosing an
+To run only routing, use `pnpm run eval:routing`. Contributors diagnosing an
 affected subset can keep the same isolated runner and sanitized report path:
 
 ```bash
@@ -77,7 +77,7 @@ uv pip install --python "$validator_env_path/bin/python" PyYAML
 TUXEDO_VALIDATOR_PYTHON="$validator_env_path/bin/python" pnpm run eval:full
 ```
 
-## 5. Red-team (explicit maintainer actions)
+## 5. Red-team (explicit user actions)
 
 ```bash
 pnpm run eval:redteam:generate

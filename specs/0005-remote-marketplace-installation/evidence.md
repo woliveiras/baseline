@@ -6,6 +6,7 @@
 | --- | --- | --- |
 | RM-001–RM-002, RM-004–RM-008 | `spec-derived` | The user request and approved specification define the exact command sequence, lifecycle, limitations, credential boundary, and maintainer path before the documentation test was run. |
 | RM-003 | `external` and `spec-derived` | The SSH URL and repeated `--sparse`/`--ref` options were cross-checked against the installed Codex CLI help; the private-repository security boundary comes from the approved specification. |
+| RM-010 | `spec-derived` | The maintainer explicitly requires the project, marketplace, plugin, and user-facing name to use only the canonical `tuxedo`/`Tuxedo` identity. |
 
 ## Fail-first evidence
 
@@ -67,6 +68,42 @@ Those constraints describe commit `c092f1f`. They were superseded only for the
 later, separately authorized remote clean-room probes recorded above; the
 history is retained rather than rewritten as if the original task had broader
 authority.
+
+## 2026-08-08 marketplace identity reconciliation
+
+### Fail-first evidence
+
+| Criterion | Verification or probe | Test-tree digest | Command | Expected failure | Observed failure | Oracle provenance |
+| --- | --- | --- | --- | --- | --- | --- |
+| RM-001, RM-004, RM-007, RM-010; CP-004 | Marketplace identity and maintained command contract | `c8e3e906b998948d6fa9341e78d4bf09bb85a47a` | `uv run python -m unittest -v tests.test_toolkit.ToolkitStructureTests.test_readme_documents_codex_installation_and_discovery tests.test_toolkit.ToolkitStructureTests.test_readme_documents_remote_marketplace_installation_contract` | The pre-migration marketplace and documentation fail the canonical `tuxedo` identity and selector assertions | 2/2 failed for the expected behavior: the manifest reported the location-branded marketplace identifier, and README lacked the canonical remove/add sequence | spec-derived |
+
+The prior sections remain historical evidence for the commands and product
+identity that existed when those runs occurred. They are not current
+installation guidance.
+
+### Passing evidence
+
+| Criterion | Test-tree digest | Command or probe | Result | Timestamp or run identifier |
+| --- | --- | --- | --- | --- |
+| RM-001, RM-004, RM-007, RM-010 | `085cdf1f4f4578beda658f46d6a68c0d9d22777e` | Focused README, development-guide, and marketplace identity tests | 2/2 pass; canonical selectors, lifecycle commands, manifest identifier/display name, and absence of the retired branding from current installation docs passed | 2026-08-08 |
+| CP-004–CP-006, RM-010 | `085cdf1f4f4578beda658f46d6a68c0d9d22777e` | Real Codex clean-room marketplace add, plugin install, discovery, removal, and reinstall in isolated operating-system and Codex homes | pass with `tuxedo@tuxedo`; all distributed skills resolved from the isolated installed cache | 2026-08-08 |
+| RM-001–RM-010, CP-001–CP-009 | `085cdf1f4f4578beda658f46d6a68c0d9d22777e` | `uv run python -m unittest discover -s tests -v` with the pre-existing ignored `.DS_Store` preserved outside the package only for the run | 91/91 pass | 2026-08-08 |
+| RM-010 | n/a | Official plugin validator and official skill validator for every `plugins/tuxedo/skills/*` skill through an isolated UV/PyYAML execution | Plugin validation passed; 17/17 skill validations passed | 2026-08-08 |
+| RM-010 | n/a | `uv run python evals/run.py --dry-run` | 48 deterministic configurations generated; fingerprint `b030bf3e0fa391e232330c54aef6d1366df8c35a95b60cf7e016046e17f356a5`; no model call | 2026-08-08 |
+| RM-010 | n/a | Remove the previous installed plugin and marketplace, add the local marketplace, install `tuxedo@tuxedo`, then inspect `codex plugin list --json` and `codex plugin marketplace list --json` | Marketplace `tuxedo`; plugin `tuxedo@tuxedo` version `0.1.0`, installed and enabled; the empty retired cache directory was removed | 2026-08-08T12:01:59Z |
+| RM-010 | n/a | Relative-path content digest over every installed file except the preserved ignored `.DS_Store`; SHA-256 of both plugin manifests | Source and installed tree digest both `0bd76fd77a2e17e6ba934dd8052e33a42d4d91e18e095edcd9cc8d29a7e9d04d`; manifest digest both `b7330fdd2e0e3ca00e442cf503720f5d0e77df9d6e20901cc81cb8cd83c09156` | 2026-08-08 |
+
+### Reconciliation limitations
+
+- The repository is not pushed, so the documented remote GitHub snapshot still
+  exposes the prior marketplace identity until these local changes are reviewed
+  and separately authorized for push.
+- The ignored `plugins/tuxedo/.DS_Store` remains preserved. Codex copies it from
+  the local package, so package-boundary tests require holding it outside the
+  package during execution. Removing that untracked file was not inferred from
+  the naming request.
+- Historical evidence and the original 2026-08-07 review retain the prior
+  selector because rewriting observed commands would falsify the record.
 
 ## Residual limitations
 

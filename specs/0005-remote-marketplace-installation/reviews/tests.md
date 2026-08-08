@@ -53,3 +53,37 @@ implementation as evidence that the test expectations were correct.
 - The SSH lifecycle is external evidence for one configured machine. It does
   not prove that another machine has valid GitHub SSH access or that Codex
   desktop exposes the same UI behavior.
+
+## 2026-08-08 marketplace identity reconciliation
+
+### Review boundary
+
+Reviewed the reconciled specifications, RM-010 matrix row, fail-first record,
+and test changes without using the changed manifest or documentation as
+evidence.
+
+### Spec
+
+- No findings. Static assertions require marketplace identifier `tuxedo`,
+  display name `Tuxedo`, exact `tuxedo@tuxedo` lifecycle commands, and absence
+  of the retired branding from current installation documentation.
+- The real clean-room lifecycle uses the installed Codex CLI and asserts the
+  reinstalled plugin ID, so a documentation-only rename cannot pass CP-004
+  through CP-006.
+
+### Standards
+
+- The two core identity tests failed before the manifest and documentation
+  changed for the expected reasons. Their oracles are spec-derived.
+- The explicit legacy-name absence checks were added after implementation
+  inspection and are implementation-aware supplemental coverage; the
+  fail-first manifest, selector, and lifecycle assertions remain the primary
+  oracles.
+
+### Risk
+
+- A plausible partial rename fails either the parsed manifest assertions,
+  exact command assertions, or real CLI lifecycle.
+- The ignored `.DS_Store` independently triggers the package allowlist as
+  designed; preserving it outside the package during the integration run does
+  not weaken the naming assertions.

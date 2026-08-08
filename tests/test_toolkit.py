@@ -292,8 +292,218 @@ class MarkdownLinkValidationTests(unittest.TestCase):
 
 
 class ToolkitStructureTests(unittest.TestCase):
-    def test_maintainer_dependency_security_resolution(self):
-        """DS-002/DS-003/DS-004/DS-007/DS-008: constrain the reviewed maintainer graph."""
+    def test_canonical_project_vocabulary_and_package_identity(self):
+        """TV-001..TV-006: identity, boundaries, authority, and history stay distinct."""
+        package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
+        self.assertEqual("tuxedo", package["name"])
+        self.assertEqual("Development-only evaluation tooling for Tuxedo", package["description"])
+        self.assertTrue(package["private"])
+        self.assertEqual("0.1.0", package["version"])
+        self.assertEqual("pnpm@11.13.1", package["packageManager"])
+
+        glossary = (ROOT / "GLOSSARY.md").read_text(encoding="utf-8")
+        for marker in (
+            "## Repository roles and boundaries",
+            "| Development-only |",
+            "| Repository-only |",
+            "| User-authorized |",
+            "| Maintainer |",
+            "does not implicitly grant task authority",
+        ):
+            self.assertIn(marker, glossary, marker)
+
+        active_surfaces = (
+            "AGENTS.md",
+            "GLOSSARY.md",
+            "README.md",
+            "package.json",
+            "docs/README.md",
+            "docs/development.md",
+            "docs/architecture/enforcement.md",
+            "docs/architecture/eval-isolation.md",
+            "docs/architecture/evaluations.md",
+            "docs/decisions/0001-use-promptfoo-as-evaluation-orchestrator.md",
+            "docs/decisions/0002-defer-lifecycle-hooks-pending-empirical-need.md",
+            "docs/evidence/declarative-workflow-trials.md",
+            "docs/evidence/eval-runs.md",
+            "docs/guides/using-the-eval-harness.md",
+            "docs/research/evidence-map.md",
+            "evals/promptfoo/promptfooconfig.yaml",
+            "evals/promptfoo/redteam-config.yaml",
+            "evals/promptfoo/smoke-config.yaml",
+            "evals/promptfoo/scripts/codex_auth.py",
+            "evals/promptfoo/scripts/run-evaluations.py",
+            "specs/0001-declarative-workflow/spec.md",
+            "specs/0002-repository-glossary/spec.md",
+            "specs/0002-repository-glossary/behavior-matrix.md",
+            "specs/0003-skill-catalog-contract/spec.md",
+            "specs/0004-clean-room-plugin-package/spec.md",
+            "specs/0005-remote-marketplace-installation/spec.md",
+            "specs/0005-remote-marketplace-installation/behavior-matrix.md",
+            "specs/0006-development-dependency-security/spec.md",
+            "specs/0006-development-dependency-security/behavior-matrix.md",
+        )
+        retired_compounds = (
+            "maintainer-only",
+            "maintainer development",
+            "maintainer checkout",
+            "maintainer evaluation",
+            "maintainer tooling",
+            "maintainer dependencies",
+            "maintainer package",
+            "maintainer graph",
+            "maintainer research",
+            "maintainer documentation",
+            "maintainer product",
+            "maintainer evidence",
+            "explicit maintainer authority",
+            "explicit maintainer action",
+            "maintainer provider",
+            "maintainer responsibility",
+            "maintainer runs",
+            "maintainer task",
+            "maintainer content",
+            "maintainer and evaluation paths",
+        )
+        for relative in active_surfaces:
+            text = (ROOT / relative).read_text(encoding="utf-8").lower()
+            for retired in retired_compounds:
+                self.assertNotIn(retired, text, f"{relative}: {retired}")
+
+        contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        evaluations = (ROOT / "docs" / "architecture" / "evaluations.md").read_text(
+            encoding="utf-8"
+        )
+        guide = (ROOT / "docs" / "guides" / "using-the-eval-harness.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("explicit user authority", " ".join(contract.split()))
+        self.assertIn("explicit user authority", " ".join(evaluations.split()))
+        self.assertIn("explicit user actions", " ".join(guide.split()))
+
+        manifest = json.loads((PLUGIN_ROOT / ".codex-plugin" / "plugin.json").read_text())
+        self.assertEqual("tuxedo", manifest["name"])
+        self.assertEqual({".codex-plugin", "skills"}, {path.name for path in PLUGIN_ROOT.iterdir()})
+
+    def test_release_version_and_release_please_contract(self):
+        """RV-001/RV-002: one root product version drives immutable releases."""
+        package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
+        plugin = json.loads(
+            (PLUGIN_ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8")
+        )
+        manifest = json.loads(
+            (ROOT / ".release-please-manifest.json").read_text(encoding="utf-8")
+        )
+        release_config = json.loads(
+            (ROOT / "release-please-config.json").read_text(encoding="utf-8")
+        )
+
+        self.assertTrue(package["private"])
+        self.assertEqual("tuxedo", package["name"])
+        self.assertEqual("0.1.0", package["version"])
+        self.assertEqual(package["version"], plugin["version"])
+        self.assertEqual({".": package["version"]}, manifest)
+
+        self.assertEqual({"."}, set(release_config["packages"]))
+        root_release = release_config["packages"]["."]
+        self.assertEqual("node", root_release["release-type"])
+        self.assertEqual("tuxedo", root_release["package-name"])
+        self.assertTrue(root_release["include-v-in-tag"])
+        self.assertFalse(root_release["include-component-in-tag"])
+        self.assertTrue(root_release["bump-minor-pre-major"])
+        self.assertEqual(
+            [
+                {
+                    "type": "json",
+                    "path": "plugins/tuxedo/.codex-plugin/plugin.json",
+                    "jsonpath": "$.version",
+                }
+            ],
+            root_release["extra-files"],
+        )
+
+    def test_release_documentation_contract(self):
+        """RV-003/RV-004/RV-008/RV-010: policy and immutable install are explicit."""
+        changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+        releases = (ROOT / "docs" / "releases.md").read_text(encoding="utf-8")
+        releases_normalized = " ".join(releases.split())
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+        self.assertIn("## 0.1.0 - 2026-08-08", changelog)
+        for marker in (
+            "one product version",
+            "private Node package is never published to npm",
+            "Release PR merge is the explicit publication decision",
+            "`fix` | `0.1.0` -> `0.1.1`",
+            "`feat` | `0.1.0` -> `0.2.0`",
+            "Breaking change before `1.0.0` | `0.1.0` -> `0.2.0`",
+            "Rollback",
+            "v0.1.0",
+        ):
+            self.assertIn(marker, releases_normalized, marker)
+
+        self.assertIn("--ref v0.1.0", readme)
+        self.assertIn("--ref v0.2.0", readme)
+        self.assertIn("mutable development channel", readme)
+        self.assertIn("`tuxedo@tuxedo` is `plugin@marketplace`", readme)
+        self.assertNotIn("no Git tags are published yet", readme)
+
+    def test_ci_and_release_workflow_contract(self):
+        """RV-005/RV-006: deterministic CI and release writes stay isolated."""
+        ci = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        release = (ROOT / ".github" / "workflows" / "release-please.yml").read_text(
+            encoding="utf-8"
+        )
+        validate = (ROOT / ".github" / "actions" / "validate" / "action.yml").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("pull_request:", ci)
+        self.assertIn("branches: [main]", ci)
+        self.assertIn("contents: read", ci)
+        self.assertIn("persist-credentials: false", ci)
+        self.assertNotIn("pull_request_target", ci)
+
+        for marker in (
+            "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78",
+            "e363b08c9175ac1cbe5893615dd2cb9ddf95043b",
+            "validate_plugin.py",
+            "quick_validate.py",
+            "plugins/tuxedo/skills/*/",
+            "uv run python -m unittest discover -s tests -v",
+            "uv run python evals/run.py --dry-run",
+            "bash -n",
+            "git diff --check",
+            "git status --porcelain",
+        ):
+            self.assertIn(marker, validate, marker)
+        for forbidden in ("eval:full", "promptfoo", "OPENAI_API_KEY", "CODEX_API_KEY"):
+            self.assertNotIn(forbidden, validate)
+
+        for marker in (
+            "permissions: {}",
+            "googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7",
+            "token: ${{ secrets.GITHUB_TOKEN }}",
+            "contents: write",
+            "issues: write",
+            "pull-requests: write",
+            "validate-release-pr:",
+            "contents: read",
+            "persist-credentials: false",
+            "report-release-pr-status:",
+            "statuses: write",
+            "context=Validate",
+        ):
+            self.assertIn(marker, release, marker)
+        self.assertNotIn("pull_request_target", release)
+        self.assertNotIn("RELEASE_PLEASE_TOKEN", release)
+        mutation_job = release.split("  validate-release-pr:", 1)[0]
+        self.assertNotIn("actions/checkout", mutation_job)
+        self.assertNotIn("uses: ./.github/actions/validate", mutation_job)
+
+    def test_development_dependency_security_resolution(self):
+        """DS-002/DS-003/DS-004/DS-007/DS-008: constrain the reviewed development graph."""
         package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
         self.assertEqual(
             {
@@ -422,7 +632,7 @@ class ToolkitStructureTests(unittest.TestCase):
 
             run_cli("plugin", "marketplace", "add", str(ROOT), "--json")
             installed = json.loads(
-                run_cli("plugin", "add", "tuxedo@tuxedo-local", "--json").stdout
+                run_cli("plugin", "add", "tuxedo@tuxedo", "--json").stdout
             )
             installed_path = Path(installed["installedPath"]).resolve()
             self.assertTrue(installed_path.is_relative_to(isolated_codex_home.resolve()))
@@ -516,13 +726,13 @@ class ToolkitStructureTests(unittest.TestCase):
                 )
             )
 
-            run_cli("plugin", "remove", "tuxedo@tuxedo-local", "--json")
+            run_cli("plugin", "remove", "tuxedo@tuxedo", "--json")
             listed = json.loads(run_cli("plugin", "list", "--json").stdout)
             self.assertEqual([], listed["installed"])
             reinstalled = json.loads(
-                run_cli("plugin", "add", "tuxedo@tuxedo-local", "--json").stdout
+                run_cli("plugin", "add", "tuxedo@tuxedo", "--json").stdout
             )
-            self.assertEqual("tuxedo@tuxedo-local", reinstalled["pluginId"])
+            self.assertEqual("tuxedo@tuxedo", reinstalled["pluginId"])
 
     def test_distributed_product_has_no_lifecycle_runtime(self):
         """DW-001/DW-005: no dormant hook or receipt runtime remains installed."""
@@ -929,7 +1139,7 @@ class ToolkitStructureTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         for marker in (
             "codex plugin marketplace add",
-            "codex plugin add tuxedo@tuxedo-local",
+            "codex plugin add tuxedo@tuxedo",
             "plugins/tuxedo/",
             "No package-build or copy script is required",
             "/plugins",
@@ -946,7 +1156,11 @@ class ToolkitStructureTests(unittest.TestCase):
         marketplace = json.loads(
             (ROOT / ".agents" / "plugins" / "marketplace.json").read_text(encoding="utf-8")
         )
-        self.assertEqual("tuxedo-local", marketplace["name"])
+        self.assertEqual("tuxedo", marketplace["name"])
+        self.assertEqual("Tuxedo", marketplace["interface"]["displayName"])
+        legacy_marketplace_name = "tuxedo" + "-local"
+        self.assertNotIn(legacy_marketplace_name, readme.lower())
+        self.assertNotIn(legacy_marketplace_name, json.dumps(marketplace).lower())
         self.assertEqual("tuxedo", marketplace["plugins"][0]["name"])
         self.assertEqual(
             {"source": "local", "path": "./plugins/tuxedo"},
@@ -955,26 +1169,26 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertTrue((PLUGIN_ROOT / ".codex-plugin" / "plugin.json").is_file())
 
     def test_readme_documents_remote_marketplace_installation_contract(self):
-        """RM-001..RM-009: remote install, lifecycle, access, and maintainer path are explicit."""
+        """RM-001..RM-010: remote install, identity, lifecycle, access, and development path are explicit."""
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         development = (ROOT / "docs" / "development.md").read_text(encoding="utf-8")
+        self.assertNotIn("tuxedo" + "-local", development.lower())
 
         self.assertIn(
-            "codex plugin marketplace add woliveiras/tuxedo --ref main\n"
-            "codex plugin add tuxedo@tuxedo-local",
+            "codex plugin marketplace add woliveiras/tuxedo --ref v0.1.0\n"
+            "codex plugin add tuxedo@tuxedo",
             readme,
         )
         self.assertIn("without keeping a local Tuxedo checkout", readme)
         for marker in (
-            "This repository is currently private",
-            "SSH is the verified remote clean-room route",
+            "This repository is public",
             "The `woliveiras/tuxedo` shorthand uses HTTPS",
-            "public access or separately configured GitHub HTTPS credentials",
+            "private fork",
         ):
             self.assertIn(marker, readme, marker)
         sparse_command = "\n".join(
             (
-                "codex plugin marketplace add woliveiras/tuxedo --ref main \\",
+                "codex plugin marketplace add woliveiras/tuxedo --ref v0.1.0 \\",
                 "  --sparse .agents/plugins/marketplace.json \\",
                 "  --sparse plugins/tuxedo",
             )
@@ -983,36 +1197,35 @@ class ToolkitStructureTests(unittest.TestCase):
         for marker in (
             "--sparse .agents/plugins/marketplace.json",
             "--sparse plugins/tuxedo",
-            "git@github.com:woliveiras/tuxedo.git",
-            "codex plugin marketplace upgrade tuxedo-local",
-            "codex plugin remove tuxedo@tuxedo-local",
-            "codex plugin marketplace remove tuxedo-local",
+            "git@github.com:OWNER/tuxedo.git",
+            "codex plugin remove tuxedo@tuxedo",
+            "codex plugin marketplace remove tuxedo",
             "Codex account authentication",
             "GitHub repository authentication",
-            "`main` is mutable",
-            "no Git tags are published yet",
+            "`v0.1.0` is immutable",
+            "mutable development channel",
             "Do not use `codex plugin add <URL>`",
             "No credential, token, private key, or credential-bearing URL",
         ):
             self.assertIn(marker, readme, marker)
 
         reinstall = (
-            "codex plugin remove tuxedo@tuxedo-local\n"
-            "codex plugin add tuxedo@tuxedo-local"
+            "codex plugin remove tuxedo@tuxedo\n"
+            "codex plugin add tuxedo@tuxedo"
         )
         self.assertIn(reinstall, readme)
         full_removal = (
-            "codex plugin remove tuxedo@tuxedo-local\n"
-            "codex plugin marketplace remove tuxedo-local"
+            "codex plugin remove tuxedo@tuxedo\n"
+            "codex plugin marketplace remove tuxedo"
         )
         self.assertIn(full_removal, readme)
         self.assertNotRegex(readme, r"codex plugin add\s+(?:https?|ssh|git@)")
         self.assertNotRegex(readme, r"https?://[^\s`]+:[^\s`]+@")
-        self.assertIn("maintainer development", readme.lower())
+        self.assertIn("clone locally for development", readme.lower())
         for marker in (
             "git clone https://github.com/woliveiras/tuxedo.git",
             'codex plugin marketplace add "$(pwd)"',
-            "codex plugin add tuxedo@tuxedo-local",
+            "codex plugin add tuxedo@tuxedo",
         ):
             self.assertIn(marker, development, marker)
 
@@ -1035,7 +1248,7 @@ class ToolkitStructureTests(unittest.TestCase):
         errors = markdown_link_errors(ROOT / "skills", PLUGIN_ROOT)
         self.assertEqual([], errors, "\n".join(errors))
 
-    def test_maintainer_content_is_not_referenced_as_installed_content(self):
+    def test_repository_content_is_not_referenced_as_installed_content(self):
         manifest = (PLUGIN_ROOT / ".codex-plugin" / "plugin.json").read_text()
         for name in ("docs/", "tests/", "evals/"):
             self.assertNotIn(name, manifest)

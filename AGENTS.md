@@ -56,7 +56,7 @@ When conditions disagree, use the higher tier. A familiar implementation does no
 - Keep each `SKILL.md` concise and imperative. Put optional detail one level down in `references/`.
 - Keep portable workflow logic client-neutral. Put Codex invocation policy in `agents/openai.yaml`.
 - Add deterministic tests for every mechanical invariant.
-- Keep `evals/` and maintainer research outside installed skill content. Do not run paid or extensive evals without explicit authority.
+- Keep `evals/` and repository-only research outside installed skill content. Do not run paid or extensive evals without explicit authority.
 - Commit coherent task-owned slices locally with Conventional Commits. Never infer push, release, or publication authority.
 
 ### Commit convention
@@ -81,7 +81,7 @@ When conditions disagree, use the higher tier. A familiar implementation does no
 - Allowed managed evaluation-home entries must be real directories/files rather than symlinks, so a personal target cannot hide behind an allowed name.
 - Neither `OPENAI_API_KEY` nor `CODEX_API_KEY` is a requirement or fallback for the dedicated evaluation flow. The preflight removes both from Codex child environments, accepts only the `Logged in using ChatGPT` status label, and requires that evidence before creating workspaces or making provider calls; API-key, agent-identity, ambiguous, or failed statuses are rejected.
 - Provider configurations omit a fixed `model`; the Codex CLI selects an account-supported model for the authenticated ChatGPT/Codex session, and reports label this as `codex-cli-default`. Do not pin a model without a fresh compatibility check for the selected authentication method.
-- Run `pnpm run eval:full` only with explicit maintainer authority because it invokes model calls and consumes quota. It runs the official validators, deterministic checks, config validation, then all routing, behavior, frozen security, and task-specific secondary rubric cases before proving Git status is unchanged. The current upper bound is 117 model calls: 92 target trials plus 25 semantic judges. Routing and behavior may use disjoint shards with at most two active processes; do not reduce coverage or reasoning to optimize elapsed time. It is an explicit empirical evaluation, not a pre-push hook or an automatic Git gate.
+- Run `pnpm run eval:full` only with explicit user authority because it invokes model calls and consumes quota. It runs the official validators, deterministic checks, config validation, then all routing, behavior, frozen security, and task-specific secondary rubric cases before proving Git status is unchanged. The current upper bound is 117 model calls: 92 target trials plus 25 semantic judges. Routing and behavior may use disjoint shards with at most two active processes; do not reduce coverage or reasoning to optimize elapsed time. It is an explicit empirical evaluation, not a pre-push hook or an automatic Git gate.
 - Treat `evals/promptfoo/generated/` as reviewable generated probes and `evals/promptfoo/results/` as append-only local reports. Persist a sanitized checkpoint for every completed shard, including Promptfoo exit 100 assertion failures; aggregate verdicts only after all authorized suite outcomes are available. Never persist raw model output, prompts, traces, or credentials. Do not make `eval:full` require either directory to be empty or delete prior evidence silently.
 - Give each Promptfoo provider or red-team process a disposable `PROMPTFOO_CONFIG_DIR`. Deep tracing requires Promptfoo to persist the parent evaluation row in that disposable database, so do not combine tracing with `--no-write`; remove the entire temporary state after extracting sanitized evidence.
 - Frozen security probes require a concrete adversarial fixture stimulus and a legitimate deterministic oracle. A refusal or “done” response without the requested edit is not a pass. The canary check covers exfiltration/copying; it does not establish silent reads without reliable trajectory evidence.
@@ -89,6 +89,6 @@ When conditions disagree, use the higher tier. A familiar implementation does no
 
 ## Required checks
 
-These required checks apply to the Tuxedo maintainer checkout. In a consumer project or synthetic evaluation workspace, run only checks already present and applicable; do not install dependencies or access paths outside the authorized workspace to manufacture evidence. Report unavailable checks honestly.
+These required checks apply to the Tuxedo development checkout. In a consumer project or synthetic evaluation workspace, run only checks already present and applicable; do not install dependencies or access paths outside the authorized workspace to manufacture evidence. Report unavailable checks honestly.
 
 Run the official plugin validator, the official skill validator for every skill, `uv run python -m unittest discover -s tests -v`, `uv run python evals/run.py --dry-run`, shell syntax checks, `git diff --check`, and `git status --short` before completion.

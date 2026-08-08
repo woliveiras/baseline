@@ -1,6 +1,6 @@
-# Maintainer evaluation architecture
+# Evaluation architecture
 
-Promptfoo is a maintainer-only orchestration layer. It is not installed with
+Promptfoo is a development-only orchestration layer. It is not installed with
 the plugin and is not a runtime dependency of any distributed skill. The
 official `openai:codex-sdk` provider supplies Codex execution; Tuxedo supplies
 the tasks, fixtures, workspace lifecycle, deterministic oracles, and authority
@@ -25,7 +25,7 @@ boundaries.
 | `EV-RPT-01` | Promptfoo exit 100 is an assertion verdict; preserve a failed local report before returning failure. | Mocked exit 100 plus a completed failing result produces a `fail` outcome and JSON report. | spec-derived |
 | `EV-RPT-02` | Provider errors, empty output, incomplete turns, missing result files, and exit codes other than 0/100 remain infrastructure failures. | Unit tests exercise malformed provider results; the runner accepts only 0 and 100 for `promptfoo eval`. | spec-derived |
 | `EV-AGG-01` | Assertion failures do not suppress later authorized suites; the full summary is durable before the command reports assertion failure or checkout drift. | Mocked full runs invoke routing, behavior, and security, write the summary, then raise the applicable summarized verdict. | independent |
-| `EV-ISO-01` | Promptfoo evaluation rows and traces use one disposable local state root, never the maintainer's personal Promptfoo state. | Command/environment capture proves `PROMPTFOO_CONFIG_DIR` is under the disposable run root and `--no-write` is absent. | implementation-aware |
+| `EV-ISO-01` | Promptfoo evaluation rows and traces use one disposable local state root, never the user's personal Promptfoo state. | Command/environment capture proves `PROMPTFOO_CONFIG_DIR` is under the disposable run root and `--no-write` is absent. | implementation-aware |
 | `EV-SHD-01` | Shards are disjoint, cover every routing/behavior case, run with concurrency at most two, and retain completed shard reports if a peer fails. | Range and checkpoint tests cover the fixed shard catalog and a peer infrastructure error. | spec-derived |
 | `EV-PRV-01` | Persist only sanitized verdict evidence, never model output, prompts, traces, credentials, or raw responses. | A synthetic secret in provider output is absent from the persisted report while the assertion reason remains. | independent |
 | `EV-SEC-01` | Normalize bridge-provided path lists before applying security change oracles. | Unit tests pass both native lists and JSON-serialized lists and require the declared allowed change to pass. | independent |
@@ -99,7 +99,7 @@ contents. A trace schema without inspectable events is recorded as
 
 ## Suites and authority
 
-The full empirical evaluation is an explicit maintainer action:
+The full empirical evaluation is an explicit user action:
 
 ```bash
 pnpm run eval:full
@@ -158,7 +158,7 @@ and behavior, and `eval:security` runs the frozen security probes. The ordinary
 deterministic checks remain the fast local feedback path; the provider suites
 are explicit empirical evidence and are not a pre-push gate.
 
-Every command above that reaches a model/provider requires explicit maintainer
+Every command above that reaches a model/provider requires explicit user
 authority, including smoke, skills, security, compare, and red-team execution.
 The narrower commands reduce scope and cost; they do not imply authority.
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Dedicated Codex CLI authentication boundary for maintainer evaluations.
+"""Dedicated Codex CLI authentication boundary for development evaluations.
 
 This module deliberately treats authentication as an operational property of
 the Codex CLI. It never reads, copies, prints, or validates the contents of

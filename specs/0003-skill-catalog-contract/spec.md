@@ -29,7 +29,7 @@ dependencies: []
 
 # Intent
 
-Make the 17-skill catalog predictable without merging useful workflows or adding a runtime state machine. A maintainer and an agent must be able to identify which skill owns each artifact, when skills compose, which workflow takes precedence, where each skill stops, and what happens when no skill fits.
+Make the 17-skill catalog predictable without merging useful workflows or adding a runtime state machine. A developer and an agent must be able to identify which skill owns each artifact, when skills compose, which workflow takes precedence, where each skill stops, and what happens when no skill fits.
 
 Provide reusable documentation knowledge instead of command-only reminders, and make Codex installation and automatic skill selection reproducible and honest.
 
