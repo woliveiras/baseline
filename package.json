@@ -1,9 +1,9 @@
 {
-  "name": "tuxedo-maintainer-evals",
+  "name": "tuxedo",
   "version": "0.0.0",
   "private": true,
   "packageManager": "pnpm@11.13.1",
-  "description": "Maintainer-only evaluation tooling for Tuxedo",
+  "description": "Development-only evaluation tooling for Tuxedo",
   "engines": {
     "node": ">=22.22.0"
   },

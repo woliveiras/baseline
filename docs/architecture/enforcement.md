@@ -11,7 +11,7 @@ checkouts, or claim mechanical enforcement of workflow chronology, scope,
 review quality, or staged ownership. The decision and reintroduction criteria
 are recorded in [ADR 0002](../decisions/0002-defer-lifecycle-hooks-pending-empirical-need.md).
 
-The maintainer-only Promptfoo evaluation boundary is documented separately in
+The development-only Promptfoo evaluation boundary is documented separately in
 [the evaluation architecture](evaluations.md) and [ADR 0001](../decisions/0001-use-promptfoo-as-evaluation-orchestrator.md).
 
 ## Declarative workflow

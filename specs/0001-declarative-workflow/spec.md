@@ -44,7 +44,7 @@ Tuxedo must first validate its strict declarative workflow in real engineering t
 - **DW-003** Given work that is not part of the authorized task, when the agent discovers it, then the agent leaves it unchanged and requests authority before beginning it.
 - **DW-004** Given the absence of lifecycle hooks, when Tuxedo describes its guarantees, then it identifies AGENTS and skills as declarative guidance, Rules as optional command authority, and tests/CI as product evidence without claiming mechanical workflow enforcement.
 - **DW-005** Given a future proposal for a hook, when it is evaluated, then it is deferred until real-task observations show a recurring mechanically detectable failure and the proposed gate does not introduce a runtime dependency or mutate the consumer checkout.
-- **DW-006** Given the empirical experiment, when maintainers assess 10–20 real tasks, then they record occurrences of implementation-before-oracle, unauthorized scope expansion, implementation-aware weak tests, missing review, unrelated staged content, and unauthorized additional work before deciding whether any hook is needed.
+- **DW-006** Given the empirical experiment, when users assess 10–20 real repository tasks, then they record occurrences of implementation-before-oracle, unauthorized scope expansion, implementation-aware weak tests, missing review, unrelated staged content, and unauthorized additional work before deciding whether any hook is needed.
 
 # Explicit exclusions
 

@@ -43,7 +43,7 @@ decisions say why something was chosen, and evidence records what was measured.
 - [Using the evaluation harness](guides/using-the-eval-harness.md):
   prerequisites, authentication, suites, reading results, and cleanup.
 - [Evaluation run evidence](evidence/eval-runs.md): dated results and open items
-  from maintainer runs.
+  from recorded evaluation runs.
 - [Declarative workflow trial log](evidence/declarative-workflow-trials.md):
   real-task observations used to decide whether any lifecycle gate is needed.
 
@@ -52,7 +52,7 @@ decisions say why something was chosen, and evidence records what was measured.
 - [Engineering evidence map](research/evidence-map.md): empirical results,
   heuristics, product decisions, and their limits.
 
-## Maintainer-internal notes
+## Repository-internal notes
 
 - [Skill-creator limitations](internal/skill-creator-limitations.md): a
   maintenance observation log, not product documentation.

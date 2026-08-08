@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Maintainer-only Promptfoo orchestration and explicit evaluation suites."""
+"""Development-only Promptfoo orchestration and explicit evaluation suites."""
 
 from __future__ import annotations
 
@@ -213,7 +213,7 @@ def _official_validators() -> None:
 
 def _promptfoo_validate() -> None:
     if not PROMPTFOO.is_file():
-        raise RuntimeError("Promptfoo is not installed; run pnpm install --frozen-lockfile in the maintainer checkout")
+        raise RuntimeError("Promptfoo is not installed; run pnpm install --frozen-lockfile in the development checkout")
     for config in CONFIGS:
         _run([PNPM, "exec", "promptfoo", "validate", "config", "-c", str(config)], timeout=120, label=f"Promptfoo config validation: {config.name}")
 

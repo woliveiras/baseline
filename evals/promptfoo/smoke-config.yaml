@@ -1,4 +1,4 @@
-description: Tuxedo maintainer evaluation wiring smoke test
+description: Tuxedo development evaluation wiring smoke test
 prompts:
   - file://prompts.py:create_prompt
 tests:

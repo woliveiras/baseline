@@ -7,7 +7,7 @@ test changes. The authoritative rules are in the
 ## The product is the repository
 
 Tuxedo is not a program with a build step. The repository contains the complete
-product contract and maintainer evidence; its directly installable plugin
+product contract and repository evidence; its directly installable plugin
 package is committed under `plugins/tuxedo/`. There is intentionally no CLI,
 daemon, package manager, sync layer, telemetry, client generator, generated
 distribution directory, or runtime dependency, and none should be added.
@@ -16,21 +16,21 @@ distribution directory, or runtime dependency, and none should be added.
 
 - `plugins/tuxedo/` is the complete installed plugin package. It contains the
   manifest and the 17 distributed workflow skills, and nothing from the
-  maintainer-only toolchain.
+  development-only toolchain.
 - `skills/` is a repository compatibility symlink to
-  `plugins/tuxedo/skills/`. It keeps existing maintainer and evaluation paths
+  `plugins/tuxedo/skills/`. It keeps existing repository and evaluation paths
   stable without creating a second skill tree or a package-generation step.
 - Each distributed skill is a `SKILL.md` with optional `references/`, `assets/`,
   and `agents/` beside it.
 - `templates/` holds opt-in Codex Rules and spec/evidence templates.
-- `specs/` holds maintainer product contracts, oracle matrices, evidence, and
+- `specs/` holds product contracts, oracle matrices, evidence, and
   reconstructed review records.
-- `docs/` holds this maintainer documentation.
-- `evals/` holds the maintainer-only evaluation harness (the deterministic
+- `docs/` holds project documentation.
+- `evals/` holds the development-only evaluation harness (the deterministic
   runner plus the Promptfoo orchestration). It is not installed with the plugin.
 - `tests/` holds the deterministic tests for the mechanical invariants.
 
-`docs/`, `specs/`, `tests/`, and `evals/` are maintainer-only and are not part
+`docs/`, `specs/`, `tests/`, and `evals/` are repository-only and are not part
 of the installed plugin surface.
 
 ## Toolchain
@@ -41,7 +41,7 @@ of the installed plugin surface.
   package commands with `pnpm run` or `pnpm exec`. Do not use npm or maintain a
   `package-lock.json`.
 
-These are maintainer toolchain conventions. Installed Tuxedo skills do not run
+These are development toolchain conventions. Installed Tuxedo skills do not run
 UV, Python, PNPM, or Node.js in consumer projects.
 
 ## How to develop
@@ -56,14 +56,14 @@ UV, Python, PNPM, or Node.js in consumer projects.
 - Classify work by the highest applicable proportionality tier (see the
   contract), never by line count.
 
-## Maintainer development installation
+## Local development installation
 
 The supported consumer installation is documented in the [top-level README](../README.md):
 Codex can fetch `woliveiras/tuxedo` as a GitHub marketplace and install
 `tuxedo@tuxedo` without a Tuxedo checkout on the consumer machine. The
 remote ref is `main`, which is mutable; no Git tags are published yet.
 
-For maintainers developing the repository itself, keep the local marketplace
+For people developing the repository itself, keep the local marketplace
 flow so changes can be inspected directly from the checkout:
 
 ```bash
@@ -87,7 +87,7 @@ uv run python -m unittest discover -s tests -v
 uv run python evals/run.py --dry-run
 ```
 
-`evals/run.py` never calls a model unless a maintainer passes `--execute`. The
+`evals/run.py` never calls a model unless a user explicitly passes `--execute`. The
 legacy runner compares baseline, minimal core, focal skill, broad configuration,
 and distinct current-versus-proposed roots with seeded ordering and hidden
 deterministic oracles. Architectural and intent-sensitive tasks stay
@@ -99,8 +99,8 @@ Before completing a material change, run the checks listed in the
 official skill validator for every skill, the unit tests, the eval dry-run,
 shell syntax checks, `git diff --check`, and `git status --short`.
 
-The empirical provider evaluations (Promptfoo plus Codex) are maintainer-only
-and explicit. They are described in
+The empirical provider evaluations (Promptfoo plus Codex) are development-only
+and require explicit user authority. They are described in
 [the harness guide](guides/using-the-eval-harness.md) and
 [the evaluation architecture](architecture/evaluations.md), and are never
 implied by installation or a Git push.

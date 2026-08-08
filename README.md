@@ -119,9 +119,9 @@ codex plugin marketplace remove tuxedo
 
 `main` is mutable, and no Git tags are published yet. Until an immutable ref is actually published, review the source changes brought by a marketplace upgrade. The supported remote route is marketplace-first. Do not use `codex plugin add <URL>`; `codex plugin add` receives the `plugin@marketplace` selector after the marketplace has been configured.
 
-### Option B: clone locally for maintainer development
+### Option B: clone locally for development
 
-This repository includes a local marketplace entry that points to the dedicated package at `plugins/tuxedo/`. That package contains only the plugin manifest and the distributed skills; maintainer tests, evaluations, specifications, documentation, and `node_modules/` are outside it. No package-build or copy script is required. Preserve this flow for developing Tuxedo itself:
+This repository includes a local marketplace entry that points to the dedicated package at `plugins/tuxedo/`. That package contains only the plugin manifest and the distributed skills; repository-only tests, evaluations, specifications, documentation, and `node_modules/` are outside it. No package-build or copy script is required. Preserve this flow for developing Tuxedo itself:
 
 ```bash
 git clone https://github.com/woliveiras/tuxedo.git
@@ -130,7 +130,7 @@ codex plugin marketplace add "$(pwd)"
 codex plugin add tuxedo@tuxedo
 ```
 
-This local-clone route is for maintainers working on the checkout. It is not required for the remote installation above.
+This local-clone route is for people working on the checkout. It is not required for the remote installation above.
 
 ### Option C: install standalone skills
 
@@ -167,13 +167,13 @@ Tuxedo separates command authority from workflow guidance:
 - **`AGENTS.md` and skills** define the strict spec-first, oracle-first, scoped, reviewed workflow.
 - **Tests and CI** provide executable evidence for product behavior.
 
-Tuxedo does not install lifecycle hooks or require external dependencies in consumer projects. The workflow requirements are declarative rather than mechanically enforced. The maintainer is validating them across real tasks before deciding whether any narrow gate is necessary. See [the workflow boundary](docs/architecture/enforcement.md) for responsibilities and the observation protocol.
+Tuxedo does not install lifecycle hooks or require external dependencies in consumer projects. The workflow requirements are declarative rather than mechanically enforced. They are being validated across real repository tasks before any narrow gate is considered. See [the workflow boundary](docs/architecture/enforcement.md) for responsibilities and the observation protocol.
 
 ## Documentation
 
 - **Use it:** this page, plus each skill's own `SKILL.md`.
 - **Learn the vocabulary:** the [repository glossary](GLOSSARY.md) defines oracle, evidence, provenance, fail-first, and the three review phases.
-- **Work on it:** the [documentation hub](docs/README.md) links the development guide, architecture, decisions (ADRs), research evidence, and the maintainer evaluation harness.
+- **Work on it:** the [documentation hub](docs/README.md) links the development guide, architecture, decisions (ADRs), research evidence, and the development-only evaluation harness.
 
 ## History: from Geremmyas to Tuxedo
 

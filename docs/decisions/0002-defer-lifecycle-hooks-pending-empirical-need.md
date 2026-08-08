@@ -11,7 +11,7 @@ decision-makers:
 
 Tuxedo initially shipped Codex `PreToolUse` and `Stop` hooks that invoked a Python guard through UV. Projects could opt into policy, completion receipt, tree-hash, evidence-hash, and review-receipt validation.
 
-The mechanism introduced UV and Python into the consumer execution path and could let UV discover or synchronize the consumer project. It also attempted to enforce a workflow that had not yet been exercised by the maintainer across ordinary real tasks. The existing evaluations measure skill routing and configured behavior; they do not establish the incremental value of lifecycle hooks.
+The mechanism introduced UV and Python into the consumer execution path and could let UV discover or synchronize the consumer project. It also attempted to enforce a workflow that had not yet been exercised across ordinary real repository tasks. The existing evaluations measure skill routing and configured behavior; they do not establish the incremental value of lifecycle hooks.
 
 Tuxedo needs to validate whether strict declarative guidance is sufficient before accepting a runtime dependency and a second policy system.
 
@@ -69,7 +69,7 @@ Retain Codex Rules as an optional command-authority template. Retain determinist
 
 ## Empirical checkpoint
 
-Observe 10–20 real maintainer tasks and record, without adding hidden enforcement:
+Observe 10–20 real repository tasks and record, without adding hidden enforcement:
 
 - production implementation started before a suitable oracle;
 - unauthorized files or behavior changed;

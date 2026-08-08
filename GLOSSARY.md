@@ -11,6 +11,19 @@ This glossary defines specialized terms used by Tuxedo's engineering contract an
 | Evidence | The record of what actually happened |
 | Provenance | The origin and implementation exposure of each oracle |
 
+## Repository roles and boundaries
+
+| Term | Operational meaning |
+| --- | --- |
+| Development-only | Tooling or dependencies used to develop or evaluate Tuxedo that are never consumer runtime requirements. |
+| Repository-only | Specs, tests, docs, evals, evidence, or other project artifacts retained in the checkout but excluded from the installed plugin. |
+| User-authorized | An operation that may run only after explicit permission from the user controlling the current task. |
+| Maintainer | A person responsible for ongoing project stewardship. The role does not implicitly grant task authority and is not a package identity or distribution boundary. |
+
+Use the term owned by the relevant context. A development-only tool can still
+require user authorization, and repository-only content can be useful to any
+contributor working on Tuxedo.
+
 ## Identifier and evidence prefixes
 
 Tuxedo prefixes stable identifiers with the artifact family that owns them.
@@ -25,7 +38,7 @@ globally unique across every fixture and subsystem in the repository.
 | `GL` | Glossary | Acceptance criteria owned by `SPEC-0002`, the repository glossary contract. |
 | `DW` | Declarative Workflow | Acceptance criteria owned by `SPEC-0001`, the declarative workflow decision. |
 | `DWF` | Declarative Workflow Failure | Observable failure categories used by the real-task workflow experiment. |
-| `DWT` | Declarative Workflow Trial | Individual real maintainer tasks observed during that experiment. |
+| `DWT` | Declarative Workflow Trial | Individual real repository tasks observed during that experiment. |
 | `SC` | Skill Catalog | Acceptance criteria owned by `SPEC-0003`, the skill catalog and composition contract. |
 | `CP` | Clean-room Plugin package | Acceptance criteria owned by `SPEC-0004`, covering package boundaries, installation, discovery, and lifecycle. |
 | `RM` | Remote Marketplace | Acceptance criteria owned by `SPEC-0005`, covering remote marketplace installation and Git transport. |

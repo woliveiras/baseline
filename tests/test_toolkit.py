@@ -292,8 +292,101 @@ class MarkdownLinkValidationTests(unittest.TestCase):
 
 
 class ToolkitStructureTests(unittest.TestCase):
-    def test_maintainer_dependency_security_resolution(self):
-        """DS-002/DS-003/DS-004/DS-007/DS-008: constrain the reviewed maintainer graph."""
+    def test_canonical_project_vocabulary_and_package_identity(self):
+        """TV-001..TV-006: identity, boundaries, authority, and history stay distinct."""
+        package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
+        self.assertEqual("tuxedo", package["name"])
+        self.assertEqual("Development-only evaluation tooling for Tuxedo", package["description"])
+        self.assertTrue(package["private"])
+        self.assertEqual("0.0.0", package["version"])
+        self.assertEqual("pnpm@11.13.1", package["packageManager"])
+
+        glossary = (ROOT / "GLOSSARY.md").read_text(encoding="utf-8")
+        for marker in (
+            "## Repository roles and boundaries",
+            "| Development-only |",
+            "| Repository-only |",
+            "| User-authorized |",
+            "| Maintainer |",
+            "does not implicitly grant task authority",
+        ):
+            self.assertIn(marker, glossary, marker)
+
+        active_surfaces = (
+            "AGENTS.md",
+            "GLOSSARY.md",
+            "README.md",
+            "package.json",
+            "docs/README.md",
+            "docs/development.md",
+            "docs/architecture/enforcement.md",
+            "docs/architecture/eval-isolation.md",
+            "docs/architecture/evaluations.md",
+            "docs/decisions/0001-use-promptfoo-as-evaluation-orchestrator.md",
+            "docs/decisions/0002-defer-lifecycle-hooks-pending-empirical-need.md",
+            "docs/evidence/declarative-workflow-trials.md",
+            "docs/evidence/eval-runs.md",
+            "docs/guides/using-the-eval-harness.md",
+            "docs/research/evidence-map.md",
+            "evals/promptfoo/promptfooconfig.yaml",
+            "evals/promptfoo/redteam-config.yaml",
+            "evals/promptfoo/smoke-config.yaml",
+            "evals/promptfoo/scripts/codex_auth.py",
+            "evals/promptfoo/scripts/run-evaluations.py",
+            "specs/0001-declarative-workflow/spec.md",
+            "specs/0002-repository-glossary/spec.md",
+            "specs/0002-repository-glossary/behavior-matrix.md",
+            "specs/0003-skill-catalog-contract/spec.md",
+            "specs/0004-clean-room-plugin-package/spec.md",
+            "specs/0005-remote-marketplace-installation/spec.md",
+            "specs/0005-remote-marketplace-installation/behavior-matrix.md",
+            "specs/0006-development-dependency-security/spec.md",
+            "specs/0006-development-dependency-security/behavior-matrix.md",
+        )
+        retired_compounds = (
+            "maintainer-only",
+            "maintainer development",
+            "maintainer checkout",
+            "maintainer evaluation",
+            "maintainer tooling",
+            "maintainer dependencies",
+            "maintainer package",
+            "maintainer graph",
+            "maintainer research",
+            "maintainer documentation",
+            "maintainer product",
+            "maintainer evidence",
+            "explicit maintainer authority",
+            "explicit maintainer action",
+            "maintainer provider",
+            "maintainer responsibility",
+            "maintainer runs",
+            "maintainer task",
+            "maintainer content",
+            "maintainer and evaluation paths",
+        )
+        for relative in active_surfaces:
+            text = (ROOT / relative).read_text(encoding="utf-8").lower()
+            for retired in retired_compounds:
+                self.assertNotIn(retired, text, f"{relative}: {retired}")
+
+        contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        evaluations = (ROOT / "docs" / "architecture" / "evaluations.md").read_text(
+            encoding="utf-8"
+        )
+        guide = (ROOT / "docs" / "guides" / "using-the-eval-harness.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("explicit user authority", " ".join(contract.split()))
+        self.assertIn("explicit user authority", " ".join(evaluations.split()))
+        self.assertIn("explicit user actions", " ".join(guide.split()))
+
+        manifest = json.loads((PLUGIN_ROOT / ".codex-plugin" / "plugin.json").read_text())
+        self.assertEqual("tuxedo", manifest["name"])
+        self.assertEqual({".codex-plugin", "skills"}, {path.name for path in PLUGIN_ROOT.iterdir()})
+
+    def test_development_dependency_security_resolution(self):
+        """DS-002/DS-003/DS-004/DS-007/DS-008: constrain the reviewed development graph."""
         package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
         self.assertEqual(
             {
@@ -959,7 +1052,7 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertTrue((PLUGIN_ROOT / ".codex-plugin" / "plugin.json").is_file())
 
     def test_readme_documents_remote_marketplace_installation_contract(self):
-        """RM-001..RM-010: remote install, identity, lifecycle, access, and maintainer path are explicit."""
+        """RM-001..RM-010: remote install, identity, lifecycle, access, and development path are explicit."""
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         development = (ROOT / "docs" / "development.md").read_text(encoding="utf-8")
         self.assertNotIn("tuxedo" + "-local", development.lower())
@@ -1013,7 +1106,7 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertIn(full_removal, readme)
         self.assertNotRegex(readme, r"codex plugin add\s+(?:https?|ssh|git@)")
         self.assertNotRegex(readme, r"https?://[^\s`]+:[^\s`]+@")
-        self.assertIn("maintainer development", readme.lower())
+        self.assertIn("clone locally for development", readme.lower())
         for marker in (
             "git clone https://github.com/woliveiras/tuxedo.git",
             'codex plugin marketplace add "$(pwd)"',
@@ -1040,7 +1133,7 @@ class ToolkitStructureTests(unittest.TestCase):
         errors = markdown_link_errors(ROOT / "skills", PLUGIN_ROOT)
         self.assertEqual([], errors, "\n".join(errors))
 
-    def test_maintainer_content_is_not_referenced_as_installed_content(self):
+    def test_repository_content_is_not_referenced_as_installed_content(self):
         manifest = (PLUGIN_ROOT / ".codex-plugin" / "plugin.json").read_text()
         for name in ("docs/", "tests/", "evals/"):
             self.assertNotIn(name, manifest)

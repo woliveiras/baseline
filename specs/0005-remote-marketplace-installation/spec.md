@@ -1,7 +1,7 @@
 ---
 id: SPEC-0005
 title: Install Tuxedo from the GitHub marketplace without a local checkout
-summary: Document and mechanically validate the supported remote marketplace lifecycle while preserving the maintainer clone flow.
+summary: Document and mechanically validate the supported remote marketplace lifecycle while preserving the local development flow.
 status: approved
 scope:
   - GitHub repository marketplace installation
@@ -36,7 +36,7 @@ Make the supported remote installation of Tuxedo explicit for a machine that
 does not keep a local Tuxedo checkout. The GitHub repository is added as a
 Codex marketplace snapshot, and the package named by that marketplace is then
 installed with the normal plugin selector. Keep the local marketplace flow as
-the maintainer's development path.
+the local development path.
 
 # Behavior and invariants
 
@@ -61,7 +61,7 @@ the maintainer's development path.
 - **RM-004** README documents marketplace upgrade, plugin reinstallation, plugin removal, and marketplace removal in an executable order.
 - **RM-005** README separates Codex account authentication from GitHub Git authentication and forbids credentials in URLs and repository content.
 - **RM-006** README states that `main` is mutable, that Git tags are not published yet, and that direct `codex plugin add <URL>` is not the supported route.
-- **RM-007** README and the development guide preserve the local clone flow as maintainer development workflow rather than presenting it as the remote installation requirement.
+- **RM-007** README and the development guide preserve the local clone flow as a development workflow rather than presenting it as the remote installation requirement.
 - **RM-008** Deterministic tests assert the exact commands, both sparse paths, lifecycle order, credential limitations, mutable-ref limitation, and absence of the unsupported direct-URL claim without installing the plugin, using the network, or calling a model.
 - **RM-009** README states that the repository is currently private, identifies SSH as the verified clean-room route, and explains that the HTTPS shorthand requires public access or separately configured GitHub HTTPS credentials.
 - **RM-010** The committed marketplace identifier is `tuxedo`, its display name is `Tuxedo`, and maintained installation commands select `tuxedo@tuxedo` without branding the product by transport or checkout location.
@@ -88,7 +88,7 @@ the maintainer's development path.
 
 - Marketplace and plugin identifiers intentionally share the project name `tuxedo`; Codex distinguishes their positions in the `plugin@marketplace` selector.
 - The exact remote command is governed by the user request and cross-checked against the installed Codex CLI help; no remote install is authorized for this task.
-- The maintainer authorized removal of the previously configured local marketplace and local plugin installation under the canonical `tuxedo` identity.
+- The user authorized removal of the previously configured local marketplace and local plugin installation under the canonical `tuxedo` identity.
 
 # Evidence and review
 

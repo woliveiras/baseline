@@ -1,6 +1,6 @@
 # Evaluation isolation and authentication
 
-Reference for how the maintainer evaluation harness isolates Codex state,
+Reference for how the development evaluation harness isolates Codex state,
 authentication, and Promptfoo state. Step-by-step usage is in
 [the harness guide](../guides/using-the-eval-harness.md); the rationale is in
 [ADR 0001](../decisions/0001-use-promptfoo-as-evaluation-orchestrator.md).
@@ -75,7 +75,7 @@ output or trace payloads. Personal Promptfoo state is neither read nor written.
 The official plugin and skill validators are discovered from the local Codex
 installation or environment configuration. If they require PyYAML, provide an
 isolated interpreter through `TUXEDO_VALIDATOR_PYTHON`, created with UV. PyYAML
-is deliberately not a Tuxedo runtime or maintainer dependency.
+is deliberately not a Tuxedo runtime or development dependency.
 
 ## Network and result paths
 
