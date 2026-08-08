@@ -39,5 +39,20 @@ Result: 3 tests ran and all 3 errored for the expected missing release surfaces:
 
 The final local suite repeated 95/95 unit tests, the 48-case evaluation dry-run,
 YAML parsing, `actionlint`, shell syntax, and `git diff --check` successfully.
-Pending protected pull-request CI, protected `main` merge, tag/GitHub Release
-inspection, and tag-pinned clean-room Codex installation.
+Pending the final-candidate repeat of protected pull-request CI, protected
+`main` merge, tag/GitHub Release inspection, and tag-pinned clean-room Codex
+installation.
+
+## Protected pull-request evidence
+
+- Draft PR [#1](https://github.com/woliveiras/tuxedo/pull/1) ran `Validate` on
+  candidate `cf90cd8`; GitHub Actions run `31266278812`, job `93124824801`,
+  passed in 26 seconds.
+- The GitHub Actions repository policy keeps default workflow permissions at
+  `read` and now permits Actions to create Release Please pull requests.
+- The `main` branch-protection API reports strict required context `Validate`
+  from GitHub Actions app `15368`, pull-request enforcement with zero mandatory
+  approvals, administrator enforcement, linear history, required conversation
+  resolution, and disabled force pushes/deletion.
+- This evidence commit intentionally changes the candidate SHA, so `Validate`
+  must pass again before merge.

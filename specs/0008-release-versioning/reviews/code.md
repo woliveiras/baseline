@@ -43,11 +43,13 @@ that it is outside the candidate and is not included below.
   checkout, least-privilege scopes, protected `main`, and human Release PR merge
   reduce but do not eliminate it.
 - The `Validate` status bridge is intentionally narrow but still depends on
-  GitHub's required-status semantics. Branch protection and a real PR run must
-  be inspected before merge.
+  GitHub's required-status semantics. PR #1 passed the real Actions check, and
+  the branch-protection API resolved required context `Validate` to GitHub
+  Actions app `15368`; the final candidate must repeat that result before merge.
 - The first post-bootstrap `feat` remains the empirical proof that Release
   Please proposes `0.2.0`; the official schema and configuration establish the
   current deterministic contract but not a future GitHub service outcome.
 
-No blocking local code or security finding remains. Remote publication remains
-blocked until protected CI and GitHub state satisfy RV-007 through RV-009.
+No blocking local code or security finding remains. RV-007 is satisfied; remote
+publication remains blocked until the final protected candidate, initial
+release, and tag-pinned installation satisfy RV-005, RV-008, and RV-009.
