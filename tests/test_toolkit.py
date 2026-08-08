@@ -298,7 +298,7 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertEqual("tuxedo", package["name"])
         self.assertEqual("Development-only evaluation tooling for Tuxedo", package["description"])
         self.assertTrue(package["private"])
-        self.assertEqual("0.0.0", package["version"])
+        self.assertEqual("0.1.0", package["version"])
         self.assertEqual("pnpm@11.13.1", package["packageManager"])
 
         glossary = (ROOT / "GLOSSARY.md").read_text(encoding="utf-8")
@@ -384,6 +384,123 @@ class ToolkitStructureTests(unittest.TestCase):
         manifest = json.loads((PLUGIN_ROOT / ".codex-plugin" / "plugin.json").read_text())
         self.assertEqual("tuxedo", manifest["name"])
         self.assertEqual({".codex-plugin", "skills"}, {path.name for path in PLUGIN_ROOT.iterdir()})
+
+    def test_release_version_and_release_please_contract(self):
+        """RV-001/RV-002: one root product version drives immutable releases."""
+        package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
+        plugin = json.loads(
+            (PLUGIN_ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8")
+        )
+        manifest = json.loads(
+            (ROOT / ".release-please-manifest.json").read_text(encoding="utf-8")
+        )
+        release_config = json.loads(
+            (ROOT / "release-please-config.json").read_text(encoding="utf-8")
+        )
+
+        self.assertTrue(package["private"])
+        self.assertEqual("tuxedo", package["name"])
+        self.assertEqual("0.1.0", package["version"])
+        self.assertEqual(package["version"], plugin["version"])
+        self.assertEqual({".": package["version"]}, manifest)
+
+        self.assertEqual({"."}, set(release_config["packages"]))
+        root_release = release_config["packages"]["."]
+        self.assertEqual("node", root_release["release-type"])
+        self.assertEqual("tuxedo", root_release["package-name"])
+        self.assertTrue(root_release["include-v-in-tag"])
+        self.assertFalse(root_release["include-component-in-tag"])
+        self.assertTrue(root_release["bump-minor-pre-major"])
+        self.assertEqual(
+            [
+                {
+                    "type": "json",
+                    "path": "plugins/tuxedo/.codex-plugin/plugin.json",
+                    "jsonpath": "$.version",
+                }
+            ],
+            root_release["extra-files"],
+        )
+
+    def test_release_documentation_contract(self):
+        """RV-003/RV-004/RV-008/RV-010: policy and immutable install are explicit."""
+        changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+        releases = (ROOT / "docs" / "releases.md").read_text(encoding="utf-8")
+        releases_normalized = " ".join(releases.split())
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+        self.assertIn("## 0.1.0 - 2026-08-08", changelog)
+        for marker in (
+            "one product version",
+            "private Node package is never published to npm",
+            "Release PR merge is the explicit publication decision",
+            "`fix` | `0.1.0` -> `0.1.1`",
+            "`feat` | `0.1.0` -> `0.2.0`",
+            "Breaking change before `1.0.0` | `0.1.0` -> `0.2.0`",
+            "Rollback",
+            "v0.1.0",
+        ):
+            self.assertIn(marker, releases_normalized, marker)
+
+        self.assertIn("--ref v0.1.0", readme)
+        self.assertIn("--ref v0.2.0", readme)
+        self.assertIn("mutable development channel", readme)
+        self.assertIn("`tuxedo@tuxedo` is `plugin@marketplace`", readme)
+        self.assertNotIn("no Git tags are published yet", readme)
+
+    def test_ci_and_release_workflow_contract(self):
+        """RV-005/RV-006: deterministic CI and release writes stay isolated."""
+        ci = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        release = (ROOT / ".github" / "workflows" / "release-please.yml").read_text(
+            encoding="utf-8"
+        )
+        validate = (ROOT / ".github" / "actions" / "validate" / "action.yml").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("pull_request:", ci)
+        self.assertIn("branches: [main]", ci)
+        self.assertIn("contents: read", ci)
+        self.assertIn("persist-credentials: false", ci)
+        self.assertNotIn("pull_request_target", ci)
+
+        for marker in (
+            "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78",
+            "e363b08c9175ac1cbe5893615dd2cb9ddf95043b",
+            "validate_plugin.py",
+            "quick_validate.py",
+            "plugins/tuxedo/skills/*/",
+            "uv run python -m unittest discover -s tests -v",
+            "uv run python evals/run.py --dry-run",
+            "bash -n",
+            "git diff --check",
+            "git status --porcelain",
+        ):
+            self.assertIn(marker, validate, marker)
+        for forbidden in ("eval:full", "promptfoo", "OPENAI_API_KEY", "CODEX_API_KEY"):
+            self.assertNotIn(forbidden, validate)
+
+        for marker in (
+            "permissions: {}",
+            "googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7",
+            "token: ${{ secrets.GITHUB_TOKEN }}",
+            "contents: write",
+            "issues: write",
+            "pull-requests: write",
+            "validate-release-pr:",
+            "contents: read",
+            "persist-credentials: false",
+            "report-release-pr-status:",
+            "statuses: write",
+            "context=Validate",
+        ):
+            self.assertIn(marker, release, marker)
+        self.assertNotIn("pull_request_target", release)
+        self.assertNotIn("RELEASE_PLEASE_TOKEN", release)
+        mutation_job = release.split("  validate-release-pr:", 1)[0]
+        self.assertNotIn("actions/checkout", mutation_job)
+        self.assertNotIn("uses: ./.github/actions/validate", mutation_job)
 
     def test_development_dependency_security_resolution(self):
         """DS-002/DS-003/DS-004/DS-007/DS-008: constrain the reviewed development graph."""
@@ -1058,21 +1175,20 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertNotIn("tuxedo" + "-local", development.lower())
 
         self.assertIn(
-            "codex plugin marketplace add woliveiras/tuxedo --ref main\n"
+            "codex plugin marketplace add woliveiras/tuxedo --ref v0.1.0\n"
             "codex plugin add tuxedo@tuxedo",
             readme,
         )
         self.assertIn("without keeping a local Tuxedo checkout", readme)
         for marker in (
-            "This repository is currently private",
-            "SSH is the verified remote clean-room route",
+            "This repository is public",
             "The `woliveiras/tuxedo` shorthand uses HTTPS",
-            "public access or separately configured GitHub HTTPS credentials",
+            "private fork",
         ):
             self.assertIn(marker, readme, marker)
         sparse_command = "\n".join(
             (
-                "codex plugin marketplace add woliveiras/tuxedo --ref main \\",
+                "codex plugin marketplace add woliveiras/tuxedo --ref v0.1.0 \\",
                 "  --sparse .agents/plugins/marketplace.json \\",
                 "  --sparse plugins/tuxedo",
             )
@@ -1081,14 +1197,13 @@ class ToolkitStructureTests(unittest.TestCase):
         for marker in (
             "--sparse .agents/plugins/marketplace.json",
             "--sparse plugins/tuxedo",
-            "git@github.com:woliveiras/tuxedo.git",
-            "codex plugin marketplace upgrade tuxedo",
+            "git@github.com:OWNER/tuxedo.git",
             "codex plugin remove tuxedo@tuxedo",
             "codex plugin marketplace remove tuxedo",
             "Codex account authentication",
             "GitHub repository authentication",
-            "`main` is mutable",
-            "no Git tags are published yet",
+            "`v0.1.0` is immutable",
+            "mutable development channel",
             "Do not use `codex plugin add <URL>`",
             "No credential, token, private key, or credential-bearing URL",
         ):

@@ -61,7 +61,9 @@ UV, Python, PNPM, or Node.js in consumer projects.
 The supported consumer installation is documented in the [top-level README](../README.md):
 Codex can fetch `woliveiras/tuxedo` as a GitHub marketplace and install
 `tuxedo@tuxedo` without a Tuxedo checkout on the consumer machine. The
-remote ref is `main`, which is mutable; no Git tags are published yet.
+stable remote ref is the latest published `vX.Y.Z` tag. The initial release is
+`v0.1.0`; `main` is a mutable development channel rather than a reproducible
+consumer installation.
 
 For people developing the repository itself, keep the local marketplace
 flow so changes can be inspected directly from the checkout:
@@ -98,6 +100,10 @@ Before completing a material change, run the checks listed in the
 [engineering contract](../AGENTS.md): the official plugin validator, the
 official skill validator for every skill, the unit tests, the eval dry-run,
 shell syntax checks, `git diff --check`, and `git status --short`.
+
+Version increments, protected CI, Release Please, and the explicit publication
+boundary are documented in the [release guide](releases.md). The root Node
+package remains private and is never published to npm.
 
 The empirical provider evaluations (Promptfoo plus Codex) are development-only
 and require explicit user authority. They are described in

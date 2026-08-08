@@ -20,6 +20,8 @@ decisions say why something was chosen, and evidence records what was measured.
   precedence, stop conditions, and fallback for all 17 installed workflows.
 - [Development guide](development.md) covers the repository layout, the
   toolchain, how to develop a change, and how to test it.
+- [Release guide](releases.md) defines the shared version, protected Release
+  Please flow, publication boundary, verification, and rollback policy.
 
 ## How things work (architecture)
 

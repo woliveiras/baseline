@@ -40,37 +40,30 @@ Cloning the repository does not install Tuxedo. Choose either the plugin route f
 
 For another machine, install Tuxedo without keeping a local Tuxedo checkout. Codex fetches the GitHub marketplace snapshot, reads its committed `.agents/plugins/marketplace.json`, and then installs the package at `plugins/tuxedo/`.
 
-This repository is currently private. SSH is the verified remote clean-room route for its current access policy. Configure the machine's GitHub SSH access, then run:
+This repository is public. Install the stable release from its immutable tag:
 
 ```bash
-codex plugin marketplace add git@github.com:woliveiras/tuxedo.git --ref main
+codex plugin marketplace add woliveiras/tuxedo --ref v0.1.0
 codex plugin add tuxedo@tuxedo
 ```
 
-The `woliveiras/tuxedo` shorthand uses HTTPS. Use it when the repository has public access or separately configured GitHub HTTPS credentials:
-
-```bash
-codex plugin marketplace add woliveiras/tuxedo --ref main
-codex plugin add tuxedo@tuxedo
-```
-
-The marketplace and plugin are both named `tuxedo`; their shared identity is independent of whether Codex obtained the marketplace from GitHub or a local checkout. Start a new Codex session after installation. You can also open `/plugins` in Codex CLI, select the **Tuxedo** marketplace, and install **Tuxedo**. In Codex desktop, restart the app, open **Plugins**, choose **Tuxedo**, install **Tuxedo**, and start a new task. The installed plugin exposes all distributed skills; you do not have to name the plugin in normal prompts.
+The `woliveiras/tuxedo` shorthand uses HTTPS. The marketplace and plugin are both named `tuxedo`; `tuxedo@tuxedo` is `plugin@marketplace`, not `name@version`. The installed manifest reports version `0.1.0` separately. Start a new Codex session after installation. You can also open `/plugins` in Codex CLI, select the **Tuxedo** marketplace, and install **Tuxedo**. In Codex desktop, restart the app, open **Plugins**, choose **Tuxedo**, install **Tuxedo**, and start a new task. The installed plugin exposes all distributed skills; you do not have to name the plugin in normal prompts.
 
 #### Optional sparse checkout
 
 To fetch only the two paths needed to resolve and install the plugin, repeat `--sparse` for the marketplace manifest and the package. This HTTPS form has the same access requirement described above:
 
 ```bash
-codex plugin marketplace add woliveiras/tuxedo --ref main \
+codex plugin marketplace add woliveiras/tuxedo --ref v0.1.0 \
   --sparse .agents/plugins/marketplace.json \
   --sparse plugins/tuxedo
 codex plugin add tuxedo@tuxedo
 ```
 
-For the currently verified SSH route, use the same sparse paths with the SSH source:
+For a private fork, use the same sparse paths with an SSH source after configuring GitHub access on the machine:
 
 ```bash
-codex plugin marketplace add git@github.com:woliveiras/tuxedo.git --ref main \
+codex plugin marketplace add git@github.com:OWNER/tuxedo.git --ref v0.1.0 \
   --sparse .agents/plugins/marketplace.json \
   --sparse plugins/tuxedo
 codex plugin add tuxedo@tuxedo
@@ -78,12 +71,12 @@ codex plugin add tuxedo@tuxedo
 
 Do not omit either sparse path: the manifest selects the plugin and `plugins/tuxedo/` contains the manifest and distributed skills.
 
-#### Private repositories and credentials
+#### Private forks and credentials
 
-For this private repository or another private fork, use an SSH Git URL after configuring the machine's GitHub SSH access:
+For a private fork, use an SSH Git URL after configuring the machine's GitHub SSH access:
 
 ```bash
-codex plugin marketplace add git@github.com:woliveiras/tuxedo.git --ref main
+codex plugin marketplace add git@github.com:OWNER/tuxedo.git --ref v0.1.0
 codex plugin add tuxedo@tuxedo
 ```
 
@@ -91,15 +84,16 @@ Codex account authentication and GitHub repository authentication are separate. 
 
 #### Update
 
-Refresh the configured Git marketplace, then refresh the installed plugin cache:
+Tags are immutable, so upgrading replaces the configured marketplace ref and then reinstalls the plugin. For example, after `v0.2.0` exists:
 
 ```bash
-codex plugin marketplace upgrade tuxedo
 codex plugin remove tuxedo@tuxedo
+codex plugin marketplace remove tuxedo
+codex plugin marketplace add woliveiras/tuxedo --ref v0.2.0
 codex plugin add tuxedo@tuxedo
 ```
 
-Start a new session afterward. The same remove/install cycle is available through `/plugins` or the desktop Plugins screen. Updating `main` follows that mutable ref; it does not provide immutable or reproducible source selection.
+Start a new session afterward. The same lifecycle is available through `/plugins` or the desktop Plugins screen. `v0.1.0` is immutable; a later version always uses a new tag.
 
 #### Reinstall and Remove
 
@@ -117,7 +111,7 @@ codex plugin remove tuxedo@tuxedo
 codex plugin marketplace remove tuxedo
 ```
 
-`main` is mutable, and no Git tags are published yet. Until an immutable ref is actually published, review the source changes brought by a marketplace upgrade. The supported remote route is marketplace-first. Do not use `codex plugin add <URL>`; `codex plugin add` receives the `plugin@marketplace` selector after the marketplace has been configured.
+The supported remote route is marketplace-first. Do not use `codex plugin add <URL>`; `codex plugin add` receives the `plugin@marketplace` selector after the marketplace has been configured. For unreleased testing only, `--ref main` remains a mutable development channel; review its source before use and do not treat it as a reproducible release.
 
 ### Option B: clone locally for development
 
@@ -174,6 +168,7 @@ Tuxedo does not install lifecycle hooks or require external dependencies in cons
 - **Use it:** this page, plus each skill's own `SKILL.md`.
 - **Learn the vocabulary:** the [repository glossary](GLOSSARY.md) defines oracle, evidence, provenance, fail-first, and the three review phases.
 - **Work on it:** the [documentation hub](docs/README.md) links the development guide, architecture, decisions (ADRs), research evidence, and the development-only evaluation harness.
+- **Release it:** the [release guide](docs/releases.md) defines the single product version, protected automation, verification, and rollback.
 
 ## History: from Geremmyas to Tuxedo
 
