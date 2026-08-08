@@ -49,6 +49,7 @@ Bootstrap the already-declared plugin version as `v0.1.0`, then let Release Plea
 - Tuxedo has one SemVer shared by root `package.json`, the plugin manifest, the Release Please manifest, the changelog heading, the Git tag, and the GitHub Release.
 - The root Node package remains `private: true`; release automation never publishes npm, plugin registries, deployments, or generated consumer runtime artifacts.
 - Release Please manages one root package named `tuxedo`, updates the plugin manifest as an extra JSON file, and creates `vX.Y.Z` tags without a component prefix.
+- Before the first tag exists, `bootstrap-sha` excludes pre-bootstrap history. Release Please also updates the stable version markers in README.
 - Before `1.0.0`, `fix` increments patch, `feat` increments minor, and a breaking Conventional Commit increments minor. Documentation, tests, CI, refactors, and chores do not request a release unless their commit deliberately carries a user-visible `fix` or `feat` contract.
 - The first `v0.1.0` tag and GitHub Release are created explicitly after the bootstrap change reaches protected `main` with green CI. Release Please owns `v0.1.1`, `v0.2.0`, and later releases.
 - Stable Codex installation pins an existing release tag. `main` remains available only as an explicitly mutable development channel.
@@ -58,11 +59,12 @@ Bootstrap the already-declared plugin version as `v0.1.0`, then let Release Plea
 - Because GitHub suppresses workflow events created by the built-in `GITHUB_TOKEN`, a separate read-only job validates the exact Release Please PR head. A final no-checkout job publishes only the required `Validate` commit status for that already-validated SHA.
 - Protected `main` requires a pull request and the `Validate` status, applies to administrators, requires linear history and resolved conversations, and forbids force pushes and deletion.
 - Release automation, CI helpers, specifications, tests, evaluations, and documentation stay outside `plugins/tuxedo/`; installed Tuxedo remains content-only.
+- Version oracles compare the synchronized current version dynamically. Historical `0.1.0` documentation remains fixed evidence, but tests must accept a valid Release PR bump.
 
 # Acceptance criteria
 
-- **RV-001** Root package, plugin manifest, and Release Please manifest all declare `0.1.0` before bootstrap publication, and a deterministic test rejects version drift.
-- **RV-002** Release Please config owns exactly the root package, uses the Node strategy, creates `vX.Y.Z` tags without a component prefix, applies pre-1.0 minor rules, and updates `plugins/tuxedo/.codex-plugin/plugin.json` at `$.version`.
+- **RV-001** Root package, plugin manifest, and Release Please manifest all declare `0.1.0` before bootstrap publication, then remain dynamically equal after every valid bump; a deterministic test rejects version drift without freezing one version.
+- **RV-002** Release Please config owns exactly the root package, bounds initial history at the protected bootstrap merge, uses the Node strategy, creates `vX.Y.Z` tags without a component prefix, applies pre-1.0 minor rules, and updates the plugin manifest plus README version markers.
 - **RV-003** `CHANGELOG.md` contains the initial `0.1.0` product entry, and durable release documentation defines SemVer/Conventional Commit rules, the human release boundary, rollback, and the no-npm boundary.
 - **RV-004** README documents a stable public install pinned to `v0.1.0`, a complete immutable upgrade to a later tag, and a separately labeled mutable `main` development channel.
 - **RV-005** CI runs the official plugin validator, every official skill validator, unit tests, evaluation dry-run, shell syntax checks, and Git cleanliness checks without model calls or write permissions.
@@ -84,6 +86,7 @@ Bootstrap the already-declared plugin version as `v0.1.0`, then let Release Plea
 # Edge and failure scenarios
 
 - If any synchronized version differs, CI fails before release automation can publish a tag.
+- If pre-bootstrap history is not bounded, Release Please may misclassify historical `feat` commits as an immediate new minor release; bootstrap stops and corrects the range rather than merging that PR.
 - If Release Please creates or updates a PR but its exact head fails validation, the explicit `Validate` status is failure and protected `main` blocks merge.
 - If the release mutation job gains a checkout or executes repository code, the security oracle fails because write-token isolation has been lost.
 - If a `vX.Y.Z` tag or GitHub Release already exists at a different commit, bootstrap stops rather than moving or replacing it.

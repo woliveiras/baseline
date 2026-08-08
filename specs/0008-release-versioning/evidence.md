@@ -56,3 +56,45 @@ installation.
   resolution, and disabled force pushes/deletion.
 - This evidence commit intentionally changes the candidate SHA, so `Validate`
   must pass again before merge.
+
+## Release automation regression
+
+The protected bootstrap merged as `4370b1ebecb31f58619e8f877fccbea9769c92a7`.
+Main CI run `31266579295` passed, but the first Release Please run
+`31266579282` exposed two independent defects before publication:
+
+1. With no prior tag or `bootstrap-sha`, Release Please included historical
+   `feat` commits and opened PR [#2](https://github.com/woliveiras/tuxedo/pull/2)
+   for `0.2.0` instead of waiting for the `v0.1.0` bootstrap.
+2. The exact generated candidate updated synchronized versions to `0.2.0`, but
+   three tests froze current versions at `0.1.0`. The read-only validation job
+   failed and the no-checkout status job reported `Validate: failure` on head
+   `e2a9e8380aadbadeb28176270ec525bf829a1dfc`, so protection blocked merge.
+
+Ranked hypotheses and outcomes:
+
+- unbounded pre-bootstrap commit history caused the premature minor proposal:
+  confirmed by Release Please's documented bootstrap behavior and PR #2;
+- hardcoded current-version assertions rejected legitimate release candidates:
+  confirmed by the three exact CI assertion failures;
+- the generated-PR status bridge failed to protect `main`: disproved because it
+  attached the failure to the resolved head and branch protection blocked PR #2.
+
+PR #2 was closed without merge. The regression fix adds the protected bootstrap
+merge as top-level `bootstrap-sha`, makes current-version oracles dynamic, adds
+generic README version updates, moves checkout/setup-node to pinned v5 commits,
+and disables the unused UV cache that generated a warning.
+
+The corrected release-focused regression suite passed 3/3. The reconciled
+identity, manifest inventory, and remote-install documentation tests each
+passed. `actionlint` 1.7.7, YAML parsing, `git diff --check`, and the official
+Release Please 17.6.0 JSON Schema also passed. A clean task-owned PR must repeat
+the full suite because concurrent SPEC-0009 work is intentionally preserved in
+the local worktree and excluded from this correction.
+
+PR #3's first clean run (`31267039734`) then exposed a setup-node v5 default:
+automatic package-manager caching tried to resolve `pnpm` before the later
+Corepack installation step and failed with `Unable to locate executable file:
+pnpm`. A fail-first workflow-contract oracle reproduced the missing setting.
+The composite action now disables setup-node's unused package-manager cache
+explicitly; dependency installation remains the following pinned Corepack step.
