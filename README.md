@@ -44,17 +44,17 @@ This repository is currently private. SSH is the verified remote clean-room rout
 
 ```bash
 codex plugin marketplace add git@github.com:woliveiras/tuxedo.git --ref main
-codex plugin add tuxedo@tuxedo-local
+codex plugin add tuxedo@tuxedo
 ```
 
 The `woliveiras/tuxedo` shorthand uses HTTPS. Use it when the repository has public access or separately configured GitHub HTTPS credentials:
 
 ```bash
 codex plugin marketplace add woliveiras/tuxedo --ref main
-codex plugin add tuxedo@tuxedo-local
+codex plugin add tuxedo@tuxedo
 ```
 
-The `tuxedo-local` name is the committed marketplace name; it does not mean that the consumer must have a local clone. Start a new Codex session after installation. You can also open `/plugins` in Codex CLI, select the `tuxedo-local` marketplace, and install `tuxedo`. In Codex desktop, restart the app, open **Plugins**, choose **Tuxedo local**, install **Tuxedo**, and start a new task. The installed plugin exposes all distributed skills; you do not have to name the plugin in normal prompts.
+The marketplace and plugin are both named `tuxedo`; their shared identity is independent of whether Codex obtained the marketplace from GitHub or a local checkout. Start a new Codex session after installation. You can also open `/plugins` in Codex CLI, select the **Tuxedo** marketplace, and install **Tuxedo**. In Codex desktop, restart the app, open **Plugins**, choose **Tuxedo**, install **Tuxedo**, and start a new task. The installed plugin exposes all distributed skills; you do not have to name the plugin in normal prompts.
 
 #### Optional sparse checkout
 
@@ -64,7 +64,7 @@ To fetch only the two paths needed to resolve and install the plugin, repeat `--
 codex plugin marketplace add woliveiras/tuxedo --ref main \
   --sparse .agents/plugins/marketplace.json \
   --sparse plugins/tuxedo
-codex plugin add tuxedo@tuxedo-local
+codex plugin add tuxedo@tuxedo
 ```
 
 For the currently verified SSH route, use the same sparse paths with the SSH source:
@@ -73,7 +73,7 @@ For the currently verified SSH route, use the same sparse paths with the SSH sou
 codex plugin marketplace add git@github.com:woliveiras/tuxedo.git --ref main \
   --sparse .agents/plugins/marketplace.json \
   --sparse plugins/tuxedo
-codex plugin add tuxedo@tuxedo-local
+codex plugin add tuxedo@tuxedo
 ```
 
 Do not omit either sparse path: the manifest selects the plugin and `plugins/tuxedo/` contains the manifest and distributed skills.
@@ -84,7 +84,7 @@ For this private repository or another private fork, use an SSH Git URL after co
 
 ```bash
 codex plugin marketplace add git@github.com:woliveiras/tuxedo.git --ref main
-codex plugin add tuxedo@tuxedo-local
+codex plugin add tuxedo@tuxedo
 ```
 
 Codex account authentication and GitHub repository authentication are separate. The former is used by Codex itself; the latter is used by Git to fetch a private marketplace. A public repository does not require a GitHub credential for this fetch. No credential, token, private key, or credential-bearing URL belongs in commands committed to documentation or in the repository. Configure SSH keys, an agent, or an approved Git credential helper on the machine instead.
@@ -94,9 +94,9 @@ Codex account authentication and GitHub repository authentication are separate. 
 Refresh the configured Git marketplace, then refresh the installed plugin cache:
 
 ```bash
-codex plugin marketplace upgrade tuxedo-local
-codex plugin remove tuxedo@tuxedo-local
-codex plugin add tuxedo@tuxedo-local
+codex plugin marketplace upgrade tuxedo
+codex plugin remove tuxedo@tuxedo
+codex plugin add tuxedo@tuxedo
 ```
 
 Start a new session afterward. The same remove/install cycle is available through `/plugins` or the desktop Plugins screen. Updating `main` follows that mutable ref; it does not provide immutable or reproducible source selection.
@@ -106,15 +106,15 @@ Start a new session afterward. The same remove/install cycle is available throug
 To reinstall only Tuxedo:
 
 ```bash
-codex plugin remove tuxedo@tuxedo-local
-codex plugin add tuxedo@tuxedo-local
+codex plugin remove tuxedo@tuxedo
+codex plugin add tuxedo@tuxedo
 ```
 
 To remove Tuxedo completely, uninstall the plugin before removing its marketplace:
 
 ```bash
-codex plugin remove tuxedo@tuxedo-local
-codex plugin marketplace remove tuxedo-local
+codex plugin remove tuxedo@tuxedo
+codex plugin marketplace remove tuxedo
 ```
 
 `main` is mutable, and no Git tags are published yet. Until an immutable ref is actually published, review the source changes brought by a marketplace upgrade. The supported remote route is marketplace-first. Do not use `codex plugin add <URL>`; `codex plugin add` receives the `plugin@marketplace` selector after the marketplace has been configured.
@@ -127,7 +127,7 @@ This repository includes a local marketplace entry that points to the dedicated 
 git clone https://github.com/woliveiras/tuxedo.git
 cd tuxedo
 codex plugin marketplace add "$(pwd)"
-codex plugin add tuxedo@tuxedo-local
+codex plugin add tuxedo@tuxedo
 ```
 
 This local-clone route is for maintainers working on the checkout. It is not required for the remote installation above.

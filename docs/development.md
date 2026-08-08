@@ -60,7 +60,7 @@ UV, Python, PNPM, or Node.js in consumer projects.
 
 The supported consumer installation is documented in the [top-level README](../README.md):
 Codex can fetch `woliveiras/tuxedo` as a GitHub marketplace and install
-`tuxedo@tuxedo-local` without a Tuxedo checkout on the consumer machine. The
+`tuxedo@tuxedo` without a Tuxedo checkout on the consumer machine. The
 remote ref is `main`, which is mutable; no Git tags are published yet.
 
 For maintainers developing the repository itself, keep the local marketplace
@@ -70,7 +70,7 @@ flow so changes can be inspected directly from the checkout:
 git clone https://github.com/woliveiras/tuxedo.git
 cd tuxedo
 codex plugin marketplace add "$(pwd)"
-codex plugin add tuxedo@tuxedo-local
+codex plugin add tuxedo@tuxedo
 ```
 
 This local clone is a development convenience, not a prerequisite for users.

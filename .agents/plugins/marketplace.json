@@ -1,7 +1,7 @@
 {
-  "name": "tuxedo-local",
+  "name": "tuxedo",
   "interface": {
-    "displayName": "Tuxedo local"
+    "displayName": "Tuxedo"
   },
   "plugins": [
     {

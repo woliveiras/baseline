@@ -48,7 +48,7 @@ Install the complete Tuxedo plugin from a trusted checkout without copying maint
 - **CP-001** The marketplace source is exactly `./plugins/tuxedo`, and that directory is the manifest-bearing package named `tuxedo`.
 - **CP-002** The package top level contains only `.codex-plugin/` and `skills/`; it contains no symlink escaping the package and no maintainer-only or runtime dependency path.
 - **CP-003** The root `skills/` path resolves to `plugins/tuxedo/skills`, so existing maintainer tooling uses the same canonical files while public standalone instructions name the canonical path directly.
-- **CP-004** In empty temporary `HOME` and `CODEX_HOME` directories, `codex plugin marketplace add` and `codex plugin add tuxedo@tuxedo-local` succeed without authentication or API keys.
+- **CP-004** In empty temporary `HOME` and `CODEX_HOME` directories, `codex plugin marketplace add` and `codex plugin add tuxedo@tuxedo` succeed without authentication or API keys.
 - **CP-005** Codex App Server `skills/list` reports exactly the 17 `tuxedo:*` skills from the installed cache, enabled with no discovery errors.
 - **CP-006** `codex plugin remove` removes the installation and a subsequent `codex plugin add` reinstalls it successfully in the same clean room.
 - **CP-007** README and maintainer documentation explain the package boundary, direct CLI installation, standalone installation, updates, removal, and the absence of a package-build step.

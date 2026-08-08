@@ -53,3 +53,34 @@ SPEC-0005 without using the new tests or documentation as justification.
 
 - SSH depends on machine-managed GitHub access. No key, token, credential URL,
   or Codex authentication state was copied into the isolated home.
+
+## 2026-08-08 marketplace identity reconciliation
+
+### Review boundary
+
+Reviewed the maintainer's naming requirement, complete SPEC-0004 and
+SPEC-0005, the product vocabulary, and the installed Codex CLI selector
+contract without using tests, documentation, or the changed manifest as
+justification.
+
+### Spec
+
+- No findings. Marketplace and plugin occupy distinct positions in the
+  `plugin@marketplace` selector, so both can use the canonical `tuxedo`
+  identifier without ambiguity.
+- RM-010 makes product identity independent of Git transport and checkout
+  location while preserving the existing package source and lifecycle order.
+
+### Standards
+
+- The reconciliation changes no package boundary, consumer dependency,
+  runtime, authentication mechanism, or distributed skill behavior.
+- Local plugin installation is explicitly authorized; push, publication,
+  release, remote mutation, and model calls remain withheld.
+
+### Risk
+
+- The change remains medium because installation commands are a public
+  compatibility contract. Rollback is the inverse local remove/add lifecycle.
+- Historical evidence must retain the prior observed selector; it is not
+  current guidance and does not weaken RM-010.

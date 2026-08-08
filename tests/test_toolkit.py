@@ -422,7 +422,7 @@ class ToolkitStructureTests(unittest.TestCase):
 
             run_cli("plugin", "marketplace", "add", str(ROOT), "--json")
             installed = json.loads(
-                run_cli("plugin", "add", "tuxedo@tuxedo-local", "--json").stdout
+                run_cli("plugin", "add", "tuxedo@tuxedo", "--json").stdout
             )
             installed_path = Path(installed["installedPath"]).resolve()
             self.assertTrue(installed_path.is_relative_to(isolated_codex_home.resolve()))
@@ -516,13 +516,13 @@ class ToolkitStructureTests(unittest.TestCase):
                 )
             )
 
-            run_cli("plugin", "remove", "tuxedo@tuxedo-local", "--json")
+            run_cli("plugin", "remove", "tuxedo@tuxedo", "--json")
             listed = json.loads(run_cli("plugin", "list", "--json").stdout)
             self.assertEqual([], listed["installed"])
             reinstalled = json.loads(
-                run_cli("plugin", "add", "tuxedo@tuxedo-local", "--json").stdout
+                run_cli("plugin", "add", "tuxedo@tuxedo", "--json").stdout
             )
-            self.assertEqual("tuxedo@tuxedo-local", reinstalled["pluginId"])
+            self.assertEqual("tuxedo@tuxedo", reinstalled["pluginId"])
 
     def test_distributed_product_has_no_lifecycle_runtime(self):
         """DW-001/DW-005: no dormant hook or receipt runtime remains installed."""
@@ -929,7 +929,7 @@ class ToolkitStructureTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         for marker in (
             "codex plugin marketplace add",
-            "codex plugin add tuxedo@tuxedo-local",
+            "codex plugin add tuxedo@tuxedo",
             "plugins/tuxedo/",
             "No package-build or copy script is required",
             "/plugins",
@@ -946,7 +946,11 @@ class ToolkitStructureTests(unittest.TestCase):
         marketplace = json.loads(
             (ROOT / ".agents" / "plugins" / "marketplace.json").read_text(encoding="utf-8")
         )
-        self.assertEqual("tuxedo-local", marketplace["name"])
+        self.assertEqual("tuxedo", marketplace["name"])
+        self.assertEqual("Tuxedo", marketplace["interface"]["displayName"])
+        legacy_marketplace_name = "tuxedo" + "-local"
+        self.assertNotIn(legacy_marketplace_name, readme.lower())
+        self.assertNotIn(legacy_marketplace_name, json.dumps(marketplace).lower())
         self.assertEqual("tuxedo", marketplace["plugins"][0]["name"])
         self.assertEqual(
             {"source": "local", "path": "./plugins/tuxedo"},
@@ -955,13 +959,14 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertTrue((PLUGIN_ROOT / ".codex-plugin" / "plugin.json").is_file())
 
     def test_readme_documents_remote_marketplace_installation_contract(self):
-        """RM-001..RM-009: remote install, lifecycle, access, and maintainer path are explicit."""
+        """RM-001..RM-010: remote install, identity, lifecycle, access, and maintainer path are explicit."""
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         development = (ROOT / "docs" / "development.md").read_text(encoding="utf-8")
+        self.assertNotIn("tuxedo" + "-local", development.lower())
 
         self.assertIn(
             "codex plugin marketplace add woliveiras/tuxedo --ref main\n"
-            "codex plugin add tuxedo@tuxedo-local",
+            "codex plugin add tuxedo@tuxedo",
             readme,
         )
         self.assertIn("without keeping a local Tuxedo checkout", readme)
@@ -984,9 +989,9 @@ class ToolkitStructureTests(unittest.TestCase):
             "--sparse .agents/plugins/marketplace.json",
             "--sparse plugins/tuxedo",
             "git@github.com:woliveiras/tuxedo.git",
-            "codex plugin marketplace upgrade tuxedo-local",
-            "codex plugin remove tuxedo@tuxedo-local",
-            "codex plugin marketplace remove tuxedo-local",
+            "codex plugin marketplace upgrade tuxedo",
+            "codex plugin remove tuxedo@tuxedo",
+            "codex plugin marketplace remove tuxedo",
             "Codex account authentication",
             "GitHub repository authentication",
             "`main` is mutable",
@@ -997,13 +1002,13 @@ class ToolkitStructureTests(unittest.TestCase):
             self.assertIn(marker, readme, marker)
 
         reinstall = (
-            "codex plugin remove tuxedo@tuxedo-local\n"
-            "codex plugin add tuxedo@tuxedo-local"
+            "codex plugin remove tuxedo@tuxedo\n"
+            "codex plugin add tuxedo@tuxedo"
         )
         self.assertIn(reinstall, readme)
         full_removal = (
-            "codex plugin remove tuxedo@tuxedo-local\n"
-            "codex plugin marketplace remove tuxedo-local"
+            "codex plugin remove tuxedo@tuxedo\n"
+            "codex plugin marketplace remove tuxedo"
         )
         self.assertIn(full_removal, readme)
         self.assertNotRegex(readme, r"codex plugin add\s+(?:https?|ssh|git@)")
@@ -1012,7 +1017,7 @@ class ToolkitStructureTests(unittest.TestCase):
         for marker in (
             "git clone https://github.com/woliveiras/tuxedo.git",
             'codex plugin marketplace add "$(pwd)"',
-            "codex plugin add tuxedo@tuxedo-local",
+            "codex plugin add tuxedo@tuxedo",
         ):
             self.assertIn(marker, development, marker)
 
