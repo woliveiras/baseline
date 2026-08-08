@@ -489,6 +489,7 @@ class ToolkitStructureTests(unittest.TestCase):
 
         for marker in (
             "actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444",
+            "package-manager-cache: false",
             "astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78",
             "enable-cache: false",
             "e363b08c9175ac1cbe5893615dd2cb9ddf95043b",

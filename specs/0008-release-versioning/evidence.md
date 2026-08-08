@@ -91,3 +91,10 @@ passed. `actionlint` 1.7.7, YAML parsing, `git diff --check`, and the official
 Release Please 17.6.0 JSON Schema also passed. A clean task-owned PR must repeat
 the full suite because concurrent SPEC-0009 work is intentionally preserved in
 the local worktree and excluded from this correction.
+
+PR #3's first clean run (`31267039734`) then exposed a setup-node v5 default:
+automatic package-manager caching tried to resolve `pnpm` before the later
+Corepack installation step and failed with `Unable to locate executable file:
+pnpm`. A fail-first workflow-contract oracle reproduced the missing setting.
+The composite action now disables setup-node's unused package-manager cache
+explicitly; dependency installation remains the following pinned Corepack step.
