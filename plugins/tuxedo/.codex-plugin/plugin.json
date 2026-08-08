@@ -1,6 +1,6 @@
 {
   "name": "tuxedo",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Spec-driven software engineering skills for traceable delivery workflows",
   "author": {
     "name": "William Oliveira",
@@ -9,7 +9,11 @@
   "homepage": "https://github.com/woliveiras/tuxedo",
   "repository": "https://github.com/woliveiras/tuxedo",
   "license": "MIT",
-  "keywords": ["agent-skills", "spec-driven-development", "software-engineering"],
+  "keywords": [
+    "agent-skills",
+    "spec-driven-development",
+    "software-engineering"
+  ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Tuxedo",
@@ -17,7 +21,10 @@
     "longDescription": "Keep specifications, test oracles, implementation, evidence, and review traceable throughout software delivery.",
     "developerName": "William Oliveira",
     "category": "Developer Tools",
-    "capabilities": ["Read", "Write"],
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
     "defaultPrompt": [
       "Refine this change and preserve traceability to its specification.",
       "Implement this approved specification with fail-first tests.",
