@@ -98,3 +98,23 @@ Corepack installation step and failed with `Unable to locate executable file:
 pnpm`. A fail-first workflow-contract oracle reproduced the missing setting.
 The composite action now disables setup-node's unused package-manager cache
 explicitly; dependency installation remains the following pinned Corepack step.
+
+## Final publication and installation
+
+- PR [#3](https://github.com/woliveiras/tuxedo/pull/3) passed its full clean
+  deterministic validation in run `31267162035` (95 unit tests, official plugin
+  validator, 17 official skill validations, evaluation dry-run, shell and Git
+  checks) and squash-merged as protected commit
+  `7a74b6e6d9f0873d5900ce426c8cde25fd7bedf4`.
+- Main CI run `31267211275` and Release Please run `31267211276` passed. The
+  bounded history produced no premature release PR.
+- Annotated tag `v0.1.0` peels to that exact merge commit. The non-draft,
+  non-prerelease GitHub Release was published at
+  <https://github.com/woliveiras/tuxedo/releases/tag/v0.1.0>.
+- A disposable `HOME` and `CODEX_HOME` installed `tuxedo@tuxedo` from remote
+  tag `v0.1.0`, reported version `0.1.0`, discovered all 17 enabled Tuxedo
+  skills with zero errors, created no `auth.json`, and made zero model calls.
+- The personal Codex installation was changed from the mutable local checkout
+  to the same Git marketplace tag. Its 63 installed files match the tagged Git
+  blobs exactly; the sorted tree digest is
+  `5f44e356f15f723a51bee8bd8137469f4a93e65a15714d790c4bcde713d2b442`.

@@ -43,20 +43,20 @@ that it is outside the candidate and is not included below.
   checkout, least-privilege scopes, protected `main`, and human Release PR merge
   reduce but do not eliminate it.
 - The `Validate` status bridge is intentionally narrow but still depends on
-  GitHub's required-status semantics. PR #1 passed the real Actions check, and
-  the branch-protection API resolved required context `Validate` to GitHub
-  Actions app `15368`; the final candidate must repeat that result before merge.
+  GitHub's required-status semantics. PR #2 demonstrated its failure path, PR
+  #3 and protected `main` demonstrated its successful path, and the protection
+  API resolves `Validate` to GitHub Actions app `15368`.
 - The first post-bootstrap `feat` remains the empirical proof that Release
   Please proposes `0.2.0`; the official schema and configuration establish the
   current deterministic contract but not a future GitHub service outcome.
 - The first Release Please run did propose `0.2.0`, but it incorrectly included
   pre-bootstrap history. PR #2 was blocked by the status bridge and closed;
   top-level `bootstrap-sha` now excludes that history until `v0.1.0` exists.
-- Main CI passed with warnings from Node 20-based Actions and automatic UV cache
-  discovery. Checkout/setup-node now use current pinned v5 commits, and the
-  unused UV cache is explicitly disabled; the correction PR must prove the
-  warnings are absent on GitHub's runner.
+- Checkout/setup-node now use pinned v5 commits, and unused setup-node/UV caches
+  are explicitly disabled. PR #3's fail-first run caught the setup-node cache
+  default before the final run passed. A non-blocking `punycode` deprecation
+  remains inside the Action runtime and produced no GitHub annotation.
 
-No blocking local code or security finding remains. RV-007 is satisfied; remote
-publication remains blocked until the final protected candidate, initial
-release, and tag-pinned installation satisfy RV-005, RV-008, and RV-009.
+No blocking code, standards, or security finding remains. RV-005, RV-007,
+RV-008, and RV-009 are satisfied. The first genuinely post-bootstrap `feat`
+remains future empirical evidence for RV-010.
