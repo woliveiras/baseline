@@ -37,5 +37,10 @@ source of expected behavior.
 - Residual risk: static workflow tests cannot prove Actions expression or
   branch-protection behavior; `actionlint`, a real pull-request run, and GitHub
   API inspection provide those independent oracles.
+- Finding corrected after the first protected merge: three tests treated
+  bootstrap version `0.1.0` as a permanent constant, so every legitimate
+  Release Please bump would fail. Current-version assertions now require valid
+  SemVer and equality across sources; historical changelog/policy assertions
+  retain the fixed initial version.
 
 No blocking test finding remains.

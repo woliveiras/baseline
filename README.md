@@ -43,30 +43,38 @@ For another machine, install Tuxedo without keeping a local Tuxedo checkout. Cod
 This repository is public. Install the stable release from its immutable tag:
 
 ```bash
+# x-release-please-start-version
 codex plugin marketplace add woliveiras/tuxedo --ref v0.1.0
 codex plugin add tuxedo@tuxedo
+# x-release-please-end
 ```
 
+<!-- x-release-please-start-version -->
 The `woliveiras/tuxedo` shorthand uses HTTPS. The marketplace and plugin are both named `tuxedo`; `tuxedo@tuxedo` is `plugin@marketplace`, not `name@version`. The installed manifest reports version `0.1.0` separately. Start a new Codex session after installation. You can also open `/plugins` in Codex CLI, select the **Tuxedo** marketplace, and install **Tuxedo**. In Codex desktop, restart the app, open **Plugins**, choose **Tuxedo**, install **Tuxedo**, and start a new task. The installed plugin exposes all distributed skills; you do not have to name the plugin in normal prompts.
+<!-- x-release-please-end -->
 
 #### Optional sparse checkout
 
 To fetch only the two paths needed to resolve and install the plugin, repeat `--sparse` for the marketplace manifest and the package. This HTTPS form has the same access requirement described above:
 
 ```bash
+# x-release-please-start-version
 codex plugin marketplace add woliveiras/tuxedo --ref v0.1.0 \
   --sparse .agents/plugins/marketplace.json \
   --sparse plugins/tuxedo
 codex plugin add tuxedo@tuxedo
+# x-release-please-end
 ```
 
 For a private fork, use the same sparse paths with an SSH source after configuring GitHub access on the machine:
 
 ```bash
+# x-release-please-start-version
 codex plugin marketplace add git@github.com:OWNER/tuxedo.git --ref v0.1.0 \
   --sparse .agents/plugins/marketplace.json \
   --sparse plugins/tuxedo
 codex plugin add tuxedo@tuxedo
+# x-release-please-end
 ```
 
 Do not omit either sparse path: the manifest selects the plugin and `plugins/tuxedo/` contains the manifest and distributed skills.
@@ -76,8 +84,10 @@ Do not omit either sparse path: the manifest selects the plugin and `plugins/tux
 For a private fork, use an SSH Git URL after configuring the machine's GitHub SSH access:
 
 ```bash
+# x-release-please-start-version
 codex plugin marketplace add git@github.com:OWNER/tuxedo.git --ref v0.1.0
 codex plugin add tuxedo@tuxedo
+# x-release-please-end
 ```
 
 Codex account authentication and GitHub repository authentication are separate. The former is used by Codex itself; the latter is used by Git to fetch a private marketplace. A public repository does not require a GitHub credential for this fetch. No credential, token, private key, or credential-bearing URL belongs in commands committed to documentation or in the repository. Configure SSH keys, an agent, or an approved Git credential helper on the machine instead.
@@ -93,7 +103,9 @@ codex plugin marketplace add woliveiras/tuxedo --ref v0.2.0
 codex plugin add tuxedo@tuxedo
 ```
 
+<!-- x-release-please-start-version -->
 Start a new session afterward. The same lifecycle is available through `/plugins` or the desktop Plugins screen. `v0.1.0` is immutable; a later version always uses a new tag.
+<!-- x-release-please-end -->
 
 #### Reinstall and Remove
 

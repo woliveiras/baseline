@@ -56,6 +56,12 @@ and reaches protected `main`, create tag `v0.1.0` and a GitHub Release targeting
 that same merge commit. From then on, `.release-please-manifest.json` starts at
 `0.1.0` and Release Please owns `0.1.1`, `0.2.0`, and later versions.
 
+Until that initial tag exists, top-level `bootstrap-sha` in
+`release-please-config.json` prevents pre-bootstrap Conventional Commits from
+being interpreted as unreleased changes. Version tests compare the synchronized
+sources dynamically; they must accept a legitimate Release PR version bump
+instead of freezing the repository forever at `0.1.0`.
+
 ## Release verification
 
 Before merging a Release PR, require:

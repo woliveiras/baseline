@@ -298,7 +298,10 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertEqual("tuxedo", package["name"])
         self.assertEqual("Development-only evaluation tooling for Tuxedo", package["description"])
         self.assertTrue(package["private"])
-        self.assertEqual("0.1.0", package["version"])
+        self.assertRegex(
+            package["version"],
+            r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$",
+        )
         self.assertEqual("pnpm@11.13.1", package["packageManager"])
 
         glossary = (ROOT / "GLOSSARY.md").read_text(encoding="utf-8")
@@ -400,9 +403,16 @@ class ToolkitStructureTests(unittest.TestCase):
 
         self.assertTrue(package["private"])
         self.assertEqual("tuxedo", package["name"])
-        self.assertEqual("0.1.0", package["version"])
+        self.assertRegex(
+            package["version"],
+            r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$",
+        )
         self.assertEqual(package["version"], plugin["version"])
         self.assertEqual({".": package["version"]}, manifest)
+        self.assertEqual(
+            "4370b1ebecb31f58619e8f877fccbea9769c92a7",
+            release_config["bootstrap-sha"],
+        )
 
         self.assertEqual({"."}, set(release_config["packages"]))
         root_release = release_config["packages"]["."]
@@ -417,7 +427,8 @@ class ToolkitStructureTests(unittest.TestCase):
                     "type": "json",
                     "path": "plugins/tuxedo/.codex-plugin/plugin.json",
                     "jsonpath": "$.version",
-                }
+                },
+                {"type": "generic", "path": "README.md"},
             ],
             root_release["extra-files"],
         )
@@ -428,6 +439,9 @@ class ToolkitStructureTests(unittest.TestCase):
         releases = (ROOT / "docs" / "releases.md").read_text(encoding="utf-8")
         releases_normalized = " ".join(releases.split())
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        current_version = json.loads(
+            (ROOT / "package.json").read_text(encoding="utf-8")
+        )["version"]
 
         self.assertIn("## 0.1.0 - 2026-08-08", changelog)
         for marker in (
@@ -442,8 +456,13 @@ class ToolkitStructureTests(unittest.TestCase):
         ):
             self.assertIn(marker, releases_normalized, marker)
 
-        self.assertIn("--ref v0.1.0", readme)
+        self.assertIn(f"--ref v{current_version}", readme)
         self.assertIn("--ref v0.2.0", readme)
+        self.assertGreaterEqual(readme.count("x-release-please-start-version"), 5)
+        self.assertEqual(
+            readme.count("x-release-please-start-version"),
+            readme.count("x-release-please-end"),
+        )
         self.assertIn("mutable development channel", readme)
         self.assertIn("`tuxedo@tuxedo` is `plugin@marketplace`", readme)
         self.assertNotIn("no Git tags are published yet", readme)
@@ -462,11 +481,16 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertIn("branches: [main]", ci)
         self.assertIn("contents: read", ci)
         self.assertIn("persist-credentials: false", ci)
+        self.assertIn(
+            "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+            ci,
+        )
         self.assertNotIn("pull_request_target", ci)
 
         for marker in (
-            "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444",
             "astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78",
+            "enable-cache: false",
             "e363b08c9175ac1cbe5893615dd2cb9ddf95043b",
             "validate_plugin.py",
             "quick_validate.py",
@@ -494,6 +518,7 @@ class ToolkitStructureTests(unittest.TestCase):
             "report-release-pr-status:",
             "statuses: write",
             "context=Validate",
+            "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
         ):
             self.assertIn(marker, release, marker)
         self.assertNotIn("pull_request_target", release)
@@ -567,8 +592,9 @@ class ToolkitStructureTests(unittest.TestCase):
 
     def test_manifest_and_distributed_inventory(self):
         manifest = json.loads((PLUGIN_ROOT / ".codex-plugin" / "plugin.json").read_text())
+        package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
         self.assertEqual("tuxedo", manifest["name"])
-        self.assertEqual("0.1.0", manifest["version"])
+        self.assertEqual(package["version"], manifest["version"])
         self.assertNotIn("hooks", manifest, "the plugin does not distribute lifecycle hooks")
         actual = {path.name for path in (ROOT / "skills").iterdir() if path.is_dir()}
         self.assertEqual(EXPECTED_SKILLS, actual)
@@ -1172,10 +1198,12 @@ class ToolkitStructureTests(unittest.TestCase):
         """RM-001..RM-010: remote install, identity, lifecycle, access, and development path are explicit."""
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         development = (ROOT / "docs" / "development.md").read_text(encoding="utf-8")
+        version = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))["version"]
+        tag = f"v{version}"
         self.assertNotIn("tuxedo" + "-local", development.lower())
 
         self.assertIn(
-            "codex plugin marketplace add woliveiras/tuxedo --ref v0.1.0\n"
+            f"codex plugin marketplace add woliveiras/tuxedo --ref {tag}\n"
             "codex plugin add tuxedo@tuxedo",
             readme,
         )
@@ -1188,7 +1216,7 @@ class ToolkitStructureTests(unittest.TestCase):
             self.assertIn(marker, readme, marker)
         sparse_command = "\n".join(
             (
-                "codex plugin marketplace add woliveiras/tuxedo --ref v0.1.0 \\",
+                f"codex plugin marketplace add woliveiras/tuxedo --ref {tag} \\",
                 "  --sparse .agents/plugins/marketplace.json \\",
                 "  --sparse plugins/tuxedo",
             )
@@ -1202,7 +1230,7 @@ class ToolkitStructureTests(unittest.TestCase):
             "codex plugin marketplace remove tuxedo",
             "Codex account authentication",
             "GitHub repository authentication",
-            "`v0.1.0` is immutable",
+            f"`{tag}` is immutable",
             "mutable development channel",
             "Do not use `codex plugin add <URL>`",
             "No credential, token, private key, or credential-bearing URL",
