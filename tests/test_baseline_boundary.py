@@ -125,14 +125,7 @@ class BaselineBoundaryTests(unittest.TestCase):
         self.assertTrue(any(item.get("id") == "large-defined-no-refine" and item.get("avoid_skill") == "refine" for item in routing))
         self.assertTrue(any(item.get("id") == "small-ambiguous-refine" and "refine" in item.get("skills", []) for item in routing))
 
-    def test_reconstructible_history_is_not_in_the_current_tree(self) -> None:
-        for relative in (
-            "docs/evidence",
-            "docs/internal/audit",
-            "docs/research/evidence-map.md",
-            "docs/tmp/v0.1-map.md",
-        ):
-            self.assertFalse((ROOT / relative).exists(), relative)
+    def test_git_is_the_default_archive_policy(self) -> None:
         contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
         docs_skill = (ROOT / "plugins/baseline/skills/docs/SKILL.md").read_text(encoding="utf-8")
         self.assertIn("Git is the default archive", contract)

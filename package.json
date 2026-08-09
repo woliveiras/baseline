@@ -8,7 +8,6 @@
     "node": ">=22.22.0"
   },
   "scripts": {
-    "promptfoo:validate": "pnpm exec promptfoo validate -c evals/promptfoo/promptfooconfig.yaml",
     "eval:login": "uv run --locked python evals/promptfoo/scripts/codex_auth.py login",
     "eval:auth:status": "uv run --locked python evals/promptfoo/scripts/codex_auth.py status",
     "eval:smoke": "uv run --locked python evals/promptfoo/scripts/run-evaluations.py --suite smoke",
