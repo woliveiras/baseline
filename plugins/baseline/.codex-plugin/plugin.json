@@ -1,6 +1,6 @@
 {
   "name": "baseline",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "The portable minimum for disciplined, proportional software engineering",
   "author": {
     "name": "William Oliveira",
@@ -9,7 +9,12 @@
   "homepage": "https://github.com/woliveiras/baseline",
   "repository": "https://github.com/woliveiras/baseline",
   "license": "MIT",
-  "keywords": ["agent-skills", "software-engineering", "tdd", "code-review"],
+  "keywords": [
+    "agent-skills",
+    "software-engineering",
+    "tdd",
+    "code-review"
+  ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Baseline",
@@ -17,7 +22,10 @@
     "longDescription": "Classify work by risk, refine only real ambiguity, test behavior fail-first, preserve durable knowledge, review proportionally, and keep authority explicit.",
     "developerName": "William Oliveira",
     "category": "Developer Tools",
-    "capabilities": ["Read", "Write"],
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
     "defaultPrompt": [
       "Classify this change proportionally and route only the necessary work.",
       "Implement this approved behavior with fail-first tests.",
