@@ -195,13 +195,7 @@ def _official_validators() -> None:
             "official plugin/skill validator unavailable; install the Codex system skills or set "
             "TUXEDO_PLUGIN_VALIDATOR and TUXEDO_SKILL_VALIDATOR to executable validator paths"
         )
-    validator_python = os.environ.get("TUXEDO_VALIDATOR_PYTHON", sys.executable)
-    validator_command = shutil.which(validator_python) or validator_python
-    validator_executable = Path(validator_command).expanduser()
-    if not validator_executable.is_file():
-        raise RuntimeError(
-            f"TUXEDO_VALIDATOR_PYTHON does not point to a Python executable: {validator_python}"
-        )
+    validator_executable = sys.executable
     _run(
         [str(validator_executable), str(plugin_validator), str(PLUGIN_ROOT)],
         timeout=120,

@@ -13,6 +13,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import tomllib
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
@@ -373,6 +374,8 @@ class ToolkitStructureTests(unittest.TestCase):
         release_config = json.loads(
             (ROOT / "release-please-config.json").read_text(encoding="utf-8")
         )
+        pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+        uv_lock = tomllib.loads((ROOT / "uv.lock").read_text(encoding="utf-8"))
 
         self.assertTrue(package["private"])
         self.assertEqual("tuxedo", package["name"])
@@ -381,6 +384,9 @@ class ToolkitStructureTests(unittest.TestCase):
             r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$",
         )
         self.assertEqual(package["version"], plugin["version"])
+        self.assertEqual(package["version"], pyproject["project"]["version"])
+        locked_project = next(item for item in uv_lock["package"] if item["name"] == "tuxedo")
+        self.assertEqual(package["version"], locked_project["version"])
         self.assertEqual({".": package["version"]}, manifest)
         self.assertEqual(
             "4370b1ebecb31f58619e8f877fccbea9769c92a7",
@@ -400,6 +406,16 @@ class ToolkitStructureTests(unittest.TestCase):
                     "type": "json",
                     "path": "plugins/tuxedo/.codex-plugin/plugin.json",
                     "jsonpath": "$.version",
+                },
+                {
+                    "type": "toml",
+                    "path": "pyproject.toml",
+                    "jsonpath": "$.project.version",
+                },
+                {
+                    "type": "toml",
+                    "path": "uv.lock",
+                    "jsonpath": "$.package[?(@.name=='tuxedo')].version",
                 },
                 {"type": "generic", "path": "README.md"},
             ],
@@ -469,8 +485,9 @@ class ToolkitStructureTests(unittest.TestCase):
             "validate_plugin.py",
             "quick_validate.py",
             "plugins/tuxedo/skills/*/",
-            "uv run python -m unittest discover -s tests -v",
-            "uv run python evals/run.py --dry-run",
+            "uv sync --locked",
+            "uv run --locked python -m unittest discover -s tests -v",
+            "uv run --locked python evals/run.py --dry-run",
             "bash -n",
             "git diff --check",
             "git status --porcelain",
@@ -478,6 +495,8 @@ class ToolkitStructureTests(unittest.TestCase):
             self.assertIn(marker, validate, marker)
         for forbidden in ("eval:full", "promptfoo", "OPENAI_API_KEY", "CODEX_API_KEY"):
             self.assertNotIn(forbidden, validate)
+        self.assertNotIn("--no-project", validate)
+        self.assertNotIn("--with 'pyyaml", validate.lower())
 
         for marker in (
             "permissions: {}",
@@ -511,6 +530,47 @@ class ToolkitStructureTests(unittest.TestCase):
             },
             package["devDependencies"],
         )
+        for name, command in package["scripts"].items():
+            if "uv run" in command:
+                self.assertIn("uv run --locked", command, name)
+
+        pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+        self.assertEqual("tuxedo", pyproject["project"]["name"])
+        self.assertEqual("Development tooling for Tuxedo", pyproject["project"]["description"])
+        self.assertEqual(">=3.12", pyproject["project"]["requires-python"])
+        self.assertEqual([], pyproject["project"]["dependencies"])
+        self.assertEqual(["PyYAML==6.0.2"], pyproject["dependency-groups"]["dev"])
+        self.assertFalse(pyproject["tool"]["uv"]["package"])
+
+        uv_lock = tomllib.loads((ROOT / "uv.lock").read_text(encoding="utf-8"))
+        self.assertEqual(">=3.12", uv_lock["requires-python"])
+        locked = {item["name"]: item for item in uv_lock["package"]}
+        self.assertEqual("6.0.2", locked["pyyaml"]["version"])
+        self.assertEqual(package["version"], locked["tuxedo"]["version"])
+
+        runner = (
+            ROOT / "evals" / "promptfoo" / "scripts" / "run-evaluations.py"
+        ).read_text(encoding="utf-8")
+        self.assertNotIn("TUXEDO_VALIDATOR_PYTHON", runner)
+
+        development_docs = "\n".join(
+            (ROOT / relative).read_text(encoding="utf-8")
+            for relative in (
+                "docs/development.md",
+                "docs/architecture/eval-isolation.md",
+                "docs/architecture/evaluations.md",
+                "docs/guides/using-the-eval-harness.md",
+            )
+        )
+        self.assertIn("PyYAML", development_docs)
+        self.assertIn("uv sync --locked", development_docs)
+        self.assertNotIn("TUXEDO_VALIDATOR_PYTHON", development_docs)
+        self.assertNotIn("uv pip install", development_docs)
+
+        contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        self.assertIn("uv run --locked python -m unittest", contract)
+        rules = RULES.read_text(encoding="utf-8")
+        self.assertIn("uv run --locked python -m unittest", rules)
 
         workspace = (ROOT / "pnpm-workspace.yaml").read_text(encoding="utf-8")
         override_lines = re.findall(r"^  '([^']+)': ([^\s#]+)$", workspace, re.MULTILINE)
@@ -1262,6 +1322,21 @@ class CodexRulesTests(unittest.TestCase):
 
 
 class EvaluationVerifierTests(unittest.TestCase):
+    def test_official_validators_preserve_the_active_uv_interpreter(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            uv_python = Path(tmp) / "python"
+            uv_python.symlink_to(Path(sys.executable).resolve())
+            with patch.object(PROMPTFOO_RUNNER.sys, "executable", str(uv_python)), patch.object(
+                PROMPTFOO_RUNNER,
+                "_discover_validator",
+                side_effect=(Path("/plugin-validator.py"), Path("/skill-validator.py")),
+            ), patch.object(PROMPTFOO_RUNNER, "_run") as run:
+                PROMPTFOO_RUNNER._official_validators()
+
+            self.assertGreater(len(run.call_args_list), 1)
+            for call in run.call_args_list:
+                self.assertEqual(str(uv_python), call.args[0][0])
+
     def _auth_environment(self, home_root: Path, **values: str):
         environment = {
             "HOME": str(home_root),

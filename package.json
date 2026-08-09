@@ -9,17 +9,17 @@
   },
   "scripts": {
     "promptfoo:validate": "pnpm exec promptfoo validate -c evals/promptfoo/promptfooconfig.yaml",
-    "eval:login": "uv run python evals/promptfoo/scripts/codex_auth.py login",
-    "eval:auth:status": "uv run python evals/promptfoo/scripts/codex_auth.py status",
-    "eval:smoke": "uv run python evals/promptfoo/scripts/run-evaluations.py --suite smoke",
-    "eval:routing": "uv run python evals/promptfoo/scripts/run-evaluations.py --suite routing",
-    "eval:skills": "uv run python evals/promptfoo/scripts/run-evaluations.py --suite skills",
-    "eval:security": "uv run python evals/promptfoo/scripts/run-evaluations.py --suite security",
-    "eval:compare": "uv run python evals/promptfoo/scripts/run-evaluations.py --suite compare",
-    "eval:redteam:generate": "uv run python evals/promptfoo/scripts/run-evaluations.py --suite redteam-generate",
-    "eval:redteam:review": "uv run python evals/promptfoo/scripts/run-evaluations.py --suite redteam-review",
-    "eval:redteam:full": "uv run python evals/promptfoo/scripts/run-evaluations.py --suite redteam-full",
-    "eval:full": "uv run python evals/promptfoo/scripts/run-evaluations.py --suite full"
+    "eval:login": "uv run --locked python evals/promptfoo/scripts/codex_auth.py login",
+    "eval:auth:status": "uv run --locked python evals/promptfoo/scripts/codex_auth.py status",
+    "eval:smoke": "uv run --locked python evals/promptfoo/scripts/run-evaluations.py --suite smoke",
+    "eval:routing": "uv run --locked python evals/promptfoo/scripts/run-evaluations.py --suite routing",
+    "eval:skills": "uv run --locked python evals/promptfoo/scripts/run-evaluations.py --suite skills",
+    "eval:security": "uv run --locked python evals/promptfoo/scripts/run-evaluations.py --suite security",
+    "eval:compare": "uv run --locked python evals/promptfoo/scripts/run-evaluations.py --suite compare",
+    "eval:redteam:generate": "uv run --locked python evals/promptfoo/scripts/run-evaluations.py --suite redteam-generate",
+    "eval:redteam:review": "uv run --locked python evals/promptfoo/scripts/run-evaluations.py --suite redteam-review",
+    "eval:redteam:full": "uv run --locked python evals/promptfoo/scripts/run-evaluations.py --suite redteam-full",
+    "eval:full": "uv run --locked python evals/promptfoo/scripts/run-evaluations.py --suite full"
   },
   "devDependencies": {
     "@openai/codex-sdk": "0.146.0",

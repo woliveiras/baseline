@@ -1,6 +1,7 @@
 evals/results/*
 !evals/results/.gitkeep
 node_modules/
+.venv/
 evals/promptfoo/results/*
 !evals/promptfoo/results/.gitkeep
 evals/promptfoo/generated/*

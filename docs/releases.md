@@ -4,12 +4,13 @@ Tuxedo has one product version for the complete plugin and all distributed
 skills. Individual skills are independently routable and installable, but they
 do not receive separate versions, changelogs, tags, or GitHub Releases.
 
-The version is synchronized across `package.json`,
-`plugins/tuxedo/.codex-plugin/plugin.json`,
+The version is synchronized across `package.json`, `pyproject.toml`, the Tuxedo
+entry in `uv.lock`, `plugins/tuxedo/.codex-plugin/plugin.json`,
 `.release-please-manifest.json`, `CHANGELOG.md`, the `vX.Y.Z` Git tag, and its
-GitHub Release. The private Node package is never published to npm; it exists
-only for repository development tooling and as Release Please's root version
-source.
+GitHub Release. The private Node package is never published to npm, and the
+non-package Python project is never published to PyPI; both exist only for
+repository development tooling. `package.json` remains Release Please's root
+version source.
 
 ## Version rules before 1.0.0
 

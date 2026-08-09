@@ -73,9 +73,10 @@ output or trace payloads. Personal Promptfoo state is neither read nor written.
 ## Official validators and PyYAML
 
 The official plugin and skill validators are discovered from the local Codex
-installation or environment configuration. If they require PyYAML, provide an
-isolated interpreter through `TUXEDO_VALIDATOR_PYTHON`, created with UV. PyYAML
-is deliberately not a Tuxedo runtime or development dependency.
+installation or environment configuration. They run with the repository's UV
+interpreter and locked PyYAML development dependency. The non-package UV
+project is repository-only and neither PyYAML nor its environment enters the
+installed plugin or any consumer project.
 
 ## Network and result paths
 

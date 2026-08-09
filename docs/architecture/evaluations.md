@@ -64,10 +64,10 @@ same disposable database. The durable report contains only sanitized verdict
 fields and never raw model output or trace payloads.
 
 The dedicated Codex home, authentication reuse, `config.toml` fail-closed
-parsing, model selection, and the isolated `TUXEDO_VALIDATOR_PYTHON` interpreter
-are specified in [the isolation model](eval-isolation.md). Content isolation and
-authentication reuse are separate properties: the account session is
-intentionally reused, while personal behavior-bearing content is not.
+parsing, model selection, and locked validator dependencies are specified in
+[the isolation model](eval-isolation.md). Content isolation and authentication
+reuse are separate properties: the account session is intentionally reused,
+while personal behavior-bearing content is not.
 
 Ignored `generated/` and `results/` have different responsibilities. Generated
 red-team probes are review inputs and may persist. JSON result reports are

@@ -33,14 +33,21 @@ of the installed plugin surface.
 
 ## Toolchain
 
-- Python uses UV. Run scripts and tests with `uv run python ...`. Do not
-  introduce a virtualenv or pip workflow.
+- Python uses the non-package UV project in `pyproject.toml`. Run
+  `uv sync --locked` after checkout and execute scripts and tests with
+  `uv run --locked python ...`. `uv.lock` is the only dependency resolution
+  source; do not introduce a manual virtualenv or pip workflow.
 - Node.js uses PNPM. Install with `pnpm install --frozen-lockfile` and run
   package commands with `pnpm run` or `pnpm exec`. Do not use npm or maintain a
   `package-lock.json`.
 
 These are development toolchain conventions. Installed Tuxedo skills do not run
 UV, Python, PNPM, or Node.js in consumer projects.
+
+The Python development group contains only PyYAML, used by the official
+Codex plugin and skill validators to parse frontmatter. PyYAML is MIT-licensed,
+version-pinned, lockfile-resolved, and absent from `plugins/tuxedo/`; it is not a
+consumer runtime dependency.
 
 ## How to develop
 
@@ -84,8 +91,8 @@ credentials in URLs or repository files.
 Local deterministic checks are fast and make no model calls:
 
 ```bash
-uv run python -m unittest discover -s tests -v
-uv run python evals/run.py --dry-run
+uv run --locked python -m unittest discover -s tests -v
+uv run --locked python evals/run.py --dry-run
 ```
 
 `evals/run.py` never calls a model unless a user explicitly passes `--execute`. The

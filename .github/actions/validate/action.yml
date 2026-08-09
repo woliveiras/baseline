@@ -23,6 +23,7 @@ runs:
         corepack enable
         corepack prepare pnpm@11.13.1 --activate
         pnpm install --frozen-lockfile --ignore-scripts
+        uv sync --locked
 
     - name: Fetch official Codex validators
       shell: bash
@@ -44,17 +45,17 @@ runs:
         validator_root="$RUNNER_TEMP/tuxedo-codex-validators/codex-rs/skills/src/assets/samples"
         plugin_validator="$validator_root/plugin-creator/scripts/validate_plugin.py"
         skill_validator="$validator_root/skill-creator/scripts/quick_validate.py"
-        uv run --no-project --with 'pyyaml==6.0.2' python "$plugin_validator" plugins/tuxedo
+        uv run --locked python "$plugin_validator" plugins/tuxedo
         for skill in plugins/tuxedo/skills/*/; do
-          uv run --no-project --with 'pyyaml==6.0.2' python "$skill_validator" "$skill"
+          uv run --locked python "$skill_validator" "$skill"
         done
 
     - name: Run deterministic tests
       shell: bash
       run: |
         set -euo pipefail
-        uv run python -m unittest discover -s tests -v
-        uv run python evals/run.py --dry-run
+        uv run --locked python -m unittest discover -s tests -v
+        uv run --locked python evals/run.py --dry-run
 
     - name: Check shell syntax
       shell: bash

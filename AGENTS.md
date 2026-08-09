@@ -73,7 +73,7 @@ Use the [repository glossary](GLOSSARY.md) and route work through:
 ## Required checks
 
 Run the official plugin validator, the official skill validator for every
-skill, `uv run python -m unittest discover -s tests -v`,
-`uv run python evals/run.py --dry-run`, shell syntax checks,
+skill, `uv run --locked python -m unittest discover -s tests -v`,
+`uv run --locked python evals/run.py --dry-run`, shell syntax checks,
 `git diff --check`, and `git status --short` before completion. Run only
 applicable existing checks in consumer or synthetic workspaces.

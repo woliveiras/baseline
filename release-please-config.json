@@ -15,6 +15,16 @@
           "jsonpath": "$.version"
         },
         {
+          "type": "toml",
+          "path": "pyproject.toml",
+          "jsonpath": "$.project.version"
+        },
+        {
+          "type": "toml",
+          "path": "uv.lock",
+          "jsonpath": "$.package[?(@.name=='tuxedo')].version"
+        },
+        {
           "type": "generic",
           "path": "README.md"
         }

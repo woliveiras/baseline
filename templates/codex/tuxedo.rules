@@ -96,7 +96,7 @@ prefix_rule(
     decision = "prompt",
     justification = "Package publication requires explicit human authority.",
     match = ["uv publish", "uv publish dist/example.whl"],
-    not_match = ["uv build", "uv run python -m unittest"],
+    not_match = ["uv build", "uv run python -m unittest", "uv run --locked python -m unittest"],
 )
 
 prefix_rule(

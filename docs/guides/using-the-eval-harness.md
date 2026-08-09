@@ -48,7 +48,7 @@ To run only routing, use `pnpm run eval:routing`. Contributors diagnosing an
 affected subset can keep the same isolated runner and sanitized report path:
 
 ```bash
-uv run python evals/promptfoo/scripts/run-evaluations.py \
+uv run --locked python evals/promptfoo/scripts/run-evaluations.py \
   --suite routing \
   --case-pattern '^(implicit-|composition-)'
 ```
@@ -67,14 +67,12 @@ status is unchanged. Five semantic behavior tasks across five conditions add
 judgments: 118 model calls. It is not a pre-push hook, is not invoked by
 installation, and a passing result does not itself authorize a push.
 
-If the official validators require PyYAML, keep it out of the repository by
-supplying an isolated interpreter:
+The official validators use PyYAML from the locked development group.
+Prepare that environment without changing the resolution:
 
 ```bash
-validator_env_path="$(mktemp -d -t tuxedo-validators.XXXXXX)"
-uv venv "$validator_env_path"
-uv pip install --python "$validator_env_path/bin/python" PyYAML
-TUXEDO_VALIDATOR_PYTHON="$validator_env_path/bin/python" pnpm run eval:full
+uv sync --locked
+pnpm run eval:full
 ```
 
 ## 5. Red-team (explicit user actions)
