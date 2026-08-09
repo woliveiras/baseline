@@ -21,7 +21,7 @@
         {
           "type": "toml",
           "path": "uv.lock",
-          "jsonpath": "$.package[?(@.name=='baseline')].version"
+          "jsonpath": "$.package[?(@.name.value=='baseline')].version"
         },
         {
           "type": "generic",

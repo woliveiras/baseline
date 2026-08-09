@@ -412,11 +412,25 @@ class ToolkitStructureTests(unittest.TestCase):
                 {
                     "type": "toml",
                     "path": "uv.lock",
-                    "jsonpath": "$.package[?(@.name=='baseline')].version",
+                    "jsonpath": "$.package[?(@.name.value=='baseline')].version",
                 },
                 {"type": "generic", "path": "README.md"},
             ],
             root_release["extra-files"],
+        )
+
+    def test_release_please_addresses_the_tagged_uv_project_name(self):
+        release_config = json.loads(
+            (ROOT / "release-please-config.json").read_text(encoding="utf-8")
+        )
+        uv_extra = next(
+            item
+            for item in release_config["packages"]["."]["extra-files"]
+            if item["path"] == "uv.lock"
+        )
+        self.assertEqual(
+            "$.package[?(@.name.value=='baseline')].version",
+            uv_extra["jsonpath"],
         )
 
     def test_release_documentation_contract(self):
