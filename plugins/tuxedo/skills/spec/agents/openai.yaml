@@ -1,4 +1,0 @@
-interface:
-  display_name: "Spec"
-  short_description: "Turn intent into active executable contracts"
-  default_prompt: "Use $spec to write an active specification with traceable criteria."

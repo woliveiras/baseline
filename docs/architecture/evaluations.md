@@ -18,29 +18,29 @@ boundaries.
 | Red-team generation and review | Promptfoo, explicitly invoked | `eval:redteam:generate`, `eval:redteam:review`; never part of `eval:full` |
 | Authority and privacy | Tuxedo runner and provider config | dedicated `TUXEDO_EVAL_CODEX_HOME`, no cloud share, no remote red-team generation, no external operations |
 
-## Runner behavior and oracle matrix
+## Runner contract
 
-| ID | Required behavior | Oracle | Evidence class |
+| ID | Required behavior | Check | Basis |
 | --- | --- | --- | --- |
-| `EV-RPT-01` | Promptfoo exit 100 is an assertion verdict; preserve a failed local report before returning failure. | Mocked exit 100 plus a completed failing result produces a `fail` outcome and JSON report. | spec-derived |
-| `EV-RPT-02` | Provider errors, empty output, incomplete turns, missing result files, and exit codes other than 0/100 remain infrastructure failures. | Unit tests exercise malformed provider results; the runner accepts only 0 and 100 for `promptfoo eval`. | spec-derived |
+| `EV-RPT-01` | Promptfoo exit 100 is an assertion verdict; preserve a failed local report before returning failure. | Mocked exit 100 plus a completed failing result produces a `fail` outcome and JSON report. | input-derived |
+| `EV-RPT-02` | Provider errors, empty output, incomplete turns, missing result files, and exit codes other than 0/100 remain infrastructure failures. | Unit tests exercise malformed provider results; the runner accepts only 0 and 100 for `promptfoo eval`. | input-derived |
 | `EV-AGG-01` | Assertion failures do not suppress later authorized suites; the full summary is durable before the command reports assertion failure or checkout drift. | Mocked full runs invoke routing, behavior, and security, write the summary, then raise the applicable summarized verdict. | independent |
 | `EV-ISO-01` | Promptfoo evaluation rows and traces use one disposable local state root, never the user's personal Promptfoo state. | Command/environment capture proves `PROMPTFOO_CONFIG_DIR` is under the disposable run root and `--no-write` is absent. | implementation-aware |
-| `EV-SHD-01` | Shards are disjoint, cover every routing/behavior case, run with concurrency at most two, and retain completed shard reports if a peer fails. | Range and checkpoint tests cover the fixed shard catalog and a peer infrastructure error. | spec-derived |
+| `EV-SHD-01` | Shards are disjoint, cover every routing/behavior case, run with concurrency at most two, and retain completed shard reports if a peer fails. | Range and checkpoint tests cover the fixed shard catalog and a peer infrastructure error. | input-derived |
 | `EV-PRV-01` | Persist only sanitized verdict evidence, never model output, prompts, traces, credentials, or raw responses. | A synthetic secret in provider output is absent from the persisted report while the assertion reason remains. | independent |
 | `EV-SEC-01` | Normalize bridge-provided path lists before applying security change oracles. | Unit tests pass both native lists and JSON-serialized lists and require the declared allowed change to pass. | independent |
-| `EV-SST-01` | Frozen security probes vary the adversarial stimulus, not the legitimate patch implementation, so coding-style variance cannot obscure the guardrail result. | Every generated security request requires the same canonical `return max(0, value)` patch that the deterministic target oracle inspects; protected-path, trajectory, outside-sentinel, and canary checks remain unchanged. | spec-derived |
-| `EV-TIM-01` | Record actual suite wall time and do not transfer a timing claim across material call-count changes. | The reviewed 2026-08-06 stack recorded 56m16.701s for 86 target calls plus up to 25 secondary judgments, below the two-hour bound; material call-count or contract changes require fresh timing. | external |
-| `EV-VRD-01` | Preserve `pass`, `fail`, and `needs-review` as distinct verdicts; a hard deterministic failure always outranks pending secondary review. | Synthetic Promptfoo rows cover review-only and mixed hard-failure/review components, and the workspace adapter delegates only after deterministic checks pass. | spec-derived |
+| `EV-SST-01` | Frozen security probes vary the adversarial stimulus, not the legitimate patch implementation, so coding-style variance cannot obscure the guardrail result. | Every generated security request requires the same canonical `return max(0, value)` patch that the deterministic target oracle inspects; protected-path, trajectory, outside-sentinel, and canary checks remain unchanged. | input-derived |
+| `EV-TIM-01` | Record actual suite wall time and do not transfer a timing claim across material call-count changes. | Reports include current duration and call counts; tests reject importing a stale timing claim into a materially different catalog. | input-derived |
+| `EV-VRD-01` | Preserve `pass`, `fail`, and `needs-review` as distinct verdicts; a hard deterministic failure always outranks pending secondary review. | Synthetic Promptfoo rows cover review-only and mixed hard-failure/review components, and the workspace adapter delegates only after deterministic checks pass. | input-derived |
 | `EV-REG-01` | Recognize a direct literal upper-bound regression assertion anywhere in a collected pytest function or unittest method, while rejecting unreachable nested assertions. | AST fixtures cover pytest `assert`, `unittest.TestCase.assertEqual`, a valid second assertion, and assertions under `if False`. | independent |
 | `EV-FIX-01` | A focused defect fixture exposes the reported failing boundary while preserving visible passing evidence for adjacent established behavior. | The clamp fixture starts with working lower-bound and in-range tests, fails only the reported upper-bound criterion, and retains a hidden oracle over all three behaviors. | independent |
-| `EV-RTE-01` | Routing cases measure the heuristic signal for explicit invocation of an applicable skill and the absence of that signal for an inapplicable skill, rather than claiming physical proof that a file was never read. A negative case requires an alternate skill only when that alternate skill's trigger contract applies. | Generated requests name each expected `SKILL.md` and forbid opening the avoided `SKILL.md`; `negative-refine` forbids `refine` without inventing an alternate expectation. Assertions require structured provider metadata for the expected and avoided heuristic signals. | spec-derived |
-| `EV-AUT-01` | Governing task inputs remain unchanged unless the task explicitly authorizes editing them. | Contract and fixture tests require immutable input plus a separate writable design artifact. | spec-derived |
+| `EV-RTE-01` | Routing cases measure the heuristic signal for explicit invocation of an applicable skill and the absence of that signal for an inapplicable skill, rather than claiming physical proof that a file was never read. A negative case requires an alternate skill only when that alternate skill's trigger contract applies. | Generated requests name each expected `SKILL.md` and forbid opening the avoided `SKILL.md`; `negative-refine` forbids `refine` without inventing an alternate expectation. Assertions require structured provider metadata for the expected and avoided heuristic signals. | input-derived |
+| `EV-AUT-01` | Governing task inputs remain unchanged unless the task explicitly authorizes editing them. | Contract and fixture tests require immutable input plus a separate writable design artifact. | input-derived |
 | `EV-JDG-01` | Semantic behavior cases receive a secondary rubric through the dedicated ChatGPT/Codex login; its result matters only when deterministic checks pass. | Generated-test inspection proves only semantic tasks attach an explicit read-only, no-network `openai:codex-sdk` grader with dedicated `CODEX_HOME` and an empty isolated working directory. | implementation-aware |
-| `EV-DLV-01` | When an isolated semantic judge can inspect only the final response, the task must state which decisions from its durable design artifact the completion report must summarize. | The multi-module task requires the same boundary, translation, trade-off, reversibility, and implementation-status evidence in `DESIGN.md` and the final response; the rubric remains unchanged. | spec-derived |
+| `EV-DLV-01` | When an isolated semantic judge can inspect only the final response, the task must state which decisions from its durable design artifact the completion report must summarize. | The multi-module task requires the same boundary, translation, trade-off, reversibility, and implementation-status evidence in `DESIGN.md` and the final response; the rubric remains unchanged. | input-derived |
 | `EV-REP-01` | Every write-capable repetition starts from a fresh fixture and workspace; no Promptfoo process-level repeat may reuse mutated state. | The runner rejects `repeat != 1`, and compare executes three independent single-repetition processes before aggregating their sanitized reports. | independent |
-| `EV-ROA-01` | An analysis-only task may inspect its fixture but must derive the hidden diagnosis itself, without executing project code or tests or creating files, caches, matrices, or reconciliation artifacts. | Prompts contain only authority constraints, while task rubrics retain the hidden semantic criteria. A structured-trajectory allowlist accepts read-only inspection, rejects runtimes and mutating commands, and returns `needs-review` when trajectory evidence is unavailable. | independent |
-| `EV-TRC-01` | Every evaluation row carries a stable criterion identifier into sanitized evidence. | Routing and security case IDs are criterion IDs; behavior tasks declare unique `BH-*` IDs; generator and report tests preserve them. | spec-derived |
+| `EV-ROA-01` | An analysis-only task may inspect its fixture but must derive the hidden diagnosis itself, without executing project code or tests or creating files, caches, or reconciliation artifacts. | Prompts contain only authority constraints, while task rubrics retain the hidden semantic criteria. A structured-trajectory allowlist accepts read-only inspection, rejects runtimes and mutating commands, and returns `needs-review` when trajectory evidence is unavailable. | independent |
+| `EV-TRC-01` | Every evaluation row carries a stable criterion identifier into sanitized evidence. | Routing and security case IDs are criterion IDs; behavior tasks declare unique `BH-*` IDs; generator and report tests preserve them. | input-derived |
 
 ## Isolation and repeatability
 
@@ -106,7 +106,7 @@ pnpm run eval:full
 ```
 
 This runs the official validators, Python and shell checks, all six Promptfoo
-config validations, fixture checks, 40 routing cases, 40 behavior-provider
+config validations, fixture checks, 41 routing cases, 40 behavior-provider
 trials, and 12 security probes, then checks that Git status is unchanged. It
 requires an authenticated dedicated evaluation home and consumes model quota.
 Routing is split into two disjoint shards and behavior into four disjoint
@@ -119,13 +119,12 @@ three suite outcomes exist, `eval:full` writes a full aggregate with total wall
 duration before checking final assertion verdicts or concurrent checkout drift.
 It then returns one aggregate failure if any outcome failed or needs review.
 
-The 92 target-agent calls are the expected upper bound for one non-repeated
+The 93 target-agent calls are the expected upper bound for one non-repeated
 run. The five semantic tasks across five behavior conditions add up to 25
-secondary Codex rubric calls, for an upper bound of 117 model calls. Sharding
-changes scheduling, not coverage. Authoritative wall duration
-and per-row evidence are recorded in ignored JSON reports under
-`evals/promptfoo/results/`, and dated run outcomes are recorded in
-[the run log](../evidence/eval-runs.md). `eval:full` is
+secondary Codex rubric calls, for an upper bound of 118 model calls. Sharding
+changes scheduling, not coverage. Current wall duration and per-row outcomes
+are recorded in ignored JSON reports under `evals/promptfoo/results/`.
+`eval:full` is
 not invoked by installation or Git push, and a passing result does not
 itself authorize a push.
 
@@ -177,6 +176,10 @@ pnpm run eval:redteam:review
 red-team command is implied by ordinary validation or `eval:full`.
 
 ## Residual limitations
+
+No provider/model evaluation has been executed for the 2026-08-09 baseline
+catalog, so `measurer` routing and the new behavior task have no current
+empirical result.
 
 The Codex `skill-used` signal and `metadata.skillCalls` are provider heuristics,
 not proof of adherence. The routing suite measures explicit invocation through

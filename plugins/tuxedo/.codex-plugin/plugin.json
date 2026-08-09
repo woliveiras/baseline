@@ -1,7 +1,7 @@
 {
   "name": "tuxedo",
   "version": "0.1.0",
-  "description": "Spec-driven software engineering skills for traceable delivery workflows",
+  "description": "A portable baseline for disciplined, proportional software engineering",
   "author": {
     "name": "William Oliveira",
     "url": "https://github.com/woliveiras"
@@ -9,19 +9,19 @@
   "homepage": "https://github.com/woliveiras/tuxedo",
   "repository": "https://github.com/woliveiras/tuxedo",
   "license": "MIT",
-  "keywords": ["agent-skills", "spec-driven-development", "software-engineering"],
+  "keywords": ["agent-skills", "software-engineering", "tdd", "code-review"],
   "skills": "./skills/",
   "interface": {
     "displayName": "Tuxedo",
-    "shortDescription": "Spec-driven engineering workflows",
-    "longDescription": "Keep specifications, test oracles, implementation, evidence, and review traceable throughout software delivery.",
+    "shortDescription": "Disciplined proportional engineering",
+    "longDescription": "Classify work by risk, refine only real ambiguity, test behavior fail-first, preserve durable knowledge, review proportionally, and keep authority explicit.",
     "developerName": "William Oliveira",
     "category": "Developer Tools",
     "capabilities": ["Read", "Write"],
     "defaultPrompt": [
-      "Refine this change and preserve traceability to its specification.",
-      "Implement this approved specification with fail-first tests.",
-      "Verify this change against its specification and evidence."
+      "Classify this change proportionally and route only the necessary work.",
+      "Implement this approved behavior with fail-first tests.",
+      "Review this change against its governing input, tests, diff, and fresh results."
     ]
   }
 }

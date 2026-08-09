@@ -5,96 +5,58 @@ decision-makers:
   - William Oliveira
 ---
 
-# Defer lifecycle hooks pending empirical need
+# Keep lifecycle enforcement out of the installed product
 
-## Context and Problem Statement
+ADR 0003 supersedes this record's former SDD-specific workflow. The no-runtime
+decision, optional Codex Rules boundary, and threshold for any future mechanical
+gate remain active.
 
-Tuxedo initially shipped Codex `PreToolUse` and `Stop` hooks that invoked a Python guard through UV. Projects could opt into policy, completion receipt, tree-hash, evidence-hash, and review-receipt validation.
+## Context
 
-The mechanism introduced UV and Python into the consumer execution path and could let UV discover or synchronize the consumer project. It also attempted to enforce a workflow that had not yet been exercised across ordinary real repository tasks. The existing evaluations measure skill routing and configured behavior; they do not establish the incremental value of lifecycle hooks.
+Lifecycle hooks previously invoked a Python guard through UV to check policies,
+receipts, and hashes. That placed development tooling in the consumer execution
+path, risked discovering or synchronizing consumer environments, and could make
+mechanical receipts appear to prove semantic quality, chronology, or review.
 
-Tuxedo needs to validate whether strict declarative guidance is sufficient before accepting a runtime dependency and a second policy system.
+Portable guidance, repository tests, CI, sandboxing, approvals, and human review
+already own different parts of this problem. Tuxedo should not add a second
+runtime policy system without a recurring, objectively observable failure.
 
-## Decision Drivers
+## Decision
 
-- Keep installed skills free of runtime dependencies.
-- Avoid modifying or discovering consumer project environments during plugin lifecycle events.
-- Validate an actual recurring failure before designing enforcement.
-- Preserve strict oracle-first development, scope authority, three-phase review, and task-owned commits.
-- Avoid receipts that prove hashes or declared exposure while appearing to prove semantic quality or chronology.
-- Keep command authority in Codex Rules, approvals, sandboxing, and human decisions.
+The installed Tuxedo product contains no lifecycle hooks, launcher, policy or
+receipt format, review-file generator, or Python/UV runtime dependency.
 
-## Considered Options
+- `AGENTS.md` and skills provide declarative engineering guidance.
+- Tests and CI provide repository-specific executable checks.
+- Optional Codex Rules cover a narrow set of direct command-authority forms.
+- Sandbox, approval policy, repository policy, and humans remain authoritative.
 
-### Keep the current UV and Python hooks
+Guidance cannot mechanically prove chronology, semantic adequacy, review
+independence, scope fidelity, or staged ownership. Public documentation must not
+claim otherwise.
 
-- Good, because some stale artifact relationships are mechanically detectable.
-- Bad, because the launcher participates in the consumer environment.
-- Bad, because the current commit gate does not bind the staged Git index.
-- Bad, because no real-task baseline establishes that the mechanism solves a recurring problem.
+## Reintroducing a gate
 
-### Rewrite the guard in shell
+A future mechanical gate is acceptable only when all of these are true:
 
-- Good, because macOS and Linux provide a shell.
-- Bad, because portable JSON parsing, path containment, globbing, SHA-256, and filesystem error handling become fragile.
-- Bad, because reimplementation complexity remains without evidence that the gate is needed.
+- a failure recurs in real work and has material impact;
+- the protected invariant is objectively observable;
+- false-positive and false-negative cases have deterministic coverage;
+- the gate does not mutate or discover the consumer project unexpectedly;
+- the installed product gains no consumer runtime dependency;
+- the documentation states the gate's limits precisely.
 
-### Isolate UV and retain Python
-
-- Good, because `--no-project`, `--no-config`, offline execution, and disabled Python downloads can avoid consumer-project synchronization.
-- Bad, because UV and Python remain runtime prerequisites.
-- Bad, because it preserves the receipt system before its value is established.
-
-### Remove lifecycle enforcement and run a declarative experiment
-
-- Good, because the installed product returns to skills and optional native Rules without a runtime.
-- Good, because real tasks can reveal which failures, if any, recur.
-- Good, because a future hook can be narrow and evidence-driven.
-- Bad, because AGENTS and skills guide behavior but cannot mechanically block a violation.
-
-## Decision Outcome
-
-Remove Tuxedo lifecycle hooks, their launcher, policy and completion-receipt templates, review-receipt JSON assets, hook fixtures, and hook-specific tests. Remove lifecycle-hook capabilities and enforcement claims from the plugin manifest and public documentation.
-
-Strengthen the declarative contract instead:
-
-1. establish the authorized task and exclusions;
-2. define an appropriate observable oracle before production implementation;
-3. keep changes within authorized scope;
-4. perform reconstructed spec, test, and code review;
-5. inspect the staged candidate and commit only task-owned changes;
-6. request authority before beginning additional work.
-
-Retain Codex Rules as an optional command-authority template. Retain deterministic tests, CI, evaluations, skills, spec/matrix/evidence artifacts, and semantic review guidance.
-
-## Empirical checkpoint
-
-Observe 10–20 real repository tasks and record, without adding hidden enforcement:
-
-- production implementation started before a suitable oracle;
-- unauthorized files or behavior changed;
-- tests derived from the implementation rather than the specification;
-- required review omitted;
-- staged content included unrelated changes;
-- additional work began without user authority.
-
-A future lifecycle hook requires all of the following:
-
-- a recurring observed failure;
-- a narrow mechanically observable invariant;
-- a deterministic false-positive/false-negative test matrix;
-- no consumer-project mutation;
-- no installed runtime dependency;
-- documentation that does not claim semantic guarantees from a mechanical check.
+Semantic judgment stays in governing inputs, skills, tests, review, and human
+authority.
 
 ## Consequences
 
-- The workflow is strict but declarative; it is not a technical gate.
-- Consumers need no UV or Python to use Tuxedo skills.
-- Tuxedo temporarily gives up mechanical stale-receipt detection.
-- Review quality, chronology, and task ownership remain agent and human responsibilities supported by tests, Git inspection, and evidence.
-- The removed implementation remains recoverable from Git history; no dormant copy is kept in the installed product.
+- Consumers need no UV, Python, or Tuxedo runtime.
+- The workflow remains declarative rather than a technical gate.
+- Tuxedo accepts that some process violations cannot be blocked mechanically.
+- Superseded hook implementations, trials, receipts, and validation logs remain
+  recoverable from Git history and do not occupy the current product tree.
 
-## Validation
-
-The governing acceptance criteria and oracle matrix are in [`SPEC-0001`](../../specs/0001-declarative-workflow/spec.md).
+See [workflow and command boundaries](../architecture/enforcement.md) for the
+current responsibility model.

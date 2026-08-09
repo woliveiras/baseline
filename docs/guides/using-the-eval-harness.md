@@ -60,11 +60,11 @@ change the full-suite inventory.
 pnpm run eval:full
 ```
 
-`eval:full` runs the official validators, deterministic suites, 40 routing
+`eval:full` runs the official validators, deterministic suites, 41 routing
 cases, 40 behavior trials, and 12 security probes, then checks that the Git
 status is unchanged. Five semantic behavior tasks across five conditions add
-25 secondary rubric calls, so the upper bound is 92 target-agent calls plus 25
-judgments: 117 model calls. It is not a pre-push hook, is not invoked by
+25 secondary rubric calls, so the upper bound is 93 target-agent calls plus 25
+judgments: 118 model calls. It is not a pre-push hook, is not invoked by
 installation, and a passing result does not itself authorize a push.
 
 If the official validators require PyYAML, keep it out of the repository by
@@ -89,8 +89,8 @@ pnpm run eval:redteam:full   # expensive; never implied by eval:full
 
 Sanitized, append-only JSON reports land in `evals/promptfoo/results/`, which is
 ignored by Git. Raw model output, prompts, traces, and credentials are never
-written there. Measured wall duration and per-run outcomes are recorded in
-[the run log](../evidence/eval-runs.md).
+written there. Review the generated report while it is relevant; do not commit
+dated result logs as permanent documentation.
 
 ## What each suite establishes
 

@@ -1,20 +1,17 @@
 ---
 name: tdd
-description: Implement approved behavior through fail-first tests and traceable oracles. Use when a material testable change has stable criteria and a behavior-oracle matrix; do not use to invent requirements from existing implementation or to maximize test count.
+description: Implement approved behavior directly from a governing request, issue, contract, decision, or other sufficient input through a fail-first executable check. Use for clear testable behavior; do not use to invent requirements from current implementation or maximize test count.
 ---
 
 # TDD
 
-Preserve the chain from criterion to oracle to test to implementation.
+Understand the expected behavior from the governing input and write first the test that demonstrates its absence or incorrectness.
 
-1. Read the full spec and matrix. Select one criterion-sized slice and confirm its oracle provenance using [provenance](./references/provenance.md).
-2. Write the smallest test at the most economical public seam: unit, integration, contract, or end-to-end. Prefer observable behavior over collaborator order or private structure.
-3. Run it before production changes. Confirm it fails for the expected behavioral reason; infrastructure errors and unrelated failures are not red evidence. Record the criterion, test-tree state, command, and observed failure in the project's evidence artifact before implementation.
-4. Implement the smallest coherent behavior that satisfies the criterion without weakening the oracle.
-5. Run the focused test, nearby suite, and relevant static checks. Add boundary cases where the matrix requires them, not to inflate counts.
-6. Refactor only while behavior remains green. Re-run fresh evidence after refactoring.
-7. Update the matrix and evidence artifact with the passing result. If the spec, test, and code disagree, stop the slice and reconcile intent explicitly.
+1. Select one behavior-sized slice and the most economical public seam: unit, integration, contract, end-to-end, static, or inspection.
+2. Write the smallest check that distinguishes the expected result from a plausible wrong result. Prefer observable behavior over collaborator order or private structure.
+3. Run it before production changes. Confirm fail-first for the expected behavioral reason; infrastructure and unrelated failures are not valid red signals.
+4. Implement the smallest coherent behavior without weakening the check.
+5. Run the focused check, nearby suite, and relevant static checks. Refactor only while behavior remains green.
+6. Synchronize durable documentation when shipped behavior or a non-obvious constraint changed. Add an `ENG-NOTE` only when the reason cannot be inferred safely.
 
-For medium and larger testable changes, require at least one `spec-derived`, `independent`, or `external` oracle. Treat tests written after viewing the new implementation as `implementation-aware` unless their oracle clearly comes from an independent source.
-
-Never change an assertion merely to match current code. Do not claim semantic completeness from coverage or a passing suite.
+When a meaningful unit test is unavailable, use the smallest executable verification that observes the real boundary. Never change an assertion merely to accept the current implementation. Report commands, results, and limitations in the final response; do not create a persistent evidence file by default.

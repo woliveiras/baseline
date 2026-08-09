@@ -5,7 +5,7 @@ description: Audit a codebase for evidence-backed architecture improvements, lev
 
 # Improve Architecture
 
-1. Establish requested area, business goal, pain, exclusions, authority, and evidence threshold. Read specs, vocabulary, tests, dependency direction, and recent relevant change history.
+1. Establish requested area, business goal, pain, exclusions, authority, and evidence threshold. Read the governing input, vocabulary, tests, dependency direction, and recent relevant change history.
 2. Trace representative behavior end to end. Look for scattered invariants, coordination-heavy callers, leaky adapters, duplicated policy, hidden ownership, unstable surfaces, weak seams, implementation-coupled tests, and low locality.
 3. Use `shape-domain` when responsibility or language is unclear and `design-deep-modules` when comparing interfaces.
 4. Support every opportunity with paths, behavior, repeated change pattern, failure mode, test limitation, or measured cost. Aesthetic preference is not architecture evidence.

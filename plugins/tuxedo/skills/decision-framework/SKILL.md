@@ -8,11 +8,11 @@ description: Make a material software decision with explicit options, evidence t
 This workflow owns the final selection among established material options when authority permits. It does not redesign options while scoring them; return incomplete boundary options to the workflow that owns their design.
 
 1. State the decision, deadline, owner, scope, non-goals, and upstream decisions it depends on.
-2. Extract decision drivers from the active spec, domain invariants, constraints, risks, and authority. Weight only when the weights reflect a real preference.
+2. Extract decision drivers from the governing input, domain invariants, constraints, risks, and authority. Weight only when the weights reflect a real preference.
 3. Compare materially different options, including leave-as-is when credible. Keep behavior and constraints constant.
 4. Classify each supporting claim using [evidence types](./references/evidence-types.md). Separate empirical result, engineering heuristic, product decision, and community inspiration.
 5. Evaluate consequence, uncertainty, reversibility, lock-in, migration, rollback, verification, and the cost of delaying the decision.
 6. Seek the cheapest discriminating evidence for high-uncertainty, high-impact claims. Do not average away a veto constraint such as security, law, data loss, or withheld authority.
-7. Select only when the active authority permits it. Record rationale, rejected options, assumptions, expiration/revisit triggers, and evidence plan in the spec or decision artifact.
+7. Select only when the active authority permits it. Record rationale, rejected options, assumptions, expiration/revisit triggers, and validation plan in the governing or decision artifact.
 
 Return a transparent matrix plus a narrative recommendation. Numbers organize judgment; they do not manufacture objectivity.

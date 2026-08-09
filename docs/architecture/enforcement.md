@@ -1,88 +1,41 @@
 # Workflow and command boundaries
 
-Tuxedo currently separates three responsibilities:
+Tuxedo separates three responsibilities:
 
-1. `AGENTS.md` and skills provide declarative workflow guidance.
-2. Tests and CI provide executable evidence for product behavior.
-3. Optional Codex Rules govern a narrow set of command-authority decisions.
+1. `AGENTS.md` and skills provide portable, declarative baseline guidance.
+2. Tests and CI execute repository-specific checks and produce fresh results.
+3. Optional Codex Rules govern a narrow set of direct command-authority decisions.
 
-Tuxedo does not distribute lifecycle hooks, launch scripts in consumer
-checkouts, or claim mechanical enforcement of workflow chronology, scope,
-review quality, or staged ownership. The decision and reintroduction criteria
-are recorded in [ADR 0002](../decisions/0002-defer-lifecycle-hooks-pending-empirical-need.md).
+Tuxedo distributes no lifecycle hooks, launch scripts, chronology gate, scope monitor, review-file generator, or consumer runtime. Guidance cannot prove chronology, semantic adequacy, review independence, scope fidelity, or staged ownership.
 
-The development-only Promptfoo evaluation boundary is documented separately in
-[the evaluation architecture](evaluations.md) and [ADR 0001](../decisions/0001-use-promptfoo-as-evaluation-orchestrator.md).
+## Proportional baseline
 
-## Declarative workflow
+For a software task, the agent:
 
-For a material task, the active contract requires the agent to:
+1. derives expected behavior, scope, constraints, and authority from the governing input;
+2. uses `measurer` to classify the highest applicable risk, never line count;
+3. invokes `refine` only when material ambiguity remains and records a durable decision only when its timing and reversibility justify it;
+4. runs the smallest suitable verification fail-first before production behavior changes;
+5. implements only the authorized task-owned behavior and synchronizes durable documentation when applicable;
+6. reviews the governing input, expected behavior, tests, complete diff, relevant risks, fresh results, unrelated changes, rollback, and limitations at `inline`, `focused`, `expanded`, or `independent` depth;
+7. performs a Git operation only when that operation is explicitly authorized.
 
-1. derive scope and exclusions from the authorized spec, task, or plan;
-2. define and run the appropriate fail-first oracle before production code;
-3. leave unrelated work unchanged and request authority before expanding scope;
-4. review the spec without implementation, tests without the new
-   implementation, and code with the complete diff and fresh evidence;
-5. inspect Git status, unstaged changes, staged changes, and untracked files;
-6. commit only the explicit task-owned candidate when local commit authority
-   exists.
-
-The appropriate oracle may be a unit, integration, contract, end-to-end,
-static, or inspection check. Documentation and configuration work must not add
-a meaningless unit test merely to satisfy a label.
-
-These instructions are strict but declarative. They guide the agent and make
-review expectations explicit; they do not prove chronology, semantic adequacy,
-reviewer independence, scope fidelity, or staged ownership.
+A suitable verification can be unit, integration, contract, end-to-end, static, inspection, or another executable check at the real boundary. Documentation and configuration work must not add a meaningless unit test to satisfy a label. The baseline does not require a specification, behavior/oracle matrix, provenance record, evidence file, or review file.
 
 ## Codex Rules
 
-Tuxedo ships `templates/codex/tuxedo.rules` as an optional project template.
-Copy it to `.codex/rules/tuxedo.rules` in a trusted project and restart Codex.
+Tuxedo ships `templates/codex/tuxedo.rules` as an optional project template. Copy it to `.codex/rules/tuxedo.rules` in a trusted project and restart Codex.
 
 For the exact standard command forms listed in the template, it:
 
 - forbids a narrow set of broad recursive deletions;
-- prompts before push, destructive Git cleanup, release, package publication,
-   deployment, selected direct remote database and project mutations, cluster
-   and infrastructure mutation, and selected direct device mutations;
+- prompts before push, destructive Git cleanup, release, package publication, deployment, selected direct remote database and project mutations, cluster and infrastructure mutation, and selected direct device mutations;
 - includes `match` and `not_match` examples validated by Codex.
 
-Rules do not validate TDD order, task scope, review quality, test adequacy, or
-commit ownership. Absolute executables, wrappers, global options, and complex
-shell programs can fall outside literal prefix coverage. Sandbox, project
-trust, approval configuration, and organizational policy remain authoritative.
-Because the most restrictive matching decision wins, non-mutating flags after
-a protected prefix still prompt; examples include `uv publish --dry-run`,
-`supabase db push --dry-run`, `supabase db push --local`, and `adb push -n`.
-The literal ADB selectors `-d` and `-e` are covered. Selectors with variable
-values, including `-s SERIAL` and `-t ID`, remain outside this template because
-the Rules pattern grammar has no wildcard argument.
+Rules do not validate TDD order, task scope, review quality, test adequacy, or commit ownership. Absolute executables, wrappers, global options, and complex shell programs can fall outside literal prefix coverage. Sandbox, project trust, approval configuration, and organizational policy remain authoritative. Because the most restrictive matching decision wins, non-mutating flags after a protected prefix can still prompt.
 
-## Real-task observation protocol
+## Gate threshold
 
-Before reconsidering lifecycle enforcement, evaluate **10–20 real tasks** with
-the declarative workflow and record only observed events:
+A future mechanical gate is justified only when a failure recurs, the invariant is objectively observable, false-positive and false-negative cases can be tested, and the solution neither mutates the consumer checkout nor introduces an installed runtime dependency. Semantic judgments remain in governing inputs, skills, tests, review, and human authority.
 
-| Failure category | Record when |
-| --- | --- |
-| Implementation before oracle | Production behavior changes before a suitable fail-first oracle is defined and run. |
-| Scope expansion | Files or behavior outside the authorized task are changed. |
-| Implementation-aware weak test | A test is shaped to accept the implementation rather than prove the spec. |
-| Missing review | Completion is claimed without the required reconstructed review phases. |
-| Unrelated staged content | The commit candidate includes changes not owned by the task. |
-| Unauthorized additional work | A newly discovered task begins without user authority. |
-
-Do not count a corrected hesitation or a false alarm as a failure. Preserve the
-task, client, relevant workflow stage, observable consequence, and whether an
-existing test, Rule, approval, or human review already caught it.
-
-Record trials in the [declarative workflow trial log](../evidence/declarative-workflow-trials.md).
-
-## Reintroducing a gate
-
-A future hook is justified only when a failure recurs, the invariant is
-mechanically observable, false-positive and false-negative cases can be tested,
-and the solution neither mutates the consumer checkout nor introduces an
-installed runtime dependency. Semantic judgments remain in specs, skills,
-reviews, tests, and human authority.
+The development-only Promptfoo boundary is documented in [evaluation architecture](evaluations.md) and [ADR 0001](../decisions/0001-use-promptfoo-as-evaluation-orchestrator.md); the product boundary decision is [ADR 0003](../decisions/0003-adopt-proportional-baseline-and-move-sdd.md). Superseded experiments and outcomes remain available through Git history rather than the current documentation tree.

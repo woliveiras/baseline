@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PLUGIN_ROOT = ROOT / "plugins" / "tuxedo"
 RULES = ROOT / "templates" / "codex" / "tuxedo.rules"
 EXPECTED_SKILLS = {
-    "refine", "brainstorming", "spec", "tdd", "bugfix", "verify", "docs",
+    "measurer", "refine", "brainstorming", "tdd", "bugfix", "verify", "docs",
     "git-commit", "ci-workflow", "shape-domain", "design-deep-modules",
     "improve-architecture", "decision-framework", "premortem", "session-bridge",
     "technical-research", "security-review",
@@ -77,57 +77,42 @@ def _markdown_section(text: str, heading: str) -> str:
 def glossary_contract_errors(text: str) -> set[str]:
     """Validate semantic boundaries that simple heading checks cannot establish."""
     headings = (
-        "Acceptance criterion",
-        "Behavior/oracle matrix",
-        "Evidence",
-        "Fail-first",
         "Governing input",
-        "Invariant",
-        "Oracle",
-        "Provenance",
-        "Task-owned change",
-        "Three-phase review",
+        "Measurer",
+        "Material ambiguity",
+        "Fail-first",
         "Verification",
+        "Fresh result",
+        "Proportional review",
+        "Task-owned change",
+        "ENG-NOTE",
+        "Authority boundary",
+        "Product and repository boundaries",
     )
     sections = {heading: _markdown_section(text, heading) for heading in headings}
     errors = {f"missing-definition:{heading}" for heading, body in sections.items() if len(body.split()) < 8}
 
     semantic_requirements = {
-        "acceptance-obligation": ("Acceptance criterion", "condition that must be true for a requirement to be satisfied"),
-        "acceptance-stable-id": ("Acceptance criterion", "stable ids"),
-        "oracle-result": ("Oracle", "expected observable result"),
-        "oracle-authority": ("Oracle", "governing input or an independent authority"),
-        "oracle-not-implementation": ("Oracle", "not from the new implementation"),
-        "oracle-test-mechanism": ("Oracle", "a test is one mechanism that evaluates observed behavior against an oracle"),
-        "oracle-test-evidence-distinct": ("Oracle", "related but distinct"),
-        "matrix-mapping": ("Behavior/oracle matrix", "maps each acceptance criterion and relevant scenario"),
-        "matrix-invariant": ("Behavior/oracle matrix", "invariant"),
-        "matrix-observable-oracle": ("Behavior/oracle matrix", "observable oracle"),
-        "matrix-provenance": ("Behavior/oracle matrix", "provenance"),
-        "matrix-planned-verification": ("Behavior/oracle matrix", "planned verification"),
-        "matrix-evidence": ("Behavior/oracle matrix", "resulting evidence"),
-        "evidence-record": ("Evidence", "durable record of what was actually inspected or executed and what happened"),
-        "evidence-not-proof": ("Evidence", "not by itself proof"),
-        "provenance-origin": ("Provenance", "where an oracle came from"),
-        "provenance-exposure": ("Provenance", "how exposed its author was to the implementation"),
-        "provenance-per-oracle": ("Provenance", "record provenance per oracle"),
-        "fail-first-before-implementation": ("Fail-first", "before the production implementation"),
-        "fail-first-expected-reason": ("Fail-first", "fail for the expected reason"),
-        "fail-first-invalid-causes": ("Fail-first", "not valid fail-first evidence"),
-        "governing-input-authority": ("Governing input", "authoritative artifact that defines intent and scope"),
-        "governing-input-not-rewritten": ("Governing input", "must not be edited merely to make implementation or tests pass"),
-        "invariant-rule": ("Invariant", "condition that must remain true"),
-        "task-owned-authorized": ("Task-owned change", "created or modified to satisfy the authorized current task"),
-        "task-owned-no-silent-expansion": ("Task-owned change", "not task-owned unless the user explicitly adds them to scope"),
-        "review-spec-boundary": ("Three-phase review", "without using tests or implementation as justification"),
-        "review-test-boundary": ("Three-phase review", "without using the new implementation as justification"),
-        "review-code-boundary": ("Three-phase review", "complete implementation and diff"),
-        "review-contexts-distinct": ("Three-phase review", "information boundaries and findings must remain distinct"),
-        "verification-evaluates-oracle": ("Verification", "mechanism used to evaluate an oracle"),
-        "verification-does-not-invent-result": ("Verification", "do not let the mechanism or implementation invent the expected result"),
+        "governing-input-authority": ("Governing input", "authoritative current source"),
+        "governing-input-not-rewritten": ("Governing input", "do not rewrite it merely"),
+        "measurer-ephemeral": ("Measurer", "exists only in conversation"),
+        "measurer-not-loc": ("Measurer", "line count is not a driver"),
+        "ambiguity-outcome": ("Material ambiguity", "would change observable behavior"),
+        "fail-first-before-implementation": ("Fail-first", "before production behavior changes"),
+        "fail-first-invalid-causes": ("Fail-first", "not valid fail-first signals"),
+        "verification-governing-input": ("Verification", "governing input"),
+        "verification-does-not-invent-result": ("Verification", "does not invent the expected result"),
+        "fresh-result-current": ("Fresh result", "actually performed for the reviewed worktree"),
+        "fresh-result-history": ("Fresh result", "not current validation"),
+        "review-complete-diff": ("Proportional review", "complete diff"),
+        "task-owned-authorized": ("Task-owned change", "authorized current task"),
+        "task-owned-no-silent-expansion": ("Task-owned change", "not task-owned without explicit scope expansion"),
+        "eng-note-not-narration": ("ENG-NOTE", "never narrates the code"),
+        "authority-explicit": ("Authority boundary", "cannot be inferred from implementation authority"),
     }
     for error, (heading, required_text) in semantic_requirements.items():
-        if required_text not in sections[heading].lower():
+        normalized_section = " ".join(sections[heading].lower().split())
+        if required_text not in normalized_section:
             errors.add(error)
     return errors
 
@@ -306,14 +291,14 @@ class ToolkitStructureTests(unittest.TestCase):
 
         glossary = (ROOT / "GLOSSARY.md").read_text(encoding="utf-8")
         for marker in (
-            "## Repository roles and boundaries",
-            "| Development-only |",
-            "| Repository-only |",
-            "| User-authorized |",
-            "| Maintainer |",
-            "does not implicitly grant task authority",
+            "## Product and repository boundaries",
+            "`development-only`",
+            "`repository-only`",
+            "`user-authorized`",
+            "`maintainer`",
+            "grants no task authority",
         ):
-            self.assertIn(marker, glossary, marker)
+            self.assertIn(marker, " ".join(glossary.split()), marker)
 
         active_surfaces = (
             "AGENTS.md",
@@ -327,24 +312,12 @@ class ToolkitStructureTests(unittest.TestCase):
             "docs/architecture/evaluations.md",
             "docs/decisions/0001-use-promptfoo-as-evaluation-orchestrator.md",
             "docs/decisions/0002-defer-lifecycle-hooks-pending-empirical-need.md",
-            "docs/evidence/declarative-workflow-trials.md",
-            "docs/evidence/eval-runs.md",
             "docs/guides/using-the-eval-harness.md",
-            "docs/research/evidence-map.md",
             "evals/promptfoo/promptfooconfig.yaml",
             "evals/promptfoo/redteam-config.yaml",
             "evals/promptfoo/smoke-config.yaml",
             "evals/promptfoo/scripts/codex_auth.py",
             "evals/promptfoo/scripts/run-evaluations.py",
-            "specs/0001-declarative-workflow/spec.md",
-            "specs/0002-repository-glossary/spec.md",
-            "specs/0002-repository-glossary/behavior-matrix.md",
-            "specs/0003-skill-catalog-contract/spec.md",
-            "specs/0004-clean-room-plugin-package/spec.md",
-            "specs/0005-remote-marketplace-installation/spec.md",
-            "specs/0005-remote-marketplace-installation/behavior-matrix.md",
-            "specs/0006-development-dependency-security/spec.md",
-            "specs/0006-development-dependency-security/behavior-matrix.md",
         )
         retired_compounds = (
             "maintainer-only",
@@ -380,7 +353,7 @@ class ToolkitStructureTests(unittest.TestCase):
         guide = (ROOT / "docs" / "guides" / "using-the-eval-harness.md").read_text(
             encoding="utf-8"
         )
-        self.assertIn("explicit user authority", " ".join(contract.split()))
+        self.assertIn("explicit human authority", " ".join(contract.split()))
         self.assertIn("explicit user authority", " ".join(evaluations.split()))
         self.assertIn("explicit user actions", " ".join(guide.split()))
 
@@ -562,13 +535,14 @@ class ToolkitStructureTests(unittest.TestCase):
         decision = (
             ROOT / "docs" / "decisions" / "0001-use-promptfoo-as-evaluation-orchestrator.md"
         ).read_text(encoding="utf-8")
+        normalized_decision = " ".join(decision.split())
         for required in (
-            "Amendment: reviewed transitive advisory remediation",
-            "crosses the parent-declared range",
+            "Transitive override policy",
+            "cross the parent-declared range",
             "remove the corresponding override",
             "Native lifecycle scripts remain disabled and unverified",
         ):
-            self.assertIn(required, decision)
+            self.assertIn(required, normalized_decision)
 
         tracked_plugin_paths = subprocess.run(
             ["git", "ls-files", "plugins/tuxedo"],
@@ -789,32 +763,27 @@ class ToolkitStructureTests(unittest.TestCase):
         decision = (
             ROOT / "docs" / "decisions" / "0002-defer-lifecycle-hooks-pending-empirical-need.md"
         ).read_text(encoding="utf-8")
-        self.assertIn("a recurring observed failure", decision)
-        self.assertIn("no installed runtime dependency", decision)
+        self.assertIn("a failure recurs in real work", decision)
+        self.assertIn("no consumer runtime dependency", decision)
 
     def test_contract_defines_declarative_task_flow(self):
-        """DW-002/DW-003: strict order and authority remain explicit without hooks."""
+        """The universal baseline keeps proportional order and authority explicit."""
         contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
-        heading = "## Declarative task flow"
+        heading = "## Baseline flow"
         self.assertIn(heading, contract)
         section = contract.split(heading, 1)[1].split("\n## ", 1)[0]
         markers = (
-            "Oracle before implementation",
-            "Authorized scope",
-            "Review before completion",
-            "Task-owned commit",
-            "Additional work",
-            "declarative requirements, not mechanical enforcement",
+            "input -> measurer",
+            "Use `refine` only when material ambiguity remains",
+            "run the smallest suitable",
+            "implement the",
+            "Review the governing input",
         )
         positions = [section.index(marker) for marker in markers]
         self.assertEqual(sorted(positions), positions)
-        self.assertIn("smallest complete set of applicable workflows", section)
-        self.assertIn("Do not stop after the first match", section)
-        self.assertIn("read each applicable `SKILL.md` completely before acting", section)
-        self.assertIn("substitute an unaided response", section)
-        self.assertIn("Use client-provided descriptions for routing", section)
-        self.assertIn("Do not scan or open every installed `SKILL.md`", section)
-        self.assertIn("do not install dependencies or access paths outside", contract)
+        self.assertIn("does not require a persistent specification", section)
+        self.assertIn("explicit human authority for staging, commit, push", contract)
+        self.assertIn("outside the authorized workspace", contract)
 
     def test_task_execution_constraints_override_generic_workflow_checks(self):
         contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
@@ -832,175 +801,76 @@ class ToolkitStructureTests(unittest.TestCase):
             self.assertIn("outside the authorized workspace", normalized)
 
     def test_contract_links_to_canonical_glossary(self):
-        """GL-001–GL-007: contract terms and identifier prefixes are discoverable."""
+        """The compact baseline glossary keeps every universal boundary discoverable."""
         contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
         glossary_path = ROOT / "GLOSSARY.md"
         self.assertTrue(glossary_path.is_file())
-        self.assertIn("[Repository glossary](GLOSSARY.md)", contract)
-        self.assertLess(
-            contract.index("[Repository glossary](GLOSSARY.md)"),
-            contract.index("spec -> behavior/oracle matrix"),
-        )
+        self.assertIn("[repository glossary](glossary.md)", contract.lower())
 
         glossary = glossary_path.read_text(encoding="utf-8")
         required_headings = (
-            "## Acceptance criterion",
-            "## Behavior/oracle matrix",
-            "## Evidence",
-            "## Fail-first",
             "## Governing input",
-            "## Invariant",
-            "## Oracle",
-            "## Provenance",
-            "## Task-owned change",
-            "## Three-phase review",
+            "## Measurer",
+            "## Material ambiguity",
+            "## Fail-first",
             "## Verification",
-            "## Identifier and evidence prefixes",
-            "## Documentation abbreviations",
+            "## Fresh result",
+            "## Proportional review",
+            "## Task-owned change",
+            "## ENG-NOTE",
+            "## Authority boundary",
+            "## Product and repository boundaries",
         )
         for heading in required_headings:
             self.assertIn(heading, glossary)
         self.assertEqual(set(), glossary_contract_errors(glossary))
 
         for marker in (
-            "| `AC` | Acceptance Criterion |",
-            "| `SPEC` | Specification |",
-            "| `GL` | Glossary |",
-            "| `DW` | Declarative Workflow |",
-            "| `DWF` | Declarative Workflow Failure |",
-            "| `DWT` | Declarative Workflow Trial |",
-            "| `SC` | Skill Catalog |",
-            "| `CP` | Clean-room Plugin package |",
-            "| `RM` | Remote Marketplace |",
-            "| `EV` | Evaluation |",
-            "| `EV-AGG` | Evaluation Aggregate |",
-            "| `EV-ISO` | Evaluation Isolation |",
-            "| `EV-PRV` | Evaluation Privacy |",
-            "| `EV-RPT` | Evaluation Report |",
-            "| `EV-SHD` | Evaluation Shard |",
-            "| `TUX-AUD` | Tuxedo Audit |",
-            "| `WP` | Work Package |",
-            "| `ADR` | Architecture Decision Record |",
-            "| `MADR` | Markdown Architectural Decision Records |",
-            "| `RFC` | Request for Comments |",
-            "| `C4` | Context, Containers, Components, and Code |",
-            "| `TDD` | Test-Driven Development |",
+            "Line count is not a driver",
+            "exists only in conversation",
+            "Do not rewrite it merely",
+            "never narrates the code",
+            "cannot be inferred from implementation authority",
         ):
-            self.assertIn(marker, glossary, marker)
-        normalized_glossary = " ".join(glossary.split())
-        for marker in (
-            "Prefixes are scoped by their governing artifact, not globally unique",
-            "`RM-001` through `RM-009`",
-            "`RM-01` in command-Rules fixtures",
-        ):
-            self.assertIn(marker, normalized_glossary, marker)
+            self.assertIn(marker, " ".join(glossary.split()), marker)
 
-        empty_definitions = "# Glossary\n\n" + "\n\n".join(required_headings)
         adversarial = {
-            "empty definitions": (empty_definitions, "missing-definition:Oracle"),
-            "heading prefix is not the oracle heading": (
-                glossary.replace("## Oracle\n", "## Oracle provenance\n"),
-                "missing-definition:Oracle",
+            "empty definitions": ("# Glossary\n\n" + "\n\n".join(required_headings), "missing-definition:Measurer"),
+            "line count drives size": (
+                glossary.replace("Line count is\nnot a driver", "Line count is\nthe primary driver"),
+                "measurer-not-loc",
             ),
-            "acceptance criterion is optional": (
-                glossary.replace("condition that must be true for a requirement to be satisfied", "optional note about a requirement"),
-                "acceptance-obligation",
+            "classification becomes a file": (
+                glossary.replace("exists only in conversation", "is saved in the repository"),
+                "measurer-ephemeral",
             ),
-            "implementation defines oracle": (
-                glossary.replace("not from the new implementation", "from the new implementation"),
-                "oracle-not-implementation",
+            "ambiguity cannot change behavior": (
+                glossary.replace("would change observable\nbehavior", "would not change observable\nbehavior"),
+                "ambiguity-outcome",
             ),
-            "oracle test and evidence collapsed": (
-                glossary.replace("related but distinct", "equivalent"),
-                "oracle-test-evidence-distinct",
-            ),
-            "matrix only lists fields": (
-                glossary.replace("maps each acceptance criterion and relevant scenario", "lists fields"),
-                "matrix-mapping",
-            ),
-            "matrix omits invariant": (
-                glossary.replace("to its invariant, observable oracle", "to its observable oracle"),
-                "matrix-invariant",
-            ),
-            "matrix omits observable oracle": (
-                glossary.replace("observable oracle", "expected value"),
-                "matrix-observable-oracle",
-            ),
-            "matrix omits provenance": (
-                glossary.replace("observable oracle, provenance", "observable oracle"),
-                "matrix-provenance",
-            ),
-            "matrix omits planned verification": (
-                glossary.replace("planned verification", "planned work"),
-                "matrix-planned-verification",
-            ),
-            "matrix omits evidence": (
-                glossary.replace("and resulting evidence", "and result"),
-                "matrix-evidence",
-            ),
-            "evidence is not an execution record": (
-                glossary.replace("durable record of what was actually inspected or executed and what happened", "prediction of what might happen"),
-                "evidence-record",
-            ),
-            "evidence treated as proof": (
-                glossary.replace("not by itself proof", "by itself proof"),
-                "evidence-not-proof",
-            ),
-            "provenance assigned per file": (
-                glossary.replace("Record provenance per oracle", "Record provenance per file"),
-                "provenance-per-oracle",
-            ),
-            "provenance omits oracle origin": (
-                glossary.replace("Where an oracle came from", "A label"),
-                "provenance-origin",
-            ),
-            "provenance omits implementation exposure": (
-                glossary.replace("how exposed its author was to the implementation", "how the file is named"),
-                "provenance-exposure",
-            ),
-            "broken setup accepted as fail-first": (
-                glossary.replace("not valid fail-first evidence", "valid fail-first evidence"),
+            "broken setup accepted fail-first": (
+                glossary.replace("not valid fail-first\nsignals", "valid fail-first\nsignals"),
                 "fail-first-invalid-causes",
             ),
-            "governing input may be rewritten to pass": (
-                glossary.replace("must not be edited merely to make implementation or tests pass", "may be edited to make implementation or tests pass"),
-                "governing-input-not-rewritten",
+            "current code invents expectation": (
+                glossary.replace("does not invent the expected result", "invents the expected result"),
+                "verification-does-not-invent-result",
             ),
-            "governing input is not authoritative": (
-                glossary.replace("authoritative artifact that defines intent and scope", "optional artifact unrelated to intent and scope"),
-                "governing-input-authority",
+            "historical report is current": (
+                glossary.replace("not current validation", "current validation"),
+                "fresh-result-history",
             ),
-            "invariant need not remain true": (
-                glossary.replace("condition that must remain true", "condition that may change freely"),
-                "invariant-rule",
-            ),
-            "all changes become task-owned": (
-                glossary.replace("not task-owned unless the user explicitly adds them to scope", "automatically task-owned"),
+            "adjacent work becomes owned": (
+                glossary.replace("not\ntask-owned without explicit scope expansion", "automatically task-owned"),
                 "task-owned-no-silent-expansion",
             ),
-            "task ownership ignores authorization": (
-                glossary.replace("created or modified to satisfy the authorized current task", "found anywhere in the repository"),
-                "task-owned-authorized",
+            "comment narrates code": (
+                glossary.replace("never\nnarrates the code", "narrates the code"),
+                "eng-note-not-narration",
             ),
-            "spec review uses implementation": (
-                glossary.replace("without using tests or implementation as justification", "using tests and implementation as justification"),
-                "review-spec-boundary",
-            ),
-            "test review uses implementation": (
-                glossary.replace("without using the new implementation as justification", "using the new implementation as justification"),
-                "review-test-boundary",
-            ),
-            "code review excludes complete diff": (
-                glossary.replace("complete implementation and diff", "selected implementation snippets"),
-                "review-code-boundary",
-            ),
-            "review contexts collapsed": (
-                glossary.replace("information boundaries and findings must remain distinct", "information boundaries may be shared"),
-                "review-contexts-distinct",
-            ),
-            "verification does not evaluate oracle": (
-                glossary.replace("mechanism used to evaluate an oracle", "mechanism used to copy implementation output"),
-                "verification-evaluates-oracle",
+            "implementation grants authority": (
+                glossary.replace("cannot be inferred from implementation authority", "is inferred from implementation authority"),
+                "authority-explicit",
             ),
         }
         for label, (candidate, expected_error) in adversarial.items():
@@ -1026,21 +896,8 @@ class ToolkitStructureTests(unittest.TestCase):
             "mechanical integrity of the spec-driven receipt",
         ):
             self.assertNotIn(forbidden, corpus)
-        self.assertIn("10–20 real tasks", corpus)
         self.assertIn("declarative", corpus.lower())
-        trial_log = ROOT / "docs" / "evidence" / "declarative-workflow-trials.md"
-        self.assertTrue(trial_log.is_file())
-        trial_text = trial_log.read_text(encoding="utf-8")
-        for category in (
-            "Implementation before oracle",
-            "Scope expansion",
-            "Implementation-aware weak test",
-            "Missing review",
-            "Unrelated staged content",
-            "Unauthorized additional work",
-        ):
-            self.assertIn(category, corpus)
-            self.assertIn(category, trial_text)
+        self.assertIn("Git is the default archive", corpus)
 
     def test_skill_frontmatter_and_ui_policy(self):
         for name in EXPECTED_SKILLS:
@@ -1060,7 +917,7 @@ class ToolkitStructureTests(unittest.TestCase):
         catalog = (ROOT / "skills" / "catalog.md").read_text(encoding="utf-8")
         normalized_catalog = catalog.replace("`", "")
         rows = re.findall(
-            r"^\| `([^`]+)` \| ([^|]+) \| ([^|]+) \| ([^|]+) \| ([^|]+) \| ([^|]+) \| ([^|]+) \|$",
+            r"^\| `([^`]+)` \| ([^|]+) \| ([^|]+) \| ([^|]+) \| ([^|]+) \|$",
             catalog,
             re.MULTILINE,
         )
@@ -1069,16 +926,12 @@ class ToolkitStructureTests(unittest.TestCase):
         for row in rows:
             self.assertTrue(all(cell.strip() for cell in row[1:]), row[0])
         for required in (
-            "spec owns the canonical behavior/oracle matrix",
-            "verify reviews the canonical matrix",
-            "design-deep-modules owns boundary options",
-            "decision-framework owns selection",
+            "Route software work through measurer first",
+            "Invoke refine only for material ambiguity",
+            "Use tdd for approved new behavior",
+            "Use verify at review or completion boundaries",
             "No matching skill",
-            "declarative transition model",
-            "read every clearly applicable implicit skill",
-            "do not substitute an unaided response",
-            "Use client-provided descriptions for routing",
-            "Do not scan or open every installed SKILL.md",
+            "explicit-only",
         ):
             self.assertIn(required, normalized_catalog)
 
@@ -1089,10 +942,10 @@ class ToolkitStructureTests(unittest.TestCase):
         decision = (ROOT / "skills" / "decision-framework" / "SKILL.md").read_text(encoding="utf-8")
         premortem = (ROOT / "skills" / "premortem" / "SKILL.md").read_text(encoding="utf-8")
 
-        self.assertIn("approved and sufficient", refine)
-        self.assertIn("do not reopen", refine.lower())
-        self.assertNotIn("Produce the behavior/oracle matrix", verify)
-        self.assertIn("canonical behavior/oracle matrix", verify)
+        self.assertIn("fully defined `L/XL` task proceeds without `refine`", refine)
+        self.assertIn("Do not reopen accepted decisions", refine)
+        self.assertNotIn("canonical behavior/oracle matrix", verify)
+        self.assertIn("complete diff and worktree state", verify)
         self.assertIn("owns boundary options", design)
         self.assertIn("does not select", design)
         self.assertIn("owns the final selection", decision)
@@ -1129,13 +982,14 @@ class ToolkitStructureTests(unittest.TestCase):
             ui = (ROOT / "skills" / name / "agents" / "openai.yaml").read_text(encoding="utf-8")
             self.assertIn("allow_implicit_invocation: false", ui, name)
 
-    def test_spec_templates_do_not_preselect_risk_or_review_policy(self):
-        for relative in ("templates/spec/spec.md", "skills/spec/assets/spec-template.md"):
-            template = (ROOT / relative).read_text(encoding="utf-8")
-            self.assertIn("risk: unresolved", template)
-            self.assertIn("review_policy: unresolved", template)
-            self.assertNotIn("risk: small", template)
-            self.assertNotIn("review_policy: single-isolated-reviewer", template)
+    def test_sdd_templates_are_not_part_of_the_baseline(self):
+        for relative in (
+            "templates/spec",
+            "skills/spec",
+            "skills/tdd/references/provenance.md",
+            "skills/verify/assets/evidence-template.md",
+        ):
+            self.assertFalse((ROOT / relative).exists(), relative)
 
     def test_documentation_and_ci_reference_assets_are_routed_and_sourced(self):
         docs_skill = (ROOT / "skills" / "docs" / "SKILL.md").read_text(encoding="utf-8")
@@ -1261,8 +1115,7 @@ class ToolkitStructureTests(unittest.TestCase):
     def test_agents_contract_has_conventional_commit_examples(self):
         contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
         self.assertIn("type(scope): imperative subject", contract)
-        self.assertIn("feat(evals): isolate Codex authentication", contract)
-        self.assertIn("fix stuff", contract)
+        self.assertIn("stage only task-owned paths or hunks", contract)
 
     def test_git_commit_routes_only_explicit_commit_requests(self):
         text = (ROOT / "skills" / "git-commit" / "SKILL.md").read_text()
@@ -1285,16 +1138,12 @@ class ToolkitStructureTests(unittest.TestCase):
         for forbidden in ("geremmyas ", "go:embed", "geremmyas.yml", "internal/cli", "catalog/packs"):
             self.assertNotIn(forbidden, corpus.lower())
 
-    def test_canonical_templates_are_kept_in_sync(self):
-        pairs = [
-            ("templates/spec/spec.md", "skills/spec/assets/spec-template.md"),
-            ("templates/spec/behavior-matrix.md", "skills/spec/assets/behavior-matrix-template.md"),
-            ("templates/spec/evidence.md", "skills/verify/assets/evidence-template.md"),
-            ("skills/spec/references/scope-tiers.md", "skills/verify/references/scope-tiers.md"),
-        ]
-        for left, right in pairs:
-            self.assertEqual((ROOT / left).read_bytes(), (ROOT / right).read_bytes(), f"{left} != {right}")
-        self.assertNotIn("## Behavior and oracle matrix", (ROOT / "templates/spec/spec.md").read_text())
+    def test_measurer_reference_is_not_duplicated_into_the_skill(self):
+        skill = (ROOT / "skills" / "measurer" / "SKILL.md").read_text(encoding="utf-8")
+        reference = (ROOT / "skills" / "measurer" / "references" / "classification.md").read_text(encoding="utf-8")
+        self.assertIn("./references/classification.md", skill)
+        self.assertIn("one-line authorization-default change can be `XL`", reference)
+        self.assertNotIn("one-line authorization-default change can be `XL`", skill)
 
     def test_eval_dry_run_is_seeded_and_covers_all_comparisons(self):
         command = ["uv", "run", "python", str(ROOT / "evals" / "run.py"), "--dry-run", "--seed", "17"]
@@ -1904,16 +1753,16 @@ class EvaluationVerifierTests(unittest.TestCase):
 
     def test_contract_requires_authority_before_editing_governing_input(self):
         contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
-        self.assertIn("Do not edit a governing spec, request, or bug report", contract)
-        self.assertIn("an analysis-only or no-write task may inspect with read-only commands", contract)
+        self.assertIn("treat the current request or external contract as immutable input", contract)
+        self.assertIn("unless the user explicitly authorizes editing it", contract)
         task = json.loads((ROOT / "evals" / "tasks" / "multi-module-change.json").read_text(encoding="utf-8"))
-        self.assertIn("Keep SPEC.md unchanged", task["prompt"])
+        self.assertIn("Keep REQUEST.md unchanged", task["prompt"])
 
     def test_read_only_semantic_tasks_forbid_execution_and_mutation_without_leaking_oracles(self):
         expected = {
             "real-ambiguity": ("exactly one focused question",),
-            "spec-inconsistent": ("If implementation is blocked", "do not invent policy"),
-            "post-hoc-contamination": ("read-only commands only", "next valid evidence step"),
+            "measurer-classification": ("Return exactly one valid JSON object",),
+            "post-hoc-contamination": ("read-only commands only", "next valid verification step"),
         }
         for task_id, task_phrases in expected.items():
             task = self.task(task_id)
@@ -1927,13 +1776,12 @@ class EvaluationVerifierTests(unittest.TestCase):
             for phrase in task_phrases:
                 self.assertIn(phrase, prompt)
 
-        spec_skill = (ROOT / "skills" / "spec" / "SKILL.md").read_text(encoding="utf-8")
+        measurer_skill = (ROOT / "skills" / "measurer" / "SKILL.md").read_text(encoding="utf-8")
         verify_skill = (ROOT / "skills" / "verify" / "SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("make no file changes", spec_skill)
-        self.assertIn("explicit read-only or no-write review", verify_skill)
+        self.assertIn("Do not create, write, or save a file", measurer_skill)
+        self.assertIn("Do not create review files", verify_skill)
         self.assertNotIn("seven-year", self.task("real-ambiguity")["prompt"])
         self.assertIn("both conflicting retention durations found", self.task("real-ambiguity")["prompt"])
-        self.assertNotIn("contradiction", self.task("spec-inconsistent")["prompt"])
         self.assertNotIn("regression oracle", self.task("post-hoc-contamination")["prompt"])
 
     def test_promptfoo_read_only_execution_policy_uses_structured_commands(self):
@@ -2137,13 +1985,13 @@ class EvaluationVerifierTests(unittest.TestCase):
             case["description"]: case
             for case in PROMPTFOO_TESTS.generate_tests({"suite": "routing"})
         }
-        indirect = cases["implicit-spec"]
+        indirect = cases["implicit-measurer"]
         request = indirect["vars"]["request"].lower()
-        self.assertNotIn("spec", request)
+        self.assertNotIn("measurer", request)
         self.assertNotIn(".agents/skills", request)
-        self.assertEqual("spec", indirect["vars"]["expected_skills"])
+        self.assertEqual("measurer", indirect["vars"]["expected_skills"])
         self.assertIn(
-            ("skill-used", "spec"),
+            ("skill-used", "measurer"),
             {(item["type"], item.get("value")) for item in indirect["assert"]},
         )
 
@@ -2157,7 +2005,7 @@ class EvaluationVerifierTests(unittest.TestCase):
         self.assertIn(("skill-used", "decision-framework"), assertions)
 
         for case_id in (
-            "composition-spec-tdd",
+            "composition-measurer-tdd",
             "composition-design-decision",
             "composition-ci-security",
         ):
@@ -2184,7 +2032,7 @@ class EvaluationVerifierTests(unittest.TestCase):
         self.assertIn("src/payments.py", architecture_item["fixture"])
         self.assertNotIn("design-deep-modules", architecture_item["request"])
 
-        self.assertEqual(40, len(cases))
+        self.assertEqual(41, len(cases))
 
     def test_promptfoo_routing_materializes_case_specific_fixture(self):
         cases = PROMPTFOO_PREPARE._cases("routing")
@@ -2214,7 +2062,8 @@ class EvaluationVerifierTests(unittest.TestCase):
             for skill in ("brainstorming", "refine", "design-deep-modules", "improve-architecture")
         }
         self.assertIn("takes precedence over refine", descriptions["brainstorming"])
-        self.assertIn("explicit brainstorming", descriptions["refine"])
+        self.assertIn("material ambiguity", descriptions["refine"])
+        self.assertIn("do not use because a task is large", descriptions["refine"])
         self.assertIn("not for whole-architecture audits", descriptions["design-deep-modules"])
         self.assertIn("defers new module-boundary design", descriptions["improve-architecture"])
 
@@ -2926,7 +2775,7 @@ class EvaluationVerifierTests(unittest.TestCase):
         """EV-SHD-01/EV-AGG-01: full coverage runs before one aggregate verdict."""
         self.assertEqual(2, PROMPTFOO_RUNNER.FULL_MAX_WORKERS)
         self.assertEqual(
-            [(0, 20), (20, 40)],
+            [(0, 21), (21, 41)],
             [PROMPTFOO_RUNNER._parse_filter_range(shard.filter_range) for shard in PROMPTFOO_RUNNER.SUITE_SHARDS["routing"]],
         )
         self.assertEqual(

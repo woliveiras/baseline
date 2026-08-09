@@ -41,7 +41,7 @@
 
 ## Decisions and evidence
 
-- Governing specifications: {links}
+- Governing inputs: {links}
 - Accepted ADRs: {links}
 - Validation evidence: {links or commands}
 - Known limitations: {limitations}

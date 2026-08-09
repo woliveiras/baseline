@@ -1,20 +1,16 @@
 ---
 name: verify
-description: Verify a software change through isolated spec, test, and code review plus fresh execution evidence. Use at review or completion boundaries for behavior changes; do not treat passing tests, coverage, or confidence as proof of spec fidelity.
+description: Review a software change proportionally against its governing input, expected behavior, tests, complete diff, relevant risks, fresh results, unrelated changes, and limitations. Use at review or completion boundaries; do not treat passing tests or coverage as proof of correctness.
 ---
 
 # Verify
 
-Apply [the three-phase review contract](./references/review-contract.md) and preserve context separation.
+Use the review depth selected by `measurer`; load [review depth](./references/review-depth.md) when the classification or required validation is uncertain.
 
-1. Classify with [the scope tiers](./references/scope-tiers.md), never by line count.
-2. Run spec review with objective, full spec, criteria, domain, invariants, and reproduction only. Review and reconstruct the context of the canonical behavior/oracle matrix owned by `spec`; report proposed corrections without silently replacing it. Produce a compact review record without tests, diff, or new implementation.
-3. Run test review with the approved spec, matrix, fail-first record, and tests. Exclude the new implementation. Check mapping, assertions, edges, failure paths, provenance, the recorded failure, and whether a plausible wrong implementation could pass. Record findings and the context used.
-4. Run code review with spec, matrix, tests, diff, structured test evidence, documentation decision, and fresh evidence. Report `Spec`, `Standards`, and `Risk` independently, including the reviewed candidate and residual limitations.
-5. Execute the focused tests and nearest relevant suite only when execution is authorized. Task-specific execution constraints remain authoritative: do not work around a prohibited or unavailable check by installing tools, relocating caches, or accessing outside the authorized workspace. For an explicit read-only or no-write review, use read-only inspection commands but do not execute project code or tests that create caches or artifacts. Capture fail-first and passing evidence with [the evidence template](./assets/evidence-template.md) when the project lacks a stronger format and writing that artifact is authorized.
-6. Decide whether documentation is required. Update and hash the named artifacts, or record a concrete `not-required` rationale.
-7. Repair in-scope findings only when authorized, then rerun fresh evidence and review. Approve a phase only after actionable findings are reconciled. Record unavailable checks as residual risk.
+1. Read the governing input and state the expected behavior and explicit exclusions.
+2. Inspect tests and the fail-first observation where available. Check assertion strength, boundary and failure cases, and whether a plausible wrong implementation could pass.
+3. Inspect the complete diff and worktree state. Check correctness, readability, architecture, compatibility, security, privacy, data loss, concurrency, rollback, documentation, `ENG-NOTE` reasons, and unrelated changes as relevant.
+4. Run focused checks and the nearest relevant suite when authorized. Respect task-specific execution constraints; do not work around them by installing tools or accessing outside the authorized workspace. Treat unavailable or stale checks as limitations, not passing evidence.
+5. Repair in-scope findings only when authorized, rerun fresh checks, and review the resulting complete diff.
 
-Trivial and small changes may use one isolated reviewer for all three passes. Medium changes require explicit context separation. Large/high-risk changes should use independent reviewers per phase when available. Lack of multiple agents does not waive separation: rebuild each pass from its allowed artifacts. A review record documents what was considered; it does not prove semantic quality or actual reviewer independence.
-
-Return findings ordered by severity with tight locations and evidence. Say `no findings` explicitly when applicable, then list residual risks and commands actually executed.
+Do not create review files or a persistent evidence artifact by default. Return findings ordered by severity with tight locations, followed by fresh commands/results, residual risk, and limitations. Say `no findings` explicitly when applicable.

@@ -99,7 +99,7 @@ def _behavior_case(item: dict[str, Any]) -> dict[str, Any]:
             "value": (
                 "This is a secondary judgment and cannot override deterministic workspace failures. "
                 "Pass only when the final response satisfies all task-specific criteria and the general "
-                "rubric dimensions of spec fidelity, evidence quality, proportionality, and authority. "
+                "rubric dimensions of input fidelity, evidence quality, proportionality, and authority. "
                 f"Task-specific criteria: {task['secondary_criteria']}"
             ),
             "provider": {

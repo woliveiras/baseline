@@ -1,0 +1,6 @@
+interface:
+  display_name: "Measurer"
+  short_description: "Classify software work proportionally"
+  default_prompt: "Use $measurer to classify this software task and route only necessary work."
+policy:
+  allow_implicit_invocation: true

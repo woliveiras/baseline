@@ -1,23 +1,25 @@
 # Tuxedo
 
-Tuxedo is an installable, spec-driven software engineering toolkit for coding agents. It is distributed as a Codex plugin and portable Agent Skills, and it keeps intent, behavioral oracles, implementation, evidence, and review connected throughout a change.
+Tuxedo is a portable baseline for disciplined, proportional software engineering. It is distributed as a Codex plugin and portable Agent Skills for coding agents.
 
 If you want to *use* Tuxedo with your agent, this page is enough to get started. If you want to *work on* Tuxedo itself, go to the [documentation hub](docs/README.md). I'll really appreciate your help, feedback, and contributions.
 
 ## Why Tuxedo
 
-Coding agents drift: the code they produce can quietly diverge from what you actually asked for, and passing tests do not prove that the intended behavior was captured. Tuxedo treats the specification as an active artifact and threads a fidelity chain through every change:
+Coding agents drift, overcomplicate routine work, and may cross authority boundaries. Tuxedo keeps the baseline small while making risk, ambiguity, verification, durable knowledge, review, and Git authority explicit:
 
 ```text
-spec
-  -> behavior and oracle matrix
-  -> tests
+input
+  -> measurer
+  -> refine or decision documentation only when needed
+  -> fail-first tests
   -> implementation
-  -> evidence
-  -> isolated spec / test / code review
+  -> durable documentation when applicable
+  -> proportional review
+  -> explicitly authorized Git operation
 ```
 
-A spec can be corrected when evidence exposes ambiguity or contradiction, but the tests, code, and docs must then be reconciled explicitly. Nothing silently redefines intent.
+The input can be a request, issue, bug report, external contract, accepted architecture decision, or explicitly approved behavior. Tuxedo does not require a persistent specification, behavior/oracle matrix, formal provenance, evidence file, or review file. Teams that choose Specification-Driven Development can install the independent `sdd` collection from [Storehouse](https://github.com/woliveiras/storehouse); Tuxedo does not depend on it.
 
 ## What's inside
 
@@ -25,12 +27,12 @@ Tuxedo v0.1 distributes workflow skills that your agent loads on demand:
 
 | Category | Skills |
 | --- | --- |
-| Change workflow | `refine`, `spec`, `tdd`, `bugfix`, `verify`, `git-commit`, `ci-workflow`, `docs` |
+| Change workflow | `measurer`, `refine`, `tdd`, `bugfix`, `verify`, `git-commit`, `ci-workflow`, `docs` |
 | Design and architecture | `shape-domain`, `design-deep-modules`, `improve-architecture`, `decision-framework` |
 | Deep work (explicitly invoked) | `brainstorming`, `premortem`, `session-bridge`, `technical-research` |
 | Safety | `security-review` |
 
-Routine changes load only the smallest relevant workflow. `brainstorming`, `git-commit`, `improve-architecture`, `premortem`, `session-bridge`, and `technical-research` are explicit-only; the other workflows may be selected automatically when their descriptions match. The [catalog contract](plugins/tuxedo/skills/catalog.md) defines ownership, precedence, stop conditions, and composition without adding a runtime state machine.
+`measurer` is intentionally concise and implicitly classifies work by the highest applicable risk, never line count. `refine` follows only when material ambiguity remains. `brainstorming`, `git-commit`, `improve-architecture`, `premortem`, `session-bridge`, and `technical-research` are explicit-only; the other workflows may be selected automatically when their descriptions match. The [catalog contract](plugins/tuxedo/skills/catalog.md) defines ownership, precedence, stop conditions, and composition without adding a runtime state machine.
 
 ## Install for Codex
 
@@ -127,7 +129,7 @@ The supported remote route is marketplace-first. Do not use `codex plugin add <U
 
 ### Option B: clone locally for development
 
-This repository includes a local marketplace entry that points to the dedicated package at `plugins/tuxedo/`. That package contains only the plugin manifest and the distributed skills; repository-only tests, evaluations, specifications, documentation, and `node_modules/` are outside it. No package-build or copy script is required. Preserve this flow for developing Tuxedo itself:
+This repository includes a local marketplace entry that points to the dedicated package at `plugins/tuxedo/`. That package contains only the plugin manifest and the distributed skills; repository-only tests, evaluations, documentation, and `node_modules/` are outside it. No package-build or copy script is required. Preserve this flow for developing Tuxedo itself:
 
 ```bash
 git clone https://github.com/woliveiras/tuxedo.git
@@ -156,21 +158,21 @@ Replace the example path with the absolute path to your clone and restart Codex.
 - **Implicit invocation:** Codex may select an installed skill when the request matches its frontmatter description and `agents/openai.yaml` permits it. Ask for the outcome normally; no plugin name is required.
 - **Explicit invocation:** use `$skill-name` in Codex CLI/IDE or choose the skill from the UI. Explicit-only Tuxedo workflows require this or an equally direct request.
 - If many skills are installed, Codex may shorten or omit entries from its initial skill list because of the context budget. Use explicit invocation when you need a particular workflow deterministically.
-- Local clean-room Codex CLI evidence covers plugin installation, discovery of all distributed skills, removal, and reinstallation without Codex authentication or model calls. A separate remote clean-room run verified the same lifecycle over SSH using machine-managed GitHub access. These checks prove packaging and discovery, not that a model follows a skill correctly.
+- Clean-room validation covers plugin installation, discovery of all distributed skills, removal, and reinstallation without Codex authentication or model calls. These checks establish packaging and discovery, not that a model follows a skill correctly.
 - The plugin is supported by Codex CLI and Codex desktop. Codex IDE supports standalone skills but not plugin installation. Tuxedo follows the portable Agent Skills format, but installation, discovery, routing, and composition in other clients remain unverified until client-specific clean-room tests are recorded.
 
 ### Optional command rules
 
 Copy [`templates/codex/tuxedo.rules`](templates/codex/tuxedo.rules) to `.codex/rules/tuxedo.rules` in a trusted project and restart Codex. The rules ask for human approval before push, destructive Git cleanup, release, publication, deploy, selected direct remote database and project mutations, infrastructure changes, and selected direct device mutations, and forbid a few literal broad-deletion forms.
 
-Once installed, work normally: start from the authorized task, define the oracle and run the appropriate verification fail-first, stay inside scope, review intent/tests/code separately, and inspect the staged candidate before a local commit. Each skill documents its own workflow in `SKILL.md`.
+Once installed, work normally: start from the authorized input, classify proportionally, refine only material ambiguity, run the smallest suitable verification fail-first, stay inside scope, synchronize durable knowledge when needed, and review the complete diff before any explicitly authorized Git operation. Each skill documents its own workflow in `SKILL.md`.
 
 ## Responsibility boundaries
 
 Tuxedo separates command authority from workflow guidance:
 
 - **Codex Rules** handle command-level safety through native, explicitly listed command prefixes.
-- **`AGENTS.md` and skills** define the strict spec-first, oracle-first, scoped, reviewed workflow.
+- **`AGENTS.md` and skills** define the proportional, fail-first, scoped, reviewed workflow.
 - **Tests and CI** provide executable evidence for product behavior.
 
 Tuxedo does not install lifecycle hooks or require external dependencies in consumer projects. The workflow requirements are declarative rather than mechanically enforced. They are being validated across real repository tasks before any narrow gate is considered. See [the workflow boundary](docs/architecture/enforcement.md) for responsibilities and the observation protocol.
@@ -178,21 +180,15 @@ Tuxedo does not install lifecycle hooks or require external dependencies in cons
 ## Documentation
 
 - **Use it:** this page, plus each skill's own `SKILL.md`.
-- **Learn the vocabulary:** the [repository glossary](GLOSSARY.md) defines oracle, evidence, provenance, fail-first, and the three review phases.
-- **Work on it:** the [documentation hub](docs/README.md) links the development guide, architecture, decisions (ADRs), research evidence, and the development-only evaluation harness.
+- **Learn the vocabulary:** the [repository glossary](GLOSSARY.md) defines governing input, measurer, material ambiguity, fail-first, proportional review, task ownership, and `ENG-NOTE`.
+- **Work on it:** the [documentation hub](docs/README.md) links the development guide, architecture, active decisions (ADRs), and the development-only evaluation harness.
 - **Release it:** the [release guide](docs/releases.md) defines the single product version, protected automation, verification, and rollback.
-
-## History: from Geremmyas to Tuxedo
-
-Tuxedo is the successor to [Geremmyas](https://github.com/woliveiras/geremmyas), an earlier project that explored spec-driven development with coding agents by combining specifications, tests, reviews, workflow guidance, and executable guardrails. Tuxedo carries that purpose forward as a portable, evidence-driven toolkit and drops the CLI and distribution machinery. It selectively adapts content from Geremmyas (MIT-licensed, same author).
-
-The project is named after Geremmyas, my tuxedo cat and the namesake of the toolkit that preceded it.
 
 ## Provenance and influences
 
-The workflows were informed by established engineering practice, compared for coverage with community engineering skills (including [Superpowers](https://github.com/obra/superpowers), [Spec Kit](https://github.com/github/spec-kit) and [Matt Pocock's](https://github.com/mattpocock/skills)), and reviewed against recent empirical studies. No third-party skill text or procedure is copied. Recognized design references include John Ousterhout's *A Philosophy of Software Design* and Andrew Hunt and David Thomas's *The Pragmatic Programmer*, translated into operational checks such as interface comparison, information hiding, locality, reversibility, and evidence before broad change.
+Tuxedo succeeds Geremmyas and selectively adapts its MIT-licensed work by the same author. The project is named after Geremmyas, the author's tuxedo cat. The workflows were informed by established engineering practice and compared for coverage with community engineering skills (including [Superpowers](https://github.com/obra/superpowers), [Spec Kit](https://github.com/github/spec-kit) and [Matt Pocock's](https://github.com/mattpocock/skills)). No third-party skill text or procedure is copied. Recognized design references include John Ousterhout's *A Philosophy of Software Design* and Andrew Hunt and David Thomas's *The Pragmatic Programmer*, translated into operational checks such as interface comparison, information hiding, locality, reversibility, and validation before broad change.
 
-Rules are labeled as empirical results, engineering heuristics, product decisions, or community inspiration; a citation does not imply that a rule is scientifically proven. Details and limitations live in [the evidence map](docs/research/evidence-map.md).
+Only fresh results from the current checkout can support a current evaluation claim.
 
 ## License
 

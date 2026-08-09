@@ -14,17 +14,17 @@
     "workspace_key": "routing-positive-brainstorming"
   },
   {
-    "id": "positive-spec",
+    "id": "positive-measurer",
     "kind": "positive",
-    "skill": "spec",
-    "request": "Use the spec workflow to turn this request into an active specification with stable acceptance criteria, exclusions, and observable oracles.",
-    "workspace_key": "routing-positive-spec"
+    "skill": "measurer",
+    "request": "Use the measurer workflow to classify this software change by risk and reversibility and return only its ephemeral JSON contract.",
+    "workspace_key": "routing-positive-measurer"
   },
   {
     "id": "positive-tdd",
     "kind": "positive",
     "skill": "tdd",
-    "request": "Use the TDD workflow to implement this approved behavior from a fail-first test and an independent behavioral oracle.",
+    "request": "Use the TDD workflow to implement this approved behavior from a fail-first test at the smallest suitable seam.",
     "workspace_key": "routing-positive-tdd"
   },
   {
@@ -38,7 +38,7 @@
     "id": "positive-verify",
     "kind": "positive",
     "skill": "verify",
-    "request": "Use the verify workflow to review this completed change through the isolated spec, test, and code review phases and fresh evidence.",
+    "request": "Use the verify workflow to review this completed change proportionally from its governing input, tests, complete diff, fresh results, and residual risks.",
     "workspace_key": "routing-positive-verify"
   },
   {
@@ -134,12 +134,12 @@
     "workspace_key": "routing-negative-brainstorming"
   },
   {
-    "id": "negative-spec",
+    "id": "negative-measurer",
     "kind": "negative",
-    "avoid_skill": "spec",
-    "expected_skill": "tdd",
-    "request": "Implement the already approved acceptance criteria from a fail-first test and verify the behavior.",
-    "workspace_key": "routing-negative-spec"
+    "avoid_skill": "measurer",
+    "expected_skill": null,
+    "request": "Translate this sentence from English to Portuguese; no software task or engineering classification is involved.",
+    "workspace_key": "routing-negative-measurer"
   },
   {
     "id": "negative-tdd",
@@ -178,7 +178,7 @@
     "kind": "negative",
     "avoid_skill": "git-commit",
     "expected_skill": "verify",
-    "request": "Verify this completed change against its approved specification, tests, evidence, and review contract; do not create a commit.",
+    "request": "Verify this completed change against its governing input, tests, complete diff, and fresh results; do not create a commit.",
     "workspace_key": "routing-negative-git-commit"
   },
   {
@@ -239,7 +239,7 @@
     "kind": "negative",
     "avoid_skill": "session-bridge",
     "expected_skill": "verify",
-    "request": "Verify this normal in-session change against its specification and evidence; no handoff or session transition is needed.",
+    "request": "Verify this normal in-session change against its governing input and fresh results; no handoff or session transition is needed.",
     "workspace_key": "routing-negative-session-bridge"
   },
   {
@@ -255,40 +255,49 @@
     "kind": "negative",
     "avoid_skill": "security-review",
     "expected_skill": "verify",
-    "request": "Verify the completed change against the approved specification, test evidence, and review phases; security analysis is not requested.",
+    "request": "Verify the completed change against its governing input, tests, complete diff, and fresh results; security analysis is not requested.",
     "workspace_key": "routing-negative-security-review"
   },
   {
-    "id": "implicit-refine",
+    "id": "small-ambiguous-refine",
     "kind": "positive",
-    "skills": ["refine"],
+    "skills": ["measurer", "refine"],
     "directed": false,
-    "request": "This request leaves two materially different retention behaviors possible. Resolve only the smallest decision that changes the outcome before any implementation.",
-    "workspace_key": "routing-implicit-refine"
+    "request": "This otherwise small request leaves two materially incompatible retention behaviors possible. Classify it proportionally, then resolve only the smallest decision that changes the outcome before implementation.",
+    "workspace_key": "routing-small-ambiguous-refine"
   },
   {
-    "id": "implicit-spec",
+    "id": "implicit-measurer",
     "kind": "positive",
-    "skills": ["spec"],
+    "skills": ["measurer"],
     "directed": false,
-    "request": "Turn this approved material change into stable acceptance criteria, invariants, exclusions, observable oracles, authority, and review policy before implementation.",
-    "workspace_key": "routing-implicit-spec"
+    "request": "Classify the risk, reversibility, documentation timing, ambiguity routing, and review depth of changing one authorization flag that can grant every tenant production-admin access. Return only the compact classification object.",
+    "workspace_key": "routing-implicit-measurer"
+  },
+  {
+    "id": "large-defined-no-refine",
+    "kind": "positive",
+    "skills": ["measurer"],
+    "avoid_skill": "refine",
+    "directed": false,
+    "request": "Classify this fully approved public schema migration with documented compatibility and rollback. The behavior, scope, constraints, and authority are complete; do not reopen decisions or refine the request.",
+    "workspace_key": "routing-large-defined-no-refine"
   },
   {
     "id": "implicit-verify",
     "kind": "positive",
     "skills": ["verify"],
     "directed": false,
-    "request": "Review this completed change in separate intent, test, and code phases, then report fresh execution evidence and residual risk.",
+    "request": "Review this completed change proportionally from the governing input, tests, complete diff, fresh results, and residual risk.",
     "workspace_key": "routing-implicit-verify"
   },
   {
-    "id": "composition-spec-tdd",
+    "id": "composition-measurer-tdd",
     "kind": "positive",
-    "skills": ["spec", "tdd"],
+    "skills": ["measurer", "tdd"],
     "directed": false,
-    "request": "Define stable criteria and independent observable oracles for this approved new behavior, run the smallest check fail-first, and then implement only enough code to pass it.",
-    "workspace_key": "routing-composition-spec-tdd"
+    "request": "Classify this approved new behavior proportionally, run the smallest suitable check fail-first, and then implement only enough coherent code to pass it.",
+    "workspace_key": "routing-composition-measurer-tdd"
   },
   {
     "id": "composition-design-decision",

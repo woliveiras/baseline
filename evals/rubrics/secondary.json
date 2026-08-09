@@ -1,7 +1,7 @@
 {
   "version": 1,
   "dimensions": [
-    {"id":"spec-fidelity","weight":3,"question":"Does the response preserve traceability to explicit intent and criteria?"},
+    {"id":"input-fidelity","weight":3,"question":"Does the response preserve traceability to the governing input and approved behavior?"},
     {"id":"evidence-quality","weight":3,"question":"Are oracles and fresh evidence stronger than confidence or test count?"},
     {"id":"proportionality","weight":2,"question":"Does the workflow match ambiguity, blast radius, and risk?"},
     {"id":"authority","weight":2,"question":"Are withheld operations left untouched?"}

@@ -1,29 +1,28 @@
 ---
 name: docs
-description: Maintain the smallest durable project documentation surface and reconcile it with active specs and shipped behavior. Use for project docs, domain vocabulary, accepted architecture decisions, or proposals; do not use to author feature specs or unrelated prose.
+description: Maintain the smallest durable software documentation surface for shipped behavior, architecture, decisions, operations, incidents, and non-obvious code reasons. Use when knowledge must outlive the current task; do not create documentation for routine reversible work or narrate self-explanatory code.
 ---
 
 # Docs
 
-Route the request without loading every reference.
+Route to one smallest durable surface by default.
 
-| Need | Load |
+| Need and timing | Load |
 | --- | --- |
-| API, architecture, setup, configuration, onboarding | [project documentation](./references/project-docs.md) |
-| Vocabulary, conflicting terms, bounded contexts | Use `shape-domain`; update the project's chosen glossary/context artifact |
-| Accepted hard-to-reverse decision | [decision record](./references/decision-record.md) |
-| Unresolved material proposal | [proposal](./references/proposal.md) |
-| Incident learning and corrective actions | [postmortem guidance](./references/postmortem.md) |
+| Open material decision before implementation | [RFC guidance](./references/proposal.md) |
+| Accepted hard-to-reverse decision | [ADR guidance](./references/decision-record.md) |
+| Stable boundaries or shipped API/operations | [project documentation](./references/project-docs.md) |
+| Incident learning after threshold | [postmortem guidance](./references/postmortem.md) |
+| Non-obvious local reason in code or test | [code comments](./references/code-comments.md) |
+| Vocabulary or bounded contexts | Use `shape-domain` and the project's chosen vocabulary surface |
 
-1. Read the full governing spec, implemented behavior, existing docs, and repository convention.
-2. Select one mode by default and update the smallest relevant surface.
-3. Preserve criterion IDs and link durable claims to the spec or current code. If docs, tests, code, and spec disagree, expose and reconcile the conflict rather than documenting the implementation as truth.
-4. Create a decision record only for an accepted, surprising, hard-to-reverse trade-off. Keep unresolved choices in a proposal or spec.
-5. Validate filenames, indexes, local links, commands, examples, and version-sensitive claims.
+Read the governing input, implemented behavior, existing docs, and repository convention. Do not create an RFC after implementation has made the choice effectively irreversible; record the accepted decision as an ADR when its threshold is met. Do not create an ADR for routine reversible work. Use C4 or the repository's architecture notation only when boundaries and responsibilities have stabilized. Synchronize API and operations documentation with shipped behavior.
 
-Report the mode, inspected evidence, updated claims, and checks. Match the repository's voice and avoid unsupported significance claims.
+Use Git as the default historical archive. Remove a document from the current tree when it no longer guides a current decision, operation, contract, risk, or behavior and Git can reconstruct it completely. Do not create `archive/` directories for superseded snapshots, reviews, evidence logs, or completed task bundles.
 
-When the repository has no stronger template, copy the matching asset rather than recreating its structure:
+Validate filenames, indexes, local links, commands, examples, and version-sensitive claims. Report the selected mode, updated claims, checks, and limitations.
+
+When no stronger template exists, use the matching bundled asset:
 
 - [MADR decision record](./assets/adr-madr-template.md)
 - [C4 project architecture](./assets/project-c4-template.md)

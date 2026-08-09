@@ -22,15 +22,13 @@ distribution directory, or runtime dependency, and none should be added.
   stable without creating a second skill tree or a package-generation step.
 - Each distributed skill is a `SKILL.md` with optional `references/`, `assets/`,
   and `agents/` beside it.
-- `templates/` holds opt-in Codex Rules and spec/evidence templates.
-- `specs/` holds product contracts, oracle matrices, evidence, and
-  reconstructed review records.
+- `templates/` holds the opt-in Codex Rules template.
 - `docs/` holds project documentation.
 - `evals/` holds the development-only evaluation harness (the deterministic
   runner plus the Promptfoo orchestration). It is not installed with the plugin.
 - `tests/` holds the deterministic tests for the mechanical invariants.
 
-`docs/`, `specs/`, `tests/`, and `evals/` are repository-only and are not part
+`docs/`, `tests/`, and `evals/` are repository-only and are not part
 of the installed plugin surface.
 
 ## Toolchain
@@ -46,8 +44,9 @@ UV, Python, PNPM, or Node.js in consumer projects.
 
 ## How to develop
 
-- Read the complete governing spec or skill before changing it. Metadata only
-  routes; it never replaces reading the full text.
+- Read the complete governing input and every applicable skill before changing behavior.
+- Classify with `measurer`; refine only material ambiguity and add durable
+  decision documentation only when timing and reversibility justify it.
 - Keep each `SKILL.md` concise and imperative. Put optional depth one level down
   in `references/`.
 - Keep portable workflow logic client-neutral. Codex invocation policy belongs

@@ -11,6 +11,6 @@ description: Investigate a technical engineering question with primary sources, 
 4. Triangulate when one source cannot support the claim. Treat community material as navigation or inspiration unless it supplies independently verifiable evidence.
 5. Separate empirical result, repository observation, engineering heuristic, product decision, and inference.
 6. Translate evidence into an operational rule, detection idea, enforcement candidate, or no-action decision. Do not turn a study outside its population into a universal mandate.
-7. Update the active spec or decision artifact with citations and residual uncertainty when authorized.
+7. Update the governing input or decision artifact with citations and residual uncertainty when authorized.
 
 Return the answer first, then evidence, limitations, derived rule, and next discriminating check. Do not copy excessive source text.

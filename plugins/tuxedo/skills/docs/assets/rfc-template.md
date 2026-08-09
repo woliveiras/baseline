@@ -40,7 +40,7 @@
 
 ## Validation plan
 
-{Acceptance criteria, test levels, rollout evidence, and success or rollback signals.}
+{Expected behavior, test levels, rollout results, and success or rollback signals.}
 
 ## Alternatives
 

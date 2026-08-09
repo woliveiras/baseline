@@ -1,4 +1,4 @@
 interface:
   display_name: "Refine"
-  short_description: "Resolve material ambiguity proportionally"
+  short_description: "Resolve only material ambiguity"
   default_prompt: "Use $refine to resolve the material decisions in this request."
