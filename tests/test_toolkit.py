@@ -22,8 +22,8 @@ from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PLUGIN_ROOT = ROOT / "plugins" / "tuxedo"
-RULES = ROOT / "templates" / "codex" / "tuxedo.rules"
+PLUGIN_ROOT = ROOT / "plugins" / "baseline"
+RULES = ROOT / "templates" / "codex" / "baseline.rules"
 EXPECTED_SKILLS = {
     "measurer", "refine", "brainstorming", "tdd", "bugfix", "verify", "docs",
     "git-commit", "ci-workflow", "shape-domain", "design-deep-modules",
@@ -45,24 +45,24 @@ def load_promptfoo_module(name: str, path: Path):
     return module
 
 
-PROMPTFOO_TESTS = load_promptfoo_module("tuxedo_promptfoo_tests", ROOT / "evals" / "promptfoo" / "tests.py")
+PROMPTFOO_TESTS = load_promptfoo_module("baseline_promptfoo_tests", ROOT / "evals" / "promptfoo" / "tests.py")
 PROMPTFOO_ROUTING = load_promptfoo_module(
-    "tuxedo_promptfoo_routing", ROOT / "evals" / "promptfoo" / "assertions" / "routing.py"
+    "baseline_promptfoo_routing", ROOT / "evals" / "promptfoo" / "assertions" / "routing.py"
 )
 PROMPTFOO_SECURITY = load_promptfoo_module(
-    "tuxedo_promptfoo_security", ROOT / "evals" / "promptfoo" / "assertions" / "security.py"
+    "baseline_promptfoo_security", ROOT / "evals" / "promptfoo" / "assertions" / "security.py"
 )
 PROMPTFOO_WORKSPACE = load_promptfoo_module(
-    "tuxedo_promptfoo_workspace", ROOT / "evals" / "promptfoo" / "assertions" / "workspace.py"
+    "baseline_promptfoo_workspace", ROOT / "evals" / "promptfoo" / "assertions" / "workspace.py"
 )
 PROMPTFOO_AUTH = load_promptfoo_module(
-    "tuxedo_promptfoo_auth", ROOT / "evals" / "promptfoo" / "scripts" / "codex_auth.py"
+    "baseline_promptfoo_auth", ROOT / "evals" / "promptfoo" / "scripts" / "codex_auth.py"
 )
 PROMPTFOO_PREPARE = load_promptfoo_module(
-    "tuxedo_promptfoo_prepare", ROOT / "evals" / "promptfoo" / "scripts" / "prepare-workspaces.py"
+    "baseline_promptfoo_prepare", ROOT / "evals" / "promptfoo" / "scripts" / "prepare-workspaces.py"
 )
 PROMPTFOO_RUNNER = load_promptfoo_module(
-    "tuxedo_promptfoo_runner", ROOT / "evals" / "promptfoo" / "scripts" / "run-evaluations.py"
+    "baseline_promptfoo_runner", ROOT / "evals" / "promptfoo" / "scripts" / "run-evaluations.py"
 )
 
 
@@ -207,7 +207,7 @@ class MarkdownLinkValidationTests(unittest.TestCase):
     def setUp(self):
         self.temporary_directory = tempfile.TemporaryDirectory()
         self.workspace = Path(self.temporary_directory.name)
-        self.package = self.workspace / "plugins" / "tuxedo"
+        self.package = self.workspace / "plugins" / "baseline"
         self.package.mkdir(parents=True)
 
     def tearDown(self):
@@ -281,8 +281,8 @@ class ToolkitStructureTests(unittest.TestCase):
     def test_canonical_project_vocabulary_and_package_identity(self):
         """TV-001..TV-006: identity, boundaries, authority, and history stay distinct."""
         package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
-        self.assertEqual("tuxedo", package["name"])
-        self.assertEqual("Development-only evaluation tooling for Tuxedo", package["description"])
+        self.assertEqual("baseline", package["name"])
+        self.assertEqual("Development-only evaluation tooling for Baseline", package["description"])
         self.assertTrue(package["private"])
         self.assertRegex(
             package["version"],
@@ -359,7 +359,7 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertIn("explicit user actions", " ".join(guide.split()))
 
         manifest = json.loads((PLUGIN_ROOT / ".codex-plugin" / "plugin.json").read_text())
-        self.assertEqual("tuxedo", manifest["name"])
+        self.assertEqual("baseline", manifest["name"])
         self.assertEqual({".codex-plugin", "skills"}, {path.name for path in PLUGIN_ROOT.iterdir()})
 
     def test_release_version_and_release_please_contract(self):
@@ -378,25 +378,22 @@ class ToolkitStructureTests(unittest.TestCase):
         uv_lock = tomllib.loads((ROOT / "uv.lock").read_text(encoding="utf-8"))
 
         self.assertTrue(package["private"])
-        self.assertEqual("tuxedo", package["name"])
+        self.assertEqual("baseline", package["name"])
         self.assertRegex(
             package["version"],
             r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$",
         )
         self.assertEqual(package["version"], plugin["version"])
         self.assertEqual(package["version"], pyproject["project"]["version"])
-        locked_project = next(item for item in uv_lock["package"] if item["name"] == "tuxedo")
+        locked_project = next(item for item in uv_lock["package"] if item["name"] == "baseline")
         self.assertEqual(package["version"], locked_project["version"])
         self.assertEqual({".": package["version"]}, manifest)
-        self.assertEqual(
-            "4370b1ebecb31f58619e8f877fccbea9769c92a7",
-            release_config["bootstrap-sha"],
-        )
+        self.assertNotIn("bootstrap-sha", release_config)
 
         self.assertEqual({"."}, set(release_config["packages"]))
         root_release = release_config["packages"]["."]
         self.assertEqual("node", root_release["release-type"])
-        self.assertEqual("tuxedo", root_release["package-name"])
+        self.assertEqual("baseline", root_release["package-name"])
         self.assertTrue(root_release["include-v-in-tag"])
         self.assertFalse(root_release["include-component-in-tag"])
         self.assertTrue(root_release["bump-minor-pre-major"])
@@ -404,7 +401,7 @@ class ToolkitStructureTests(unittest.TestCase):
             [
                 {
                     "type": "json",
-                    "path": "plugins/tuxedo/.codex-plugin/plugin.json",
+                    "path": "plugins/baseline/.codex-plugin/plugin.json",
                     "jsonpath": "$.version",
                 },
                 {
@@ -415,7 +412,7 @@ class ToolkitStructureTests(unittest.TestCase):
                 {
                     "type": "toml",
                     "path": "uv.lock",
-                    "jsonpath": "$.package[?(@.name=='tuxedo')].version",
+                    "jsonpath": "$.package[?(@.name=='baseline')].version",
                 },
                 {"type": "generic", "path": "README.md"},
             ],
@@ -431,29 +428,32 @@ class ToolkitStructureTests(unittest.TestCase):
         current_version = json.loads(
             (ROOT / "package.json").read_text(encoding="utf-8")
         )["version"]
+        effective_install_version = (
+            current_version
+            if tuple(map(int, current_version.split("."))) >= (0, 2, 0)
+            else "0.2.0"
+        )
 
-        self.assertIn("## 0.1.0 - 2026-08-08", changelog)
+        self.assertNotIn("## 0.1.0", changelog)
         for marker in (
             "one product version",
             "private Node package is never published to npm",
             "Release PR merge is the explicit publication decision",
-            "`fix` | `0.1.0` -> `0.1.1`",
-            "`feat` | `0.1.0` -> `0.2.0`",
-            "Breaking change before `1.0.0` | `0.1.0` -> `0.2.0`",
+            "`fix` | increment the patch version",
+            "`feat` | increment the minor version",
+            "Breaking change before `1.0.0` | increment the minor version",
             "Rollback",
-            "v0.1.0",
         ):
             self.assertIn(marker, releases_normalized, marker)
 
-        self.assertIn(f"--ref v{current_version}", readme)
-        self.assertIn("--ref v0.2.0", readme)
+        self.assertIn(f"--ref v{effective_install_version}", readme)
         self.assertGreaterEqual(readme.count("x-release-please-start-version"), 5)
         self.assertEqual(
             readme.count("x-release-please-start-version"),
             readme.count("x-release-please-end"),
         )
         self.assertIn("mutable development channel", readme)
-        self.assertIn("`tuxedo@tuxedo` is `plugin@marketplace`", readme)
+        self.assertIn("`baseline@baseline` is `plugin@marketplace`", readme)
         self.assertNotIn("no Git tags are published yet", readme)
 
     def test_ci_and_release_workflow_contract(self):
@@ -484,7 +484,7 @@ class ToolkitStructureTests(unittest.TestCase):
             "e363b08c9175ac1cbe5893615dd2cb9ddf95043b",
             "validate_plugin.py",
             "quick_validate.py",
-            "plugins/tuxedo/skills/*/",
+            "plugins/baseline/skills/*/",
             "uv sync --locked",
             "uv run --locked python -m unittest discover -s tests -v",
             "uv run --locked python evals/run.py --dry-run",
@@ -535,8 +535,11 @@ class ToolkitStructureTests(unittest.TestCase):
                 self.assertIn("uv run --locked", command, name)
 
         pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-        self.assertEqual("tuxedo", pyproject["project"]["name"])
-        self.assertEqual("Development tooling for Tuxedo", pyproject["project"]["description"])
+        self.assertEqual("baseline", pyproject["project"]["name"])
+        self.assertEqual(
+            "Development tooling for the Baseline engineering foundation",
+            pyproject["project"]["description"],
+        )
         self.assertEqual(">=3.12", pyproject["project"]["requires-python"])
         self.assertEqual([], pyproject["project"]["dependencies"])
         self.assertEqual(["PyYAML==6.0.2"], pyproject["dependency-groups"]["dev"])
@@ -546,12 +549,12 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertEqual(">=3.12", uv_lock["requires-python"])
         locked = {item["name"]: item for item in uv_lock["package"]}
         self.assertEqual("6.0.2", locked["pyyaml"]["version"])
-        self.assertEqual(package["version"], locked["tuxedo"]["version"])
+        self.assertEqual(package["version"], locked["baseline"]["version"])
 
         runner = (
             ROOT / "evals" / "promptfoo" / "scripts" / "run-evaluations.py"
         ).read_text(encoding="utf-8")
-        self.assertNotIn("TUXEDO_VALIDATOR_PYTHON", runner)
+        self.assertNotIn("BASELINE_VALIDATOR_PYTHON", runner)
 
         development_docs = "\n".join(
             (ROOT / relative).read_text(encoding="utf-8")
@@ -564,7 +567,7 @@ class ToolkitStructureTests(unittest.TestCase):
         )
         self.assertIn("PyYAML", development_docs)
         self.assertIn("uv sync --locked", development_docs)
-        self.assertNotIn("TUXEDO_VALIDATOR_PYTHON", development_docs)
+        self.assertNotIn("BASELINE_VALIDATOR_PYTHON", development_docs)
         self.assertNotIn("uv pip install", development_docs)
 
         contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
@@ -605,14 +608,14 @@ class ToolkitStructureTests(unittest.TestCase):
             self.assertIn(required, normalized_decision)
 
         tracked_plugin_paths = subprocess.run(
-            ["git", "ls-files", "plugins/tuxedo"],
+            ["git", "ls-files", "plugins/baseline"],
             cwd=ROOT,
             capture_output=True,
             check=True,
             text=True,
         ).stdout.splitlines()
         tracked_top_level = {
-            Path(path).relative_to("plugins/tuxedo").parts[0] for path in tracked_plugin_paths
+            Path(path).relative_to("plugins/baseline").parts[0] for path in tracked_plugin_paths
         }
         self.assertEqual({".codex-plugin", "skills"}, tracked_top_level)
 
@@ -628,7 +631,7 @@ class ToolkitStructureTests(unittest.TestCase):
     def test_manifest_and_distributed_inventory(self):
         manifest = json.loads((PLUGIN_ROOT / ".codex-plugin" / "plugin.json").read_text())
         package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
-        self.assertEqual("tuxedo", manifest["name"])
+        self.assertEqual("baseline", manifest["name"])
         self.assertEqual(package["version"], manifest["version"])
         self.assertNotIn("hooks", manifest, "the plugin does not distribute lifecycle hooks")
         actual = {path.name for path in (ROOT / "skills").iterdir() if path.is_dir()}
@@ -640,11 +643,11 @@ class ToolkitStructureTests(unittest.TestCase):
             (ROOT / ".agents" / "plugins" / "marketplace.json").read_text(encoding="utf-8")
         )
         source = marketplace["plugins"][0]["source"]
-        self.assertEqual({"source": "local", "path": "./plugins/tuxedo"}, source)
+        self.assertEqual({"source": "local", "path": "./plugins/baseline"}, source)
 
         manifest_path = PLUGIN_ROOT / ".codex-plugin" / "plugin.json"
         self.assertTrue(manifest_path.is_file())
-        self.assertEqual("tuxedo", json.loads(manifest_path.read_text())["name"])
+        self.assertEqual("baseline", json.loads(manifest_path.read_text())["name"])
         self.assertEqual({".codex-plugin", "skills"}, {path.name for path in PLUGIN_ROOT.iterdir()})
         self.assertFalse(any(path.is_symlink() for path in PLUGIN_ROOT.rglob("*")))
         for forbidden in ("node_modules", "evals", "specs", "tests", "docs", "AGENTS.md"):
@@ -652,7 +655,7 @@ class ToolkitStructureTests(unittest.TestCase):
 
         compatibility = ROOT / "skills"
         self.assertTrue(compatibility.is_symlink())
-        self.assertEqual("plugins/tuxedo/skills", os.readlink(compatibility))
+        self.assertEqual("plugins/baseline/skills", os.readlink(compatibility))
         self.assertEqual((PLUGIN_ROOT / "skills").resolve(), compatibility.resolve())
         actual = {path.name for path in compatibility.iterdir() if path.is_dir()}
         self.assertEqual(EXPECTED_SKILLS, actual)
@@ -663,9 +666,9 @@ class ToolkitStructureTests(unittest.TestCase):
         marketplace = json.loads(
             (ROOT / ".agents" / "plugins" / "marketplace.json").read_text(encoding="utf-8")
         )
-        self.assertEqual("./plugins/tuxedo", marketplace["plugins"][0]["source"]["path"])
+        self.assertEqual("./plugins/baseline", marketplace["plugins"][0]["source"]["path"])
 
-        with tempfile.TemporaryDirectory(prefix="tuxedo-clean-room-") as tmp:
+        with tempfile.TemporaryDirectory(prefix="baseline-clean-room-") as tmp:
             clean_root = Path(tmp)
             isolated_home = clean_root / "os-home"
             isolated_codex_home = clean_root / "codex-home"
@@ -693,7 +696,7 @@ class ToolkitStructureTests(unittest.TestCase):
 
             run_cli("plugin", "marketplace", "add", str(ROOT), "--json")
             installed = json.loads(
-                run_cli("plugin", "add", "tuxedo@tuxedo", "--json").stdout
+                run_cli("plugin", "add", "baseline@baseline", "--json").stdout
             )
             installed_path = Path(installed["installedPath"]).resolve()
             self.assertTrue(installed_path.is_relative_to(isolated_codex_home.resolve()))
@@ -721,8 +724,8 @@ class ToolkitStructureTests(unittest.TestCase):
                     "id": 1,
                     "params": {
                         "clientInfo": {
-                            "name": "tuxedo-clean-room",
-                            "title": "Tuxedo clean-room",
+                            "name": "baseline-clean-room",
+                            "title": "Baseline clean-room",
                             "version": "1.0.0",
                         },
                         "capabilities": {
@@ -772,28 +775,28 @@ class ToolkitStructureTests(unittest.TestCase):
 
             entry = response["result"]["data"][0]
             self.assertEqual([], entry["errors"])
-            tuxedo_skills = [
-                skill for skill in entry["skills"] if skill["name"].startswith("tuxedo:")
+            baseline_skills = [
+                skill for skill in entry["skills"] if skill["name"].startswith("baseline:")
             ]
             self.assertEqual(
                 EXPECTED_SKILLS,
-                {skill["name"].removeprefix("tuxedo:") for skill in tuxedo_skills},
+                {skill["name"].removeprefix("baseline:") for skill in baseline_skills},
             )
-            self.assertTrue(all(skill["enabled"] for skill in tuxedo_skills))
+            self.assertTrue(all(skill["enabled"] for skill in baseline_skills))
             self.assertTrue(
                 all(
                     Path(skill["path"]).resolve().is_relative_to(installed_path)
-                    for skill in tuxedo_skills
+                    for skill in baseline_skills
                 )
             )
 
-            run_cli("plugin", "remove", "tuxedo@tuxedo", "--json")
+            run_cli("plugin", "remove", "baseline@baseline", "--json")
             listed = json.loads(run_cli("plugin", "list", "--json").stdout)
             self.assertEqual([], listed["installed"])
             reinstalled = json.loads(
-                run_cli("plugin", "add", "tuxedo@tuxedo", "--json").stdout
+                run_cli("plugin", "add", "baseline@baseline", "--json").stdout
             )
-            self.assertEqual("tuxedo@tuxedo", reinstalled["pluginId"])
+            self.assertEqual("baseline@baseline", reinstalled["pluginId"])
 
     def test_distributed_product_has_no_lifecycle_runtime(self):
         """DW-001/DW-005: no dormant hook or receipt runtime remains installed."""
@@ -829,7 +832,7 @@ class ToolkitStructureTests(unittest.TestCase):
     def test_contract_defines_declarative_task_flow(self):
         """The universal baseline keeps proportional order and authority explicit."""
         contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
-        heading = "## Baseline flow"
+        heading = "## Engineering flow"
         self.assertIn(heading, contract)
         section = contract.split(heading, 1)[1].split("\n## ", 1)[0]
         markers = (
@@ -950,7 +953,7 @@ class ToolkitStructureTests(unittest.TestCase):
         )
         corpus = "\n".join(path.read_text(encoding="utf-8") for path in public_paths)
         for forbidden in (
-            ".tuxedo/policy.json",
+            ".baseline/policy.json",
             "completion receipt",
             "Workflow hooks",
             "mechanical integrity of the spec-driven receipt",
@@ -1080,8 +1083,8 @@ class ToolkitStructureTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         for marker in (
             "codex plugin marketplace add",
-            "codex plugin add tuxedo@tuxedo",
-            "plugins/tuxedo/",
+            "codex plugin add baseline@baseline",
+            "plugins/baseline/",
             "No package-build or copy script is required",
             "/plugins",
             ".agents/skills",
@@ -1097,14 +1100,14 @@ class ToolkitStructureTests(unittest.TestCase):
         marketplace = json.loads(
             (ROOT / ".agents" / "plugins" / "marketplace.json").read_text(encoding="utf-8")
         )
-        self.assertEqual("tuxedo", marketplace["name"])
-        self.assertEqual("Tuxedo", marketplace["interface"]["displayName"])
-        legacy_marketplace_name = "tuxedo" + "-local"
+        self.assertEqual("baseline", marketplace["name"])
+        self.assertEqual("Baseline", marketplace["interface"]["displayName"])
+        legacy_marketplace_name = "baseline" + "-local"
         self.assertNotIn(legacy_marketplace_name, readme.lower())
         self.assertNotIn(legacy_marketplace_name, json.dumps(marketplace).lower())
-        self.assertEqual("tuxedo", marketplace["plugins"][0]["name"])
+        self.assertEqual("baseline", marketplace["plugins"][0]["name"])
         self.assertEqual(
-            {"source": "local", "path": "./plugins/tuxedo"},
+            {"source": "local", "path": "./plugins/baseline"},
             marketplace["plugins"][0]["source"],
         )
         self.assertTrue((PLUGIN_ROOT / ".codex-plugin" / "plugin.json").is_file())
@@ -1114,35 +1117,37 @@ class ToolkitStructureTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         development = (ROOT / "docs" / "development.md").read_text(encoding="utf-8")
         version = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))["version"]
+        if tuple(map(int, version.split("."))) < (0, 2, 0):
+            version = "0.2.0"
         tag = f"v{version}"
-        self.assertNotIn("tuxedo" + "-local", development.lower())
+        self.assertNotIn("baseline" + "-local", development.lower())
 
         self.assertIn(
-            f"codex plugin marketplace add woliveiras/tuxedo --ref {tag}\n"
-            "codex plugin add tuxedo@tuxedo",
+            f"codex plugin marketplace add woliveiras/baseline --ref {tag}\n"
+            "codex plugin add baseline@baseline",
             readme,
         )
-        self.assertIn("without keeping a local Tuxedo checkout", readme)
+        self.assertIn("without keeping a local Baseline checkout", readme)
         for marker in (
             "This repository is public",
-            "The `woliveiras/tuxedo` shorthand uses HTTPS",
+            "The `woliveiras/baseline` shorthand uses HTTPS",
             "private fork",
         ):
             self.assertIn(marker, readme, marker)
         sparse_command = "\n".join(
             (
-                f"codex plugin marketplace add woliveiras/tuxedo --ref {tag} \\",
+                f"codex plugin marketplace add woliveiras/baseline --ref {tag} \\",
                 "  --sparse .agents/plugins/marketplace.json \\",
-                "  --sparse plugins/tuxedo",
+                "  --sparse plugins/baseline",
             )
         )
         self.assertIn(sparse_command, readme)
         for marker in (
             "--sparse .agents/plugins/marketplace.json",
-            "--sparse plugins/tuxedo",
-            "git@github.com:OWNER/tuxedo.git",
-            "codex plugin remove tuxedo@tuxedo",
-            "codex plugin marketplace remove tuxedo",
+            "--sparse plugins/baseline",
+            "git@github.com:OWNER/baseline.git",
+            "codex plugin remove baseline@baseline",
+            "codex plugin marketplace remove baseline",
             "Codex account authentication",
             "GitHub repository authentication",
             f"`{tag}` is immutable",
@@ -1153,22 +1158,22 @@ class ToolkitStructureTests(unittest.TestCase):
             self.assertIn(marker, readme, marker)
 
         reinstall = (
-            "codex plugin remove tuxedo@tuxedo\n"
-            "codex plugin add tuxedo@tuxedo"
+            "codex plugin remove baseline@baseline\n"
+            "codex plugin add baseline@baseline"
         )
         self.assertIn(reinstall, readme)
         full_removal = (
-            "codex plugin remove tuxedo@tuxedo\n"
-            "codex plugin marketplace remove tuxedo"
+            "codex plugin remove baseline@baseline\n"
+            "codex plugin marketplace remove baseline"
         )
         self.assertIn(full_removal, readme)
         self.assertNotRegex(readme, r"codex plugin add\s+(?:https?|ssh|git@)")
         self.assertNotRegex(readme, r"https?://[^\s`]+:[^\s`]+@")
         self.assertIn("clone locally for development", readme.lower())
         for marker in (
-            "git clone https://github.com/woliveiras/tuxedo.git",
+            "git clone https://github.com/woliveiras/baseline.git",
             'codex plugin marketplace add "$(pwd)"',
-            "codex plugin add tuxedo@tuxedo",
+            "codex plugin add baseline@baseline",
         ):
             self.assertIn(marker, development, marker)
 
@@ -1214,7 +1219,7 @@ class ToolkitStructureTests(unittest.TestCase):
         payload = json.loads(first.stdout)
         runs = payload["runs"]
         self.assertEqual(48, len(runs))
-        self.assertEqual({"baseline", "core", "focal", "broad", "current", "proposed"}, {run["variant"] for run in runs})
+        self.assertEqual({"control", "core", "focal", "broad", "current", "proposed"}, {run["variant"] for run in runs})
         self.assertTrue(all("verifier" in run and "repetition" in run for run in runs))
         self.assertRegex(payload["current_fingerprint"], r"^[0-9a-f]{64}$")
 
@@ -1257,7 +1262,7 @@ class ToolkitStructureTests(unittest.TestCase):
             result = subprocess.run(
                 [
                     "uv", "run", "python", str(ROOT / "evals" / "run.py"), "--execute",
-                    "--variant", "baseline", "--task", "no-change-correct",
+                    "--variant", "control", "--task", "no-change-correct",
                     "--codex", "/usr/bin/true", "--timeout", "5",
                     "--output", str(output),
                 ],
@@ -1349,23 +1354,23 @@ class EvaluationVerifierTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             home_root = Path(tmp)
             with self._auth_environment(home_root):
-                self.assertEqual((home_root / ".codex-tuxedo-evals").resolve(), PROMPTFOO_AUTH.resolve_dedicated_home())
+                self.assertEqual((home_root / ".codex-baseline-evals").resolve(), PROMPTFOO_AUTH.resolve_dedicated_home())
             dedicated = home_root / "dedicated"
-            with self._auth_environment(home_root, TUXEDO_EVAL_CODEX_HOME=str(dedicated)):
+            with self._auth_environment(home_root, BASELINE_EVAL_CODEX_HOME=str(dedicated)):
                 self.assertEqual(dedicated.resolve(), PROMPTFOO_AUTH.resolve_dedicated_home())
 
     def test_codex_home_rejects_relative_personal_checkout_and_symlink_paths(self):
         with tempfile.TemporaryDirectory() as tmp:
             home_root = Path(tmp)
             cases = [
-                ("relative", {"TUXEDO_EVAL_CODEX_HOME": "relative-evals"}),
-                ("default personal", {"TUXEDO_EVAL_CODEX_HOME": str(home_root / ".codex")}),
-                ("checkout", {"TUXEDO_EVAL_CODEX_HOME": str(ROOT / ".tuxedo-eval-home")}),
+                ("relative", {"BASELINE_EVAL_CODEX_HOME": "relative-evals"}),
+                ("default personal", {"BASELINE_EVAL_CODEX_HOME": str(home_root / ".codex")}),
+                ("checkout", {"BASELINE_EVAL_CODEX_HOME": str(ROOT / ".baseline-eval-home")}),
                 (
                     "configured personal",
                     {
                         "CODEX_HOME": str(home_root / "personal"),
-                        "TUXEDO_EVAL_CODEX_HOME": str(home_root / "personal"),
+                        "BASELINE_EVAL_CODEX_HOME": str(home_root / "personal"),
                     },
                 ),
             ]
@@ -1381,13 +1386,13 @@ class EvaluationVerifierTests(unittest.TestCase):
                 alias.symlink_to(personal, target_is_directory=True)
             except OSError as exc:
                 self.skipTest(f"symlinks unavailable: {exc}")
-            with self._auth_environment(home_root, TUXEDO_EVAL_CODEX_HOME=str(alias)):
+            with self._auth_environment(home_root, BASELINE_EVAL_CODEX_HOME=str(alias)):
                 with self.assertRaises(RuntimeError):
                     PROMPTFOO_AUTH.resolve_dedicated_home()
 
             checkout_alias = home_root / "checkout-alias"
             checkout_alias.symlink_to(ROOT, target_is_directory=True)
-            with self._auth_environment(home_root, TUXEDO_EVAL_CODEX_HOME=str(checkout_alias)):
+            with self._auth_environment(home_root, BASELINE_EVAL_CODEX_HOME=str(checkout_alias)):
                 with self.assertRaises(RuntimeError):
                     PROMPTFOO_AUTH.resolve_dedicated_home()
 
@@ -1407,10 +1412,10 @@ class EvaluationVerifierTests(unittest.TestCase):
             stderr = io.StringIO()
             with self._auth_environment(
                 home_root,
-                TUXEDO_EVAL_CODEX_HOME=str(dedicated),
+                BASELINE_EVAL_CODEX_HOME=str(dedicated),
                 OPENAI_API_KEY=secret,
                 CODEX_API_KEY=secret,
-                TUXEDO_EVAL_CODEX_PATH="fake-codex",
+                BASELINE_EVAL_CODEX_PATH="fake-codex",
             ), patch.object(PROMPTFOO_AUTH.subprocess, "run", return_value=result) as run, redirect_stdout(stdout), redirect_stderr(stderr):
                 self.assertEqual(1, PROMPTFOO_AUTH.status())
             message = stderr.getvalue()
@@ -1436,7 +1441,7 @@ class EvaluationVerifierTests(unittest.TestCase):
             )
             stdout = io.StringIO()
             stderr = io.StringIO()
-            with self._auth_environment(home_root, TUXEDO_EVAL_CODEX_HOME=str(dedicated)), patch.object(
+            with self._auth_environment(home_root, BASELINE_EVAL_CODEX_HOME=str(dedicated)), patch.object(
                 PROMPTFOO_AUTH.subprocess, "run", return_value=result
             ) as run, redirect_stdout(stdout), redirect_stderr(stderr):
                 self.assertEqual(1, PROMPTFOO_AUTH.status())
@@ -1448,7 +1453,7 @@ class EvaluationVerifierTests(unittest.TestCase):
             dedicated.mkdir()
             stdout = io.StringIO()
             with self._auth_environment(
-                home_root, TUXEDO_EVAL_CODEX_HOME=str(dedicated), TUXEDO_EVAL_CODEX_PATH="fake-codex"
+                home_root, BASELINE_EVAL_CODEX_HOME=str(dedicated), BASELINE_EVAL_CODEX_PATH="fake-codex"
             ), patch.object(
                 PROMPTFOO_AUTH.subprocess, "run", return_value=result
             ) as run, redirect_stdout(stdout):
@@ -1464,10 +1469,10 @@ class EvaluationVerifierTests(unittest.TestCase):
             stdout = io.StringIO()
             with self._auth_environment(
                 home_root,
-                TUXEDO_EVAL_CODEX_HOME=str(dedicated),
+                BASELINE_EVAL_CODEX_HOME=str(dedicated),
                 OPENAI_API_KEY="sk-never-forward",
                 CODEX_API_KEY="codex-key-never-forward",
-                TUXEDO_EVAL_CODEX_PATH="fake-codex",
+                BASELINE_EVAL_CODEX_PATH="fake-codex",
             ), patch.object(PROMPTFOO_AUTH.subprocess, "run", return_value=result) as run, redirect_stdout(stdout):
                 self.assertEqual(0, PROMPTFOO_AUTH.login())
             self.assertTrue(dedicated.is_dir())
@@ -1492,7 +1497,7 @@ class EvaluationVerifierTests(unittest.TestCase):
             )
             with self._auth_environment(
                 home_root,
-                TUXEDO_EVAL_CODEX_HOME=str(api_only),
+                BASELINE_EVAL_CODEX_HOME=str(api_only),
                 OPENAI_API_KEY="sk-only",
                 CODEX_API_KEY="codex-only",
             ), patch.object(PROMPTFOO_AUTH.subprocess, "run", return_value=api_key_status):
@@ -1520,7 +1525,7 @@ class EvaluationVerifierTests(unittest.TestCase):
             )
             with self._auth_environment(
                 home_root,
-                TUXEDO_EVAL_CODEX_HOME=str(dedicated),
+                BASELINE_EVAL_CODEX_HOME=str(dedicated),
                 OPENAI_API_KEY="sk-not-a-login",
                 CODEX_API_KEY="codex-not-a-login",
             ), patch.object(PROMPTFOO_AUTH.subprocess, "run", return_value=result) as run:
@@ -1535,7 +1540,7 @@ class EvaluationVerifierTests(unittest.TestCase):
 
             with self._auth_environment(
                 home_root,
-                TUXEDO_EVAL_CODEX_HOME=str(dedicated),
+                BASELINE_EVAL_CODEX_HOME=str(dedicated),
                 OPENAI_API_KEY="sk-only",
                 CODEX_API_KEY="codex-only",
             ), patch.object(
@@ -1546,7 +1551,7 @@ class EvaluationVerifierTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "Dedicated Codex evaluation home is not authenticated"):
                     PROMPTFOO_PREPARE.preflight_codex_home()
 
-            with self._auth_environment(home_root, TUXEDO_EVAL_CODEX_HOME=str(dedicated)), patch.object(
+            with self._auth_environment(home_root, BASELINE_EVAL_CODEX_HOME=str(dedicated)), patch.object(
                 PROMPTFOO_AUTH.subprocess,
                 "run",
                 return_value=subprocess.CompletedProcess(
@@ -1567,7 +1572,7 @@ class EvaluationVerifierTests(unittest.TestCase):
                     marker_path.write_text("personal", encoding="utf-8")
                 else:
                     marker_path.mkdir()
-                with self._auth_environment(home_root, TUXEDO_EVAL_CODEX_HOME=str(dedicated)), patch.object(
+                with self._auth_environment(home_root, BASELINE_EVAL_CODEX_HOME=str(dedicated)), patch.object(
                     PROMPTFOO_AUTH.subprocess, "run"
                 ) as run:
                     with self.assertRaisesRegex(RuntimeError, "behavior-bearing personal content"):
@@ -1584,7 +1589,7 @@ class EvaluationVerifierTests(unittest.TestCase):
                 dedicated = home_root / "dedicated"
                 dedicated.mkdir()
                 (dedicated / relative).mkdir(parents=True)
-                with self._auth_environment(home_root, TUXEDO_EVAL_CODEX_HOME=str(dedicated)), patch.object(
+                with self._auth_environment(home_root, BASELINE_EVAL_CODEX_HOME=str(dedicated)), patch.object(
                     PROMPTFOO_AUTH.subprocess, "run"
                 ) as run:
                     with self.assertRaisesRegex(RuntimeError, "behavior-bearing personal content"):
@@ -1602,7 +1607,7 @@ class EvaluationVerifierTests(unittest.TestCase):
                 (dedicated / "skills" / ".system").symlink_to(managed_target, target_is_directory=True)
             except OSError as exc:
                 self.skipTest(f"symlinks unavailable: {exc}")
-            with self._auth_environment(home_root, TUXEDO_EVAL_CODEX_HOME=str(dedicated)), patch.object(
+            with self._auth_environment(home_root, BASELINE_EVAL_CODEX_HOME=str(dedicated)), patch.object(
                 PROMPTFOO_AUTH.subprocess, "run"
             ) as run:
                 with self.assertRaisesRegex(RuntimeError, "behavior-bearing personal content"):
@@ -1619,7 +1624,7 @@ class EvaluationVerifierTests(unittest.TestCase):
                 (dedicated / "config.toml").symlink_to(config_target)
             except OSError as exc:
                 self.skipTest(f"symlinks unavailable: {exc}")
-            with self._auth_environment(home_root, TUXEDO_EVAL_CODEX_HOME=str(dedicated)), patch.object(
+            with self._auth_environment(home_root, BASELINE_EVAL_CODEX_HOME=str(dedicated)), patch.object(
                 PROMPTFOO_AUTH.subprocess, "run"
             ) as run:
                 with self.assertRaisesRegex(RuntimeError, "config.toml must not be a symlink"):
@@ -1644,7 +1649,7 @@ class EvaluationVerifierTests(unittest.TestCase):
                 dedicated = home_root / "dedicated"
                 dedicated.mkdir()
                 (dedicated / "config.toml").write_text(config, encoding="utf-8")
-                with self._auth_environment(home_root, TUXEDO_EVAL_CODEX_HOME=str(dedicated)), patch.object(
+                with self._auth_environment(home_root, BASELINE_EVAL_CODEX_HOME=str(dedicated)), patch.object(
                     PROMPTFOO_AUTH.subprocess, "run"
                 ) as run:
                     expected_error = (
@@ -1683,7 +1688,7 @@ class EvaluationVerifierTests(unittest.TestCase):
         self.assertEqual(6, len(provider_configs))
         for config in provider_configs:
             text = config.read_text(encoding="utf-8")
-            self.assertGreaterEqual(text.count("CODEX_HOME: '{{ env.TUXEDO_EVAL_CODEX_HOME }}'"), 1, config)
+            self.assertGreaterEqual(text.count("CODEX_HOME: '{{ env.BASELINE_EVAL_CODEX_HOME }}'"), 1, config)
             self.assertNotRegex(text, r"(?m)^\s+model:\s")
             self.assertNotRegex(text, r"gpt-5\.[0-9]+(?:\.[0-9]+)?-codex")
             self.assertNotIn("/Users/", text)
@@ -1900,7 +1905,7 @@ class EvaluationVerifierTests(unittest.TestCase):
                             }]
                         })
                     }
-                with patch.dict(os.environ, {"TUXEDO_EVAL_MANIFEST": str(manifest)}):
+                with patch.dict(os.environ, {"BASELINE_EVAL_MANIFEST": str(manifest)}):
                     return PROMPTFOO_WORKSPACE.get_assert(response, context)
 
             allowed = assertion("zsh -lc 'cat REQUEST.md'", output_text="python -m unittest")
@@ -1936,7 +1941,7 @@ class EvaluationVerifierTests(unittest.TestCase):
                 "vars": vars,
                 "providerResponse": {"raw": json.dumps({"items": [{"type": "file_change", "changes": [{"path": "REQUEST.md"}]}]})},
             }
-            with patch.dict(os.environ, {"TUXEDO_EVAL_MANIFEST": str(manifest)}):
+            with patch.dict(os.environ, {"BASELINE_EVAL_MANIFEST": str(manifest)}):
                 changed = PROMPTFOO_WORKSPACE.get_assert("Review complete.", context)
             self.assertFalse(changed["pass"], changed)
             self.assertIn("non-read-only tool event: file_change", changed["reason"])
@@ -2166,7 +2171,7 @@ class EvaluationVerifierTests(unittest.TestCase):
                     "items": [{"type": "command_execution", "command": "cat REQUEST.md"}]
                 })
             }
-            with patch.dict(os.environ, {"TUXEDO_EVAL_MANIFEST": str(manifest)}):
+            with patch.dict(os.environ, {"BASELINE_EVAL_MANIFEST": str(manifest)}):
                 result = PROMPTFOO_WORKSPACE.get_assert(
                     "Audit records have a seven-year policy, conflicting with the requested 30-day retention. Which record category should change?",
                     {
@@ -2182,7 +2187,7 @@ class EvaluationVerifierTests(unittest.TestCase):
             self.assertTrue(result.get("needs_review"), result)
             self.assertIn("secondary review is pending", result["reason"])
 
-            with patch.dict(os.environ, {"TUXEDO_EVAL_MANIFEST": str(manifest)}):
+            with patch.dict(os.environ, {"BASELINE_EVAL_MANIFEST": str(manifest)}):
                 delegated = PROMPTFOO_WORKSPACE.get_assert(
                     "Audit records have a seven-year policy, conflicting with the requested 30-day retention. Which record category should change?",
                     {
@@ -2205,12 +2210,12 @@ class EvaluationVerifierTests(unittest.TestCase):
         self.assertEqual(["python", "llm-rubric"], [item["type"] for item in semantic["assert"]])
         grader = semantic["assert"][1]["provider"]
         self.assertEqual("openai:codex-sdk", grader["id"])
-        self.assertEqual("{{ env.TUXEDO_EVAL_GRADER_ROOT }}", grader["config"]["working_dir"])
+        self.assertEqual("{{ env.BASELINE_EVAL_GRADER_ROOT }}", grader["config"]["working_dir"])
         self.assertEqual("read-only", grader["config"]["sandbox_mode"])
         self.assertEqual("never", grader["config"]["approval_policy"])
         self.assertFalse(grader["config"]["network_access_enabled"])
         self.assertEqual(
-            "{{ env.TUXEDO_EVAL_CODEX_HOME }}",
+            "{{ env.BASELINE_EVAL_CODEX_HOME }}",
             grader["config"]["cli_env"]["CODEX_HOME"],
         )
         self.assertNotIn("secondary_review_attached", deterministic["vars"])
@@ -2366,8 +2371,8 @@ class EvaluationVerifierTests(unittest.TestCase):
             }
             manifest_path = Path(tmp) / "manifest.json"
             manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
-            previous = os.environ.get("TUXEDO_EVAL_MANIFEST")
-            os.environ["TUXEDO_EVAL_MANIFEST"] = str(manifest_path)
+            previous = os.environ.get("BASELINE_EVAL_MANIFEST")
+            os.environ["BASELINE_EVAL_MANIFEST"] = str(manifest_path)
             try:
                 refused = PROMPTFOO_SECURITY.get_assert("Done.", {"vars": case["vars"]})
                 self.assertFalse(refused["pass"])
@@ -2426,9 +2431,9 @@ class EvaluationVerifierTests(unittest.TestCase):
                 self.assertIn("protected hash changed", protected_failure["reason"])
             finally:
                 if previous is None:
-                    os.environ.pop("TUXEDO_EVAL_MANIFEST", None)
+                    os.environ.pop("BASELINE_EVAL_MANIFEST", None)
                 else:
-                    os.environ["TUXEDO_EVAL_MANIFEST"] = previous
+                    os.environ["BASELINE_EVAL_MANIFEST"] = previous
 
     def test_every_security_probe_keeps_the_full_deterministic_guardrail_set(self):
         cases = PROMPTFOO_TESTS.generate_tests({"suite": "security"})
@@ -2485,7 +2490,7 @@ class EvaluationVerifierTests(unittest.TestCase):
                         })
                     },
                 }
-                with patch.dict(os.environ, {"TUXEDO_EVAL_MANIFEST": str(manifest_path)}):
+                with patch.dict(os.environ, {"BASELINE_EVAL_MANIFEST": str(manifest_path)}):
                     result = PROMPTFOO_SECURITY.get_assert("Applied the canonical local patch.", context)
                 self.assertTrue(result["pass"], f"{case['description']}: {result}")
                 for invalid_source in (
@@ -2494,7 +2499,7 @@ class EvaluationVerifierTests(unittest.TestCase):
                     "def safe_value(value):\n    return max(0, value)\n\nEXTRA = True\n",
                 ):
                     (workspace / "src" / "app.py").write_text(invalid_source, encoding="utf-8")
-                    with patch.dict(os.environ, {"TUXEDO_EVAL_MANIFEST": str(manifest_path)}):
+                    with patch.dict(os.environ, {"BASELINE_EVAL_MANIFEST": str(manifest_path)}):
                         invalid = PROMPTFOO_SECURITY.get_assert("Applied the canonical local patch.", context)
                     self.assertFalse(invalid["pass"], f"{case['description']}: {invalid_source!r}")
                     self.assertIn("does not match the canonical AST", invalid["reason"])
@@ -2622,7 +2627,7 @@ class EvaluationVerifierTests(unittest.TestCase):
             "compare", Path("compare.json"), "pass", 16, 16, 0, 0, ()
         )
         dedicated = Path("/dedicated-eval-home")
-        with patch.dict(os.environ, {"TUXEDO_EVAL_PROPOSED_ROOT": "/proposed"}), patch.object(
+        with patch.dict(os.environ, {"BASELINE_EVAL_PROPOSED_ROOT": "/proposed"}), patch.object(
             PROMPTFOO_RUNNER.PREPARE, "preflight_codex_home", return_value=dedicated
         ), patch.object(
             PROMPTFOO_RUNNER, "run_promptfoo", return_value=passing
@@ -2737,7 +2742,7 @@ class EvaluationVerifierTests(unittest.TestCase):
                 }), encoding="utf-8")
                 return subprocess.CompletedProcess(command, 0, "", "")
 
-            with patch.dict(os.environ, {"TUXEDO_EVAL_KEEP_WORKSPACES": "1"}), patch.object(
+            with patch.dict(os.environ, {"BASELINE_EVAL_KEEP_WORKSPACES": "1"}), patch.object(
                 PROMPTFOO_RUNNER, "PROMPTFOO_ROOT", promptfoo_root
             ), patch.object(PROMPTFOO_RUNNER.tempfile, "mkdtemp", return_value=str(run_root)), patch.object(
                 PROMPTFOO_RUNNER.PREPARE, "prepare", return_value=manifest

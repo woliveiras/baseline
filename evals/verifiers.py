@@ -1,4 +1,4 @@
-"""Deterministic, fixture-specific Tuxedo evaluation checks."""
+"""Deterministic, fixture-specific Baseline evaluation checks."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 
-IGNORED_OUTPUTS = {".tuxedo-final.txt"}
+IGNORED_OUTPUTS = {".baseline-final.txt"}
 
 
 class UnsupportedProgram(ValueError):

@@ -1,17 +1,16 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
-  "bootstrap-sha": "4370b1ebecb31f58619e8f877fccbea9769c92a7",
   "packages": {
     ".": {
       "release-type": "node",
-      "package-name": "tuxedo",
+      "package-name": "baseline",
       "include-v-in-tag": true,
       "include-component-in-tag": false,
       "bump-minor-pre-major": true,
       "extra-files": [
         {
           "type": "json",
-          "path": "plugins/tuxedo/.codex-plugin/plugin.json",
+          "path": "plugins/baseline/.codex-plugin/plugin.json",
           "jsonpath": "$.version"
         },
         {
@@ -22,7 +21,7 @@
         {
           "type": "toml",
           "path": "uv.lock",
-          "jsonpath": "$.package[?(@.name=='tuxedo')].version"
+          "jsonpath": "$.package[?(@.name=='baseline')].version"
         },
         {
           "type": "generic",

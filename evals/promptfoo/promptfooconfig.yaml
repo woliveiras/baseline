@@ -1,5 +1,5 @@
 # Development-only behavior evaluation. Promptfoo is not part of the plugin runtime.
-description: Tuxedo behavior evaluation through the local Codex SDK
+description: Baseline behavior evaluation through the local Codex SDK
 prompts:
   - file://prompts.py:create_prompt
 tests:
@@ -8,10 +8,10 @@ tests:
       suite: behavior
 providers:
   - id: openai:codex-sdk
-    label: baseline
+    label: control
     config:
       model_reasoning_effort: medium
-      working_dir: '{{ env.TUXEDO_EVAL_WORKSPACE_ROOT }}/{{workspace_key}}/baseline'
+      working_dir: '{{ env.BASELINE_EVAL_WORKSPACE_ROOT }}/{{workspace_key}}/control'
       sandbox_mode: workspace-write
       approval_policy: never
       network_access_enabled: false
@@ -20,14 +20,14 @@ providers:
       enable_streaming: true
       persist_threads: false
       skip_git_repo_check: false
-      codex_path_override: '{{ env.TUXEDO_EVAL_CODEX_PATH | default("codex") }}'
+      codex_path_override: '{{ env.BASELINE_EVAL_CODEX_PATH | default("codex") }}'
       cli_env:
-        CODEX_HOME: '{{ env.TUXEDO_EVAL_CODEX_HOME }}'
+        CODEX_HOME: '{{ env.BASELINE_EVAL_CODEX_HOME }}'
   - id: openai:codex-sdk
     label: core
     config:
       model_reasoning_effort: medium
-      working_dir: '{{ env.TUXEDO_EVAL_WORKSPACE_ROOT }}/{{workspace_key}}/core'
+      working_dir: '{{ env.BASELINE_EVAL_WORKSPACE_ROOT }}/{{workspace_key}}/core'
       sandbox_mode: workspace-write
       approval_policy: never
       network_access_enabled: false
@@ -36,14 +36,14 @@ providers:
       enable_streaming: true
       persist_threads: false
       skip_git_repo_check: false
-      codex_path_override: '{{ env.TUXEDO_EVAL_CODEX_PATH | default("codex") }}'
+      codex_path_override: '{{ env.BASELINE_EVAL_CODEX_PATH | default("codex") }}'
       cli_env:
-        CODEX_HOME: '{{ env.TUXEDO_EVAL_CODEX_HOME }}'
+        CODEX_HOME: '{{ env.BASELINE_EVAL_CODEX_HOME }}'
   - id: openai:codex-sdk
     label: focal
     config:
       model_reasoning_effort: medium
-      working_dir: '{{ env.TUXEDO_EVAL_WORKSPACE_ROOT }}/{{workspace_key}}/focal'
+      working_dir: '{{ env.BASELINE_EVAL_WORKSPACE_ROOT }}/{{workspace_key}}/focal'
       sandbox_mode: workspace-write
       approval_policy: never
       network_access_enabled: false
@@ -52,14 +52,14 @@ providers:
       enable_streaming: true
       persist_threads: false
       skip_git_repo_check: false
-      codex_path_override: '{{ env.TUXEDO_EVAL_CODEX_PATH | default("codex") }}'
+      codex_path_override: '{{ env.BASELINE_EVAL_CODEX_PATH | default("codex") }}'
       cli_env:
-        CODEX_HOME: '{{ env.TUXEDO_EVAL_CODEX_HOME }}'
+        CODEX_HOME: '{{ env.BASELINE_EVAL_CODEX_HOME }}'
   - id: openai:codex-sdk
     label: broad
     config:
       model_reasoning_effort: medium
-      working_dir: '{{ env.TUXEDO_EVAL_WORKSPACE_ROOT }}/{{workspace_key}}/broad'
+      working_dir: '{{ env.BASELINE_EVAL_WORKSPACE_ROOT }}/{{workspace_key}}/broad'
       sandbox_mode: workspace-write
       approval_policy: never
       network_access_enabled: false
@@ -68,14 +68,14 @@ providers:
       enable_streaming: true
       persist_threads: false
       skip_git_repo_check: false
-      codex_path_override: '{{ env.TUXEDO_EVAL_CODEX_PATH | default("codex") }}'
+      codex_path_override: '{{ env.BASELINE_EVAL_CODEX_PATH | default("codex") }}'
       cli_env:
-        CODEX_HOME: '{{ env.TUXEDO_EVAL_CODEX_HOME }}'
+        CODEX_HOME: '{{ env.BASELINE_EVAL_CODEX_HOME }}'
   - id: openai:codex-sdk
     label: current
     config:
       model_reasoning_effort: medium
-      working_dir: '{{ env.TUXEDO_EVAL_WORKSPACE_ROOT }}/{{workspace_key}}/current'
+      working_dir: '{{ env.BASELINE_EVAL_WORKSPACE_ROOT }}/{{workspace_key}}/current'
       sandbox_mode: workspace-write
       approval_policy: never
       network_access_enabled: false
@@ -84,6 +84,6 @@ providers:
       enable_streaming: true
       persist_threads: false
       skip_git_repo_check: false
-      codex_path_override: '{{ env.TUXEDO_EVAL_CODEX_PATH | default("codex") }}'
+      codex_path_override: '{{ env.BASELINE_EVAL_CODEX_PATH | default("codex") }}'
       cli_env:
-        CODEX_HOME: '{{ env.TUXEDO_EVAL_CODEX_HOME }}'
+        CODEX_HOME: '{{ env.BASELINE_EVAL_CODEX_HOME }}'

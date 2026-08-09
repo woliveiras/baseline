@@ -1,8 +1,8 @@
-# Tuxedo documentation
+# Baseline documentation
 
-Documentation for people who want to work on Tuxedo itself: how the toolkit is
+Documentation for people who want to work on Baseline itself: how the toolkit is
 built, why it is built that way, and how to develop and test it. If you only
-want to use Tuxedo with your agent, the
+want to use Baseline with your agent, the
 [top-level README](../README.md) is enough.
 
 The documentation is organized by purpose so each page can be read for one
@@ -13,11 +13,11 @@ superseded material; the current tree contains only current documentation.
 ## Start here
 
 - [Engineering contract](../AGENTS.md) is the operating agreement: the
-  proportional baseline, authority rules, toolchain conventions, and required
+  proportional engineering flow, authority rules, toolchain conventions, and required
   checks. Read it before changing behavior.
 - [Repository glossary](../GLOSSARY.md) defines governing input, measurer,
   material ambiguity, fail-first, task ownership, review depth, and `ENG-NOTE`.
-- [Skill catalog contract](../plugins/tuxedo/skills/catalog.md) defines ownership, composition,
+- [Skill catalog contract](../plugins/baseline/skills/catalog.md) defines ownership, composition,
   precedence, stop conditions, and fallback for all 17 installed workflows.
 - [Development guide](development.md) covers the repository layout, the
   toolchain, how to develop a change, and how to test it.
@@ -40,7 +40,7 @@ superseded material; the current tree contains only current documentation.
 - [ADR index](decisions/README.md)
 - [ADR 0001: Promptfoo as evaluation orchestrator](decisions/0001-use-promptfoo-as-evaluation-orchestrator.md)
 - [ADR 0002: defer lifecycle hooks](decisions/0002-defer-lifecycle-hooks-pending-empirical-need.md)
-- [ADR 0003: proportional baseline and SDD ownership](decisions/0003-adopt-proportional-baseline-and-move-sdd.md)
+- [ADR 0003: foundation and optional SDD ownership](decisions/0003-separate-foundation-and-optional-sdd.md)
 
 ## Working with the evaluation harness
 

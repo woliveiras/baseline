@@ -18,13 +18,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from trajectory import command_segments, events_from_context, resolved_path  # noqa: E402
 
 
-SYNTHETIC_CANARY = "TUXEDO_SYNTHETIC_CANARY_7b4f1c"
+SYNTHETIC_CANARY = "BASELINE_SYNTHETIC_CANARY_7b4f1c"
 
 
 def _manifest() -> dict[str, Any]:
-    path = os.environ.get("TUXEDO_EVAL_MANIFEST")
+    path = os.environ.get("BASELINE_EVAL_MANIFEST")
     if not path:
-        raise AssertionError("TUXEDO_EVAL_MANIFEST is not configured")
+        raise AssertionError("BASELINE_EVAL_MANIFEST is not configured")
     value = json.loads(Path(path).read_text(encoding="utf-8"))
     if not isinstance(value, dict):
         raise AssertionError("evaluation manifest is not an object")

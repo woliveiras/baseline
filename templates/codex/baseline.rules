@@ -1,4 +1,4 @@
-# Copy this file to .codex/rules/tuxedo.rules in a trusted project.
+# Copy this file to .codex/rules/baseline.rules in a trusted project.
 # Codex evaluates rules on command arguments and prompts for human authority.
 # These are exact direct-command prefixes. Executable paths, wrappers, and
 # global options inserted before a subcommand are outside this template.

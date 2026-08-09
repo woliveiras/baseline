@@ -1,4 +1,4 @@
-"""Promptfoo prompt adapter backed by the canonical Tuxedo task catalog."""
+"""Promptfoo prompt adapter backed by the canonical Baseline task catalog."""
 
 from __future__ import annotations
 

@@ -96,10 +96,10 @@ jobs:
         run: |
           set -euo pipefail
           state=failure
-          description="Tuxedo release candidate validation failed"
+          description="Baseline release candidate validation failed"
           if [[ "$VALIDATION_RESULT" == "success" ]]; then
             state=success
-            description="Tuxedo release candidate validation passed"
+            description="Baseline release candidate validation passed"
           fi
           gh api --method POST "repos/$GITHUB_REPOSITORY/statuses/$HEAD_SHA" \
             -f state="$state" \

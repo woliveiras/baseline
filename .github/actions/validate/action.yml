@@ -1,4 +1,4 @@
-name: Validate Tuxedo
+name: Validate Baseline
 description: Run deterministic repository and official Codex package validation
 
 runs:
@@ -29,7 +29,7 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        validator_root="$RUNNER_TEMP/tuxedo-codex-validators"
+        validator_root="$RUNNER_TEMP/baseline-codex-validators"
         mkdir -p "$validator_root"
         git -C "$validator_root" init --quiet
         git -C "$validator_root" remote add origin https://github.com/openai/codex.git
@@ -42,11 +42,11 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        validator_root="$RUNNER_TEMP/tuxedo-codex-validators/codex-rs/skills/src/assets/samples"
+        validator_root="$RUNNER_TEMP/baseline-codex-validators/codex-rs/skills/src/assets/samples"
         plugin_validator="$validator_root/plugin-creator/scripts/validate_plugin.py"
         skill_validator="$validator_root/skill-creator/scripts/quick_validate.py"
-        uv run --locked python "$plugin_validator" plugins/tuxedo
-        for skill in plugins/tuxedo/skills/*/; do
+        uv run --locked python "$plugin_validator" plugins/baseline
+        for skill in plugins/baseline/skills/*/; do
           uv run --locked python "$skill_validator" "$skill"
         done
 

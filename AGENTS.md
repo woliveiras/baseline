@@ -1,10 +1,10 @@
-# Tuxedo engineering contract
+# Baseline engineering contract
 
-Tuxedo is a portable baseline for disciplined, proportional software
+Baseline is the portable minimum for disciplined, proportional software
 engineering. The repository is the product. Do not add a CLI, daemon, package
 manager, sync layer, telemetry, client generator, or consumer runtime.
 
-## Baseline flow
+## Engineering flow
 
 Use the [repository glossary](GLOSSARY.md) and route work through:
 
@@ -18,9 +18,9 @@ Use the [repository glossary](GLOSSARY.md) and route work through:
   check fail-first for the correct behavioral reason, then implement the
   smallest coherent change. Do not change an assertion merely to accept current
   behavior.
-- Tuxedo does not require a persistent specification, behavior/oracle matrix,
+- Baseline does not require a persistent specification, behavior/oracle matrix,
   formal provenance, evidence file, or review file. Optional methodologies may
-  add those artifacts without becoming a Tuxedo dependency.
+  add those artifacts without becoming a Baseline dependency.
 - Review the governing input, expected behavior, tests, complete diff, relevant
   risks, fresh results, unrelated changes, and limitations at the depth selected
   by `measurer`.
@@ -57,9 +57,9 @@ Use the [repository glossary](GLOSSARY.md) and route work through:
 
 ## Toolkit maintenance
 
-- Keep the plugin under `plugins/tuxedo/`, with only `.codex-plugin/` and
+- Keep the plugin under `plugins/baseline/`, with only `.codex-plugin/` and
   `skills/` at its top level. Keep root `skills` as the relative compatibility
-  symlink and the marketplace pointed at `./plugins/tuxedo`.
+  symlink and the marketplace pointed at `./plugins/baseline`.
 - Keep `SKILL.md` files concise and client-neutral; put conditional detail one
   level down in `references/` and Codex policy in `agents/openai.yaml`.
 - Add deterministic tests for mechanical invariants. Keep repository-only

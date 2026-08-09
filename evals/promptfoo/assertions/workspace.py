@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from trajectory import command_segments, events_from_context, resolved_path  # noqa: E402
 
 
-CONDITIONS = ("baseline", "core", "focal", "broad", "current", "proposed")
+CONDITIONS = ("control", "core", "focal", "broad", "current", "proposed")
 _READ_ONLY_COMMANDS = {"cat", "cut", "file", "find", "grep", "head", "jq", "ls", "nl", "printf", "pwd", "rg", "sed", "shasum", "sort", "stat", "tail", "true", "uniq", "wc"}
 _READ_ONLY_GIT_COMMANDS = {"diff", "log", "ls-files", "ls-tree", "rev-parse", "show", "status"}
 
@@ -44,9 +44,9 @@ def _semantic_output_failures(task_id: str, output: str) -> list[str]:
 
 
 def _manifest() -> dict[str, Any]:
-    path = os.environ.get("TUXEDO_EVAL_MANIFEST")
+    path = os.environ.get("BASELINE_EVAL_MANIFEST")
     if not path:
-        raise AssertionError("TUXEDO_EVAL_MANIFEST is not configured")
+        raise AssertionError("BASELINE_EVAL_MANIFEST is not configured")
     value = json.loads(Path(path).read_text(encoding="utf-8"))
     if not isinstance(value, dict):
         raise AssertionError("evaluation manifest is not an object")

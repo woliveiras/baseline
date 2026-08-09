@@ -5,14 +5,14 @@ decision-makers:
   - William Oliveira
 ---
 
-# Use Promptfoo as the evaluation orchestrator while retaining Tuxedo deterministic verifiers
+# Use Promptfoo as the evaluation orchestrator while retaining Baseline deterministic verifiers
 
 ## Context
 
-Tuxedo needs controlled empirical evaluation of skill routing, behavior, and
+Baseline needs controlled empirical evaluation of skill routing, behavior, and
 security without maintaining generic provider orchestration or weakening
 repository-specific checks. Promptfoo supplies provider execution, matrices,
-aggregation, and red-team integration; it does not know Tuxedo's invariants.
+aggregation, and red-team integration; it does not know Baseline's invariants.
 
 The evaluation stack is development-only. It must not enter the distributed
 plugin, run in the development checkout, inherit personal agent configuration,
@@ -22,7 +22,7 @@ behavior.
 ## Decision
 
 Use Promptfoo for generic orchestration and the official Codex SDK provider.
-Retain Tuxedo-owned fixtures, disposable workspaces, fingerprints, snapshots,
+Retain Baseline-owned fixtures, disposable workspaces, fingerprints, snapshots,
 mutation policies, hidden executable checks, verdict semantics, and authority
 boundaries.
 
@@ -32,10 +32,10 @@ Promptfoo owns:
 - local aggregation, latency, and token collection;
 - generic assertions and explicitly invoked red-team tooling.
 
-Tuxedo owns:
+Baseline owns:
 
 - canonical tasks and controlled fixtures;
-- isolated baseline, core, focal, broad, current, and proposed workspaces;
+- isolated control, core, focal, broad, current, and proposed workspaces;
 - protected paths, snapshots, and deterministic behavior/security checks;
 - `pass`, `fail`, and `needs-review` precedence;
 - sanitized report extraction and checkout-drift detection;
@@ -81,9 +81,9 @@ or release operations.
 
 ## Consequences
 
-- Generic orchestration is maintained externally while Tuxedo preserves its
+- Generic orchestration is maintained externally while Baseline preserves its
   stronger deterministic boundary.
-- The adapter and isolation layers remain Tuxedo maintenance responsibilities.
+- The adapter and isolation layers remain Baseline maintenance responsibilities.
 - The legacy deterministic runner remains until a separately reviewed parity
   change proves that its unique comparison behavior can be removed.
 - Current claims require fresh results from the current catalog and harness;

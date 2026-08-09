@@ -19,8 +19,8 @@ pnpm run eval:login        # official codex login with the ChatGPT/Codex account
 pnpm run eval:auth:status  # verify; prints the dedicated home and login command if absent
 ```
 
-The session is stored in `$HOME/.codex-tuxedo-evals` by default. To use another
-home, set an absolute `TUXEDO_EVAL_CODEX_HOME` outside this checkout. See
+The session is stored in `$HOME/.codex-baseline-evals` by default. To use another
+home, set an absolute `BASELINE_EVAL_CODEX_HOME` outside this checkout. See
 [the isolation model](../architecture/eval-isolation.md) for the resolution and
 rejection rules.
 
@@ -35,7 +35,7 @@ pnpm run eval:smoke        # narrow provider sanity check
 ```bash
 pnpm run eval:skills       # routing + behavior
 pnpm run eval:security     # frozen security probes
-pnpm run eval:compare      # requires TUXEDO_EVAL_PROPOSED_ROOT
+pnpm run eval:compare      # requires BASELINE_EVAL_PROPOSED_ROOT
 ```
 
 `eval:compare` performs three independent repetitions. Each repetition receives
@@ -97,7 +97,7 @@ dated result logs as permanent documentation.
   observed skill-file reads. This is a routing and invocation signal, not proof
   of full instruction adherence.
 - Behavior: does the skill change the assigned workspace as required across
-  baseline/core/focal/broad/current conditions? Fresh workspaces, protected
+  control/core/focal/broad/current conditions? Fresh workspaces, protected
   hashes, hidden deterministic oracles, completed-turn checks, and no-op
   rejection make a refusal or "done" response insufficient. Semantic cases add
   task-specific `llm-rubric` judgments through the dedicated Codex login. The
@@ -109,6 +109,6 @@ dated result logs as permanent documentation.
 
 ## Cleanup and switching accounts
 
-To switch accounts, set a different `TUXEDO_EVAL_CODEX_HOME` and run
+To switch accounts, set a different `BASELINE_EVAL_CODEX_HOME` and run
 `pnpm run eval:login`. To remove a dedicated session, delete that home manually
 after confirming it is not needed. No login secret enters this repository.

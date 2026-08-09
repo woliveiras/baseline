@@ -20,12 +20,12 @@ from typing import Any, Iterable, NamedTuple
 
 
 ROOT = Path(__file__).resolve().parents[3]
-PLUGIN_ROOT = ROOT / "plugins" / "tuxedo"
+PLUGIN_ROOT = ROOT / "plugins" / "baseline"
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROMPTFOO_ROOT = ROOT / "evals" / "promptfoo"
 PROMPTFOO = ROOT / "node_modules" / ".bin" / "promptfoo"
 PNPM = shutil.which("pnpm") or "pnpm"
-SYNTHETIC_CANARY = "TUXEDO_SYNTHETIC_CANARY_7b4f1c"
+SYNTHETIC_CANARY = "BASELINE_SYNTHETIC_CANARY_7b4f1c"
 CONFIGS = (
     PROMPTFOO_ROOT / "promptfooconfig.yaml",
     PROMPTFOO_ROOT / "routing-config.yaml",
@@ -83,7 +83,7 @@ def _load_module(name: str, path: Path):
     return module
 
 
-PREPARE = _load_module("tuxedo_prepare_workspaces", SCRIPT_DIR / "prepare-workspaces.py")
+PREPARE = _load_module("baseline_prepare_workspaces", SCRIPT_DIR / "prepare-workspaces.py")
 
 
 def _redact(value: str) -> str:
@@ -100,7 +100,7 @@ def _run(
     label: str,
     accepted_returncodes: frozenset[int] = frozenset({0}),
 ) -> subprocess.CompletedProcess[str]:
-    print(f"[tuxedo] {label}")
+    print(f"[baseline] {label}")
     try:
         result = subprocess.run(
             command, cwd=ROOT, env=env, text=True, capture_output=True, check=False, timeout=timeout
@@ -142,7 +142,7 @@ def _validate_local_outputs(generated: Path, results: Path) -> None:
     ]
     if results_unexpected:
         raise RuntimeError(f"results/ contains unsupported entries: {results_unexpected}")
-    print(f"[tuxedo] ignored output directories valid: generated={len(generated_unexpected)} unexpected, results={len(list(results.glob('*.json')))} reports")
+    print(f"[baseline] ignored output directories valid: generated={len(generated_unexpected)} unexpected, results={len(list(results.glob('*.json')))} reports")
 
 
 def _validate_fixture_catalog() -> None:
@@ -155,17 +155,17 @@ def _validate_fixture_catalog() -> None:
             if path.is_absolute() or ".." in path.parts or not isinstance(content, str):
                 raise RuntimeError(f"unsafe or non-text fixture entry: {fixture_name}/{relative}")
     _validate_local_outputs(PROMPTFOO_ROOT / "generated", PROMPTFOO_ROOT / "results")
-    print("[tuxedo] fixture and ignored-directory cleanliness")
+    print("[baseline] fixture and ignored-directory cleanliness")
 
 
 def _discover_validator(kind: str) -> Path | None:
-    env_name = f"TUXEDO_{kind.upper()}_VALIDATOR"
+    env_name = f"BASELINE_{kind.upper()}_VALIDATOR"
     configured = os.environ.get(env_name)
     candidates: list[Path] = []
     if configured:
         candidates.append(Path(configured).expanduser())
     roots: list[Path] = []
-    for variable in ("TUXEDO_CODEX_SKILLS_ROOT", "CODEX_SKILLS_ROOT", "CODEX_HOME"):
+    for variable in ("BASELINE_CODEX_SKILLS_ROOT", "CODEX_SKILLS_ROOT", "CODEX_HOME"):
         value = os.environ.get(variable)
         if value:
             roots.append(Path(value).expanduser())
@@ -193,7 +193,7 @@ def _official_validators() -> None:
     if plugin_validator is None or skill_validator is None:
         raise RuntimeError(
             "official plugin/skill validator unavailable; install the Codex system skills or set "
-            "TUXEDO_PLUGIN_VALIDATOR and TUXEDO_SKILL_VALIDATOR to executable validator paths"
+            "BASELINE_PLUGIN_VALIDATOR and BASELINE_SKILL_VALIDATOR to executable validator paths"
         )
     validator_executable = sys.executable
     _run(
@@ -213,7 +213,7 @@ def _promptfoo_validate() -> None:
 
 
 def _python_and_shell_checks() -> None:
-    _run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"], timeout=180, label="Tuxedo unit tests")
+    _run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"], timeout=180, label="Baseline unit tests")
     _run([sys.executable, "evals/run.py", "--dry-run"], timeout=120, label="legacy runner dry-run")
     for path in sorted(ROOT.rglob("*.sh")):
         if ".git" not in path.parts and "node_modules" not in path.parts:
@@ -223,7 +223,7 @@ def _python_and_shell_checks() -> None:
 def _codex_version(codex_home: Path) -> str:
     try:
         result = subprocess.run(
-            [os.environ.get("TUXEDO_EVAL_CODEX_PATH", "codex"), "--version"],
+            [os.environ.get("BASELINE_EVAL_CODEX_PATH", "codex"), "--version"],
             env=PREPARE.evaluation_environment(codex_home),
             text=True,
             capture_output=True,
@@ -434,7 +434,7 @@ def _report(
         "reasoning": "low" if suite == "smoke" else "medium",
         "codex_version": codex_version,
         "promptfoo_version": promptfoo_version,
-        "seed": int(os.environ.get("TUXEDO_EVAL_SEED", "0")),
+        "seed": int(os.environ.get("BASELINE_EVAL_SEED", "0")),
         "repetitions": repeat,
         "duration_seconds": round(seconds, 3),
         "privacy": {"shared": False, "remote_redteam_generation": False, "raw_responses_saved": False},
@@ -510,7 +510,7 @@ def _check_workspace_clean(manifest: dict[str, Any]) -> None:
 
 
 def _new_workspace_root(suite: str) -> Path:
-    return Path(tempfile.mkdtemp(prefix=f"tuxedo-promptfoo-{suite}-")).resolve()
+    return Path(tempfile.mkdtemp(prefix=f"baseline-promptfoo-{suite}-")).resolve()
 
 
 def run_promptfoo(
@@ -535,7 +535,7 @@ def run_promptfoo(
     codex_version = _codex_version(codex_home)
     promptfoo_version = _promptfoo_version()
     workspace_root = _new_workspace_root(suite)
-    keep = os.environ.get("TUXEDO_EVAL_KEEP_WORKSPACES") == "1"
+    keep = os.environ.get("BASELINE_EVAL_KEEP_WORKSPACES") == "1"
     raw_path = workspace_root / "promptfoo-raw.json"
     manifest: dict[str, Any] | None = None
     started = time.monotonic()
@@ -543,9 +543,9 @@ def run_promptfoo(
         manifest = PREPARE.prepare(suite, workspace_root / "workspaces", current_root, proposed_root)
         env = PREPARE.evaluation_environment(codex_home)
         env.update({
-            "TUXEDO_EVAL_WORKSPACE_ROOT": str(workspace_root / "workspaces"),
-            "TUXEDO_EVAL_GRADER_ROOT": str(workspace_root / "grader"),
-            "TUXEDO_EVAL_MANIFEST": str(manifest["manifest_path"]),
+            "BASELINE_EVAL_WORKSPACE_ROOT": str(workspace_root / "workspaces"),
+            "BASELINE_EVAL_GRADER_ROOT": str(workspace_root / "grader"),
+            "BASELINE_EVAL_MANIFEST": str(manifest["manifest_path"]),
             "PROMPTFOO_DISABLE_REDTEAM_REMOTE_GENERATION": "true",
             "PROMPTFOO_DISABLE_SHARE": "true",
             "PROMPTFOO_CONFIG_DIR": str(workspace_root / "promptfoo-state"),
@@ -590,7 +590,7 @@ def run_promptfoo(
         output = _write_report(report, suite, f"-{shard.name}" if shard else "")
         outcome = _outcome(report, output)
         print(
-            f"[tuxedo] {suite}{f' [{shard.name}]' if shard else ''}: "
+            f"[baseline] {suite}{f' [{shard.name}]' if shard else ''}: "
             f"{outcome.passed}/{outcome.provider_responses} passed, {report['duration_seconds']}s, "
             f"result={_display_path(output)}"
         )
@@ -601,7 +601,7 @@ def run_promptfoo(
         if not keep:
             shutil.rmtree(workspace_root, ignore_errors=True)
         else:
-            print(f"[tuxedo] preserved debug workspace: {workspace_root}")
+            print(f"[baseline] preserved debug workspace: {workspace_root}")
 
 
 def _parse_filter_range(value: str) -> tuple[int, int]:
@@ -643,7 +643,7 @@ def _aggregate_shards(suite: str, outcomes: list[SuiteOutcome], duration_seconds
     }
     output = _write_report(aggregate, suite, "-aggregate")
     result = _outcome(aggregate, output)
-    print(f"[tuxedo] {suite} aggregate: {passed}/{result.provider_responses} passed, result={_display_path(output)}")
+    print(f"[baseline] {suite} aggregate: {passed}/{result.provider_responses} passed, result={_display_path(output)}")
     return result
 
 
@@ -693,7 +693,7 @@ def _aggregate_repetitions(suite: str, outcomes: list[SuiteOutcome], duration_se
     output = _write_report(aggregate, suite, "-aggregate")
     result = _outcome(aggregate, output)
     print(
-        f"[tuxedo] {suite} independent repetitions: "
+        f"[baseline] {suite} independent repetitions: "
         f"{passed}/{result.provider_responses} passed, result={_display_path(output)}"
     )
     return result
@@ -778,7 +778,7 @@ def _write_full_summary(outcomes: list[SuiteOutcome], duration_seconds: float) -
         ],
     }
     output = _write_report(report, "full", "-aggregate")
-    print(f"[tuxedo] full aggregate: status={status}, {duration_seconds:.3f}s, result={_display_path(output)}")
+    print(f"[baseline] full aggregate: status={status}, {duration_seconds:.3f}s, result={_display_path(output)}")
     return output
 
 
@@ -792,9 +792,9 @@ def _run_skills() -> None:
 
 
 def _run_compare() -> None:
-    raw = os.environ.get("TUXEDO_EVAL_PROPOSED_ROOT")
+    raw = os.environ.get("BASELINE_EVAL_PROPOSED_ROOT")
     if not raw:
-        raise RuntimeError("TUXEDO_EVAL_PROPOSED_ROOT is required for eval:compare")
+        raise RuntimeError("BASELINE_EVAL_PROPOSED_ROOT is required for eval:compare")
     started = time.monotonic()
     codex_home = PREPARE.preflight_codex_home()
     outcomes = [
@@ -817,7 +817,7 @@ def _redteam(command_name: str) -> None:
         if not path.is_file():
             raise RuntimeError("no generated probes found; run eval:redteam:generate explicitly first")
         lines = path.read_text(encoding="utf-8").splitlines()
-        print(f"[tuxedo] generated probe file: {path.relative_to(ROOT)} ({len(lines)} sanitized lines)")
+        print(f"[baseline] generated probe file: {path.relative_to(ROOT)} ({len(lines)} sanitized lines)")
         for line in lines[:40]:
             print(_redact(line[:240]))
         return
@@ -826,7 +826,7 @@ def _redteam(command_name: str) -> None:
     env = PREPARE.evaluation_environment(codex_home)
     env["PROMPTFOO_DISABLE_REDTEAM_REMOTE_GENERATION"] = "true"
     env["PROMPTFOO_DISABLE_SHARE"] = "true"
-    state_root = Path(tempfile.mkdtemp(prefix="tuxedo-promptfoo-redteam-"))
+    state_root = Path(tempfile.mkdtemp(prefix="baseline-promptfoo-redteam-"))
     env["PROMPTFOO_CONFIG_DIR"] = str(state_root / "promptfoo-state")
     (state_root / "promptfoo-state").mkdir()
     config = PROMPTFOO_ROOT / "redteam-config.yaml"
@@ -837,7 +837,7 @@ def _redteam(command_name: str) -> None:
                 PNPM, "exec", "promptfoo", "redteam", "generate", "-c", str(config), "-o", str(output), "--no-cache",
                 "--no-progress-bar", "--strict", "--plugins", "coding-agent:core", "--num-tests", "10",
             ], timeout=1800, env=env, label="Promptfoo red-team probe generation (explicit, local-only)")
-            print(f"[tuxedo] generated probes at {output.relative_to(ROOT)}; review before execution")
+            print(f"[baseline] generated probes at {output.relative_to(ROOT)}; review before execution")
         elif command_name == "full":
             _run([
                 PNPM, "exec", "promptfoo", "redteam", "run", "-c", str(config), "--no-cache", "--no-progress-bar", "--strict",
@@ -865,7 +865,7 @@ def run_full_evaluation() -> None:
     if after != before:
         raise RuntimeError("evaluation modified the checkout; before/after git status differ")
     _require_passing_outcomes(outcomes)
-    print("[tuxedo] eval:full passed; checkout status unchanged")
+    print("[baseline] eval:full passed; checkout status unchanged")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -908,7 +908,7 @@ def main(argv: list[str] | None = None) -> int:
             run_full_evaluation()
         return 0
     except RuntimeError as exc:
-        print(f"[tuxedo] {_redact(str(exc))}", file=sys.stderr)
+        print(f"[baseline] {_redact(str(exc))}", file=sys.stderr)
         return 1
 
 
