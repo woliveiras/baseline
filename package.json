@@ -1,9 +1,9 @@
 {
-  "name": "tuxedo",
+  "name": "baseline",
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@11.13.1",
-  "description": "Development-only evaluation tooling for Tuxedo",
+  "description": "Development-only evaluation tooling for Baseline",
   "engines": {
     "node": ">=22.22.0"
   },

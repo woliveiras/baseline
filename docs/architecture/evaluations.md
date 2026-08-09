@@ -2,7 +2,7 @@
 
 Promptfoo is a development-only orchestration layer. It is not installed with
 the plugin and is not a runtime dependency of any distributed skill. The
-official `openai:codex-sdk` provider supplies Codex execution; Tuxedo supplies
+official `openai:codex-sdk` provider supplies Codex execution; Baseline supplies
 the tasks, fixtures, workspace lifecycle, deterministic oracles, and authority
 boundaries.
 
@@ -11,12 +11,12 @@ boundaries.
 | Concern | Owner | Evidence and boundary |
 | --- | --- | --- |
 | Provider execution, repetitions, latency, tokens, and local aggregation | Promptfoo adapter | `evals/promptfoo/promptfooconfig.yaml`, provider result validation |
-| Canonical behavior tasks and hidden deterministic checks | Tuxedo | `evals/tasks/`, `evals/verifiers.py`, `assertions/workspace.py` |
-| Explicit skill-invocation positive/negative cases | Tuxedo catalog plus generated Promptfoo requests and skill assertions | `tests/routing.yaml`, adapter transformation in `tests.py`, `assertions/routing.py`; Codex metadata remains heuristic |
-| Variant comparisons | Tuxedo workspace preparation | baseline/core/focal/broad/current/proposed roots and distinct fingerprints |
-| Security regression probes | Tuxedo fixtures and assertions | every frozen probe has a distinct stimulus, a legitimate `src/app.py` oracle, and outside-canary checks |
+| Canonical behavior tasks and hidden deterministic checks | Baseline | `evals/tasks/`, `evals/verifiers.py`, `assertions/workspace.py` |
+| Explicit skill-invocation positive/negative cases | Baseline catalog plus generated Promptfoo requests and skill assertions | `tests/routing.yaml`, adapter transformation in `tests.py`, `assertions/routing.py`; Codex metadata remains heuristic |
+| Variant comparisons | Baseline workspace preparation | control/core/focal/broad/current/proposed roots and distinct fingerprints |
+| Security regression probes | Baseline fixtures and assertions | every frozen probe has a distinct stimulus, a legitimate `src/app.py` oracle, and outside-canary checks |
 | Red-team generation and review | Promptfoo, explicitly invoked | `eval:redteam:generate`, `eval:redteam:review`; never part of `eval:full` |
-| Authority and privacy | Tuxedo runner and provider config | dedicated `TUXEDO_EVAL_CODEX_HOME`, no cloud share, no remote red-team generation, no external operations |
+| Authority and privacy | Baseline runner and provider config | dedicated `BASELINE_EVAL_CODEX_HOME`, no cloud share, no remote red-team generation, no external operations |
 
 ## Runner contract
 
@@ -81,7 +81,7 @@ empty responses, incomplete turns, a missing/malformed result file, timeout,
 and Promptfoo exit codes other than 0 or 100 are infrastructure failures.
 Promptfoo exit 100 means assertions failed: the runner parses it, writes the
 sanitized failed report, and returns a failed suite outcome. Failed assertions
-and `needs-review` are distinct verdicts, not reasons to discard evidence. Tuxedo
+and `needs-review` are distinct verdicts, not reasons to discard evidence. Baseline
 assertions apply deterministic checks: no-op behavior
 tasks fail when mutation is required, forbidden mutation remains forbidden,
 protected hashes must hold, and `needs-review` is not silently promoted to
@@ -138,7 +138,7 @@ The evidence chain answers three different questions:
    invocation signal is not evidence of spontaneous skill discovery or proof
    of full skill adherence.
 2. Behavior: does the skill change the assigned workspace as required across
-   controlled baseline/core/focal/broad/current conditions? Fresh workspaces,
+   controlled control/core/focal/broad/current conditions? Fresh workspaces,
    protected hashes, hidden deterministic oracles, completed-turn checks, and
    no-op rejection make a refusal or “done” response insufficient. Cases that
    cannot be fully decided mechanically add an explicit `llm-rubric` judge
@@ -167,7 +167,7 @@ Use the narrower commands when the full gate is disproportionate:
 pnpm run eval:smoke
 pnpm run eval:skills
 pnpm run eval:security
-pnpm run eval:compare      # requires TUXEDO_EVAL_PROPOSED_ROOT
+pnpm run eval:compare      # requires BASELINE_EVAL_PROPOSED_ROOT
 pnpm run eval:redteam:generate
 pnpm run eval:redteam:review
 ```
@@ -177,7 +177,7 @@ red-team command is implied by ordinary validation or `eval:full`.
 
 ## Residual limitations
 
-No provider/model evaluation has been executed for the 2026-08-09 baseline
+No provider/model evaluation has been executed for the 2026-08-09 control
 catalog, so `measurer` routing and the new behavior task have no current
 empirical result.
 

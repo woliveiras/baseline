@@ -1,7 +1,7 @@
 [project]
-name = "tuxedo"
+name = "baseline"
 version = "0.1.0"
-description = "Development tooling for Tuxedo"
+description = "Development tooling for the Baseline engineering foundation"
 requires-python = ">=3.12"
 dependencies = []
 

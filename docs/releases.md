@@ -1,11 +1,11 @@
-# Releasing Tuxedo
+# Releasing Baseline
 
-Tuxedo has one product version for the complete plugin and all distributed
+Baseline has one product version for the complete plugin and all distributed
 skills. Individual skills are independently routable and installable, but they
 do not receive separate versions, changelogs, tags, or GitHub Releases.
 
-The version is synchronized across `package.json`, `pyproject.toml`, the Tuxedo
-entry in `uv.lock`, `plugins/tuxedo/.codex-plugin/plugin.json`,
+The version is synchronized across `package.json`, `pyproject.toml`, the Baseline
+entry in `uv.lock`, `plugins/baseline/.codex-plugin/plugin.json`,
 `.release-please-manifest.json`, `CHANGELOG.md`, the `vX.Y.Z` Git tag, and its
 GitHub Release. The private Node package is never published to npm, and the
 non-package Python project is never published to PyPI; both exist only for
@@ -18,9 +18,9 @@ Use Conventional Commits to describe the user-visible effect:
 
 | Change | Version result |
 | --- | --- |
-| `fix` | `0.1.0` -> `0.1.1` |
-| `feat` | `0.1.0` -> `0.2.0` |
-| Breaking change before `1.0.0` | `0.1.0` -> `0.2.0` |
+| `fix` | increment the patch version |
+| `feat` | increment the minor version |
+| Breaking change before `1.0.0` | increment the minor version |
 | `docs`, `test`, `ci`, `chore`, or `refactor` only | no release |
 
 A documentation, test, CI, chore, or refactor commit that actually changes the
@@ -49,20 +49,6 @@ validation job has read-only repository permission and does not receive a
 publication credential. Branch protection requires the same `Validate` context
 for ordinary and generated pull requests.
 
-## Initial release
-
-`v0.1.0` is bootstrapped explicitly because the plugin manifest already
-declared `0.1.0` before Release Please existed. After the bootstrap PR passes CI
-and reaches protected `main`, create tag `v0.1.0` and a GitHub Release targeting
-that same merge commit. From then on, `.release-please-manifest.json` starts at
-`0.1.0` and Release Please owns `0.1.1`, `0.2.0`, and later versions.
-
-Until that initial tag exists, top-level `bootstrap-sha` in
-`release-please-config.json` prevents pre-bootstrap Conventional Commits from
-being interpreted as unreleased changes. Version tests compare the synchronized
-sources dynamically; they must accept a legitimate Release PR version bump
-instead of freezing the repository forever at `0.1.0`.
-
 ## Release verification
 
 Before merging a Release PR, require:
@@ -74,7 +60,7 @@ Before merging a Release PR, require:
 
 After publication, verify that the tag and GitHub Release target the same commit.
 Install the marketplace from the exact tag in disposable `HOME` and `CODEX_HOME`
-directories, confirm `tuxedo@tuxedo` reports the released version, and confirm
+directories, confirm `baseline@baseline` reports the released version, and confirm
 all distributed skills are discovered. This check performs no login or model
 call.
 

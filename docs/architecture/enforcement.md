@@ -1,14 +1,14 @@
 # Workflow and command boundaries
 
-Tuxedo separates three responsibilities:
+Baseline separates three responsibilities:
 
-1. `AGENTS.md` and skills provide portable, declarative baseline guidance.
+1. `AGENTS.md` and skills provide portable, declarative engineering guidance.
 2. Tests and CI execute repository-specific checks and produce fresh results.
 3. Optional Codex Rules govern a narrow set of direct command-authority decisions.
 
-Tuxedo distributes no lifecycle hooks, launch scripts, chronology gate, scope monitor, review-file generator, or consumer runtime. Guidance cannot prove chronology, semantic adequacy, review independence, scope fidelity, or staged ownership.
+Baseline distributes no lifecycle hooks, launch scripts, chronology gate, scope monitor, review-file generator, or consumer runtime. Guidance cannot prove chronology, semantic adequacy, review independence, scope fidelity, or staged ownership.
 
-## Proportional baseline
+## Proportional work
 
 For a software task, the agent:
 
@@ -20,11 +20,11 @@ For a software task, the agent:
 6. reviews the governing input, expected behavior, tests, complete diff, relevant risks, fresh results, unrelated changes, rollback, and limitations at `inline`, `focused`, `expanded`, or `independent` depth;
 7. performs a Git operation only when that operation is explicitly authorized.
 
-A suitable verification can be unit, integration, contract, end-to-end, static, inspection, or another executable check at the real boundary. Documentation and configuration work must not add a meaningless unit test to satisfy a label. The baseline does not require a specification, behavior/oracle matrix, provenance record, evidence file, or review file.
+A suitable verification can be unit, integration, contract, end-to-end, static, inspection, or another executable check at the real boundary. Documentation and configuration work must not add a meaningless unit test to satisfy a label. Baseline does not require a specification, behavior/oracle matrix, provenance record, evidence file, or review file.
 
 ## Codex Rules
 
-Tuxedo ships `templates/codex/tuxedo.rules` as an optional project template. Copy it to `.codex/rules/tuxedo.rules` in a trusted project and restart Codex.
+Baseline ships `templates/codex/baseline.rules` as an optional project template. Copy it to `.codex/rules/baseline.rules` in a trusted project and restart Codex.
 
 For the exact standard command forms listed in the template, it:
 
@@ -38,4 +38,4 @@ Rules do not validate TDD order, task scope, review quality, test adequacy, or c
 
 A future mechanical gate is justified only when a failure recurs, the invariant is objectively observable, false-positive and false-negative cases can be tested, and the solution neither mutates the consumer checkout nor introduces an installed runtime dependency. Semantic judgments remain in governing inputs, skills, tests, review, and human authority.
 
-The development-only Promptfoo boundary is documented in [evaluation architecture](evaluations.md) and [ADR 0001](../decisions/0001-use-promptfoo-as-evaluation-orchestrator.md); the product boundary decision is [ADR 0003](../decisions/0003-adopt-proportional-baseline-and-move-sdd.md). Superseded experiments and outcomes remain available through Git history rather than the current documentation tree.
+The development-only Promptfoo boundary is documented in [evaluation architecture](evaluations.md) and [ADR 0001](../decisions/0001-use-promptfoo-as-evaluation-orchestrator.md); the product boundary decision is [ADR 0003](../decisions/0003-separate-foundation-and-optional-sdd.md). Superseded experiments and outcomes remain available through Git history rather than the current documentation tree.

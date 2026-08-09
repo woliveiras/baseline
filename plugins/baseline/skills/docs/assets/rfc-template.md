@@ -60,7 +60,7 @@
 
 <!--
 The lightweight proposal flow and public review model are informed by npm RFCs;
-Tuxedo adds explicit authority, validation, migration, rollback, and operations.
+Baseline adds explicit authority, validation, migration, rollback, and operations.
 Source: https://github.com/npm/rfcs
 Template: https://github.com/npm/rfcs/blob/latest/accepted/0000-template.md
 -->

@@ -19,12 +19,12 @@ path, risked discovering or synchronizing consumer environments, and could make
 mechanical receipts appear to prove semantic quality, chronology, or review.
 
 Portable guidance, repository tests, CI, sandboxing, approvals, and human review
-already own different parts of this problem. Tuxedo should not add a second
+already own different parts of this problem. Baseline should not add a second
 runtime policy system without a recurring, objectively observable failure.
 
 ## Decision
 
-The installed Tuxedo product contains no lifecycle hooks, launcher, policy or
+The installed Baseline product contains no lifecycle hooks, launcher, policy or
 receipt format, review-file generator, or Python/UV runtime dependency.
 
 - `AGENTS.md` and skills provide declarative engineering guidance.
@@ -52,9 +52,9 @@ authority.
 
 ## Consequences
 
-- Consumers need no UV, Python, or Tuxedo runtime.
+- Consumers need no UV, Python, or Baseline runtime.
 - The workflow remains declarative rather than a technical gate.
-- Tuxedo accepts that some process violations cannot be blocked mechanically.
+- Baseline accepts that some process violations cannot be blocked mechanically.
 - Superseded hook implementations, trials, receipts, and validation logs remain
   recoverable from Git history and do not occupy the current product tree.
 

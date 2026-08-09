@@ -52,7 +52,7 @@ Chosen option: **{option}**, because {reason tied to the drivers}.
 - {Related specification, RFC, evidence, or source}
 
 <!--
-Adapted for Tuxedo from MADR 4.0.0. MADR is available under MIT OR CC0-1.0.
+Adapted for Baseline from MADR 4.0.0. MADR is available under MIT OR CC0-1.0.
 Source: https://adr.github.io/madr/
 Template source: https://github.com/adr/madr/tree/4.0.0/template
 -->

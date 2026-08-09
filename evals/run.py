@@ -18,7 +18,7 @@ from verifiers import snapshot, verify
 
 
 ROOT = Path(__file__).resolve().parents[1]
-VARIANTS = ("baseline", "core", "focal", "broad", "current", "proposed")
+VARIANTS = ("control", "core", "focal", "broad", "current", "proposed")
 TASK_FIELDS = {
     "id", "fixture", "focal_skill", "prompt", "verifier", "mutation_policy", "secondary_review"
 }
@@ -186,7 +186,7 @@ def execute(
     model: str | None,
     reasoning_effort: str | None,
 ) -> dict[str, Any]:
-    with tempfile.TemporaryDirectory(prefix="tuxedo-eval-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="baseline-eval-") as tmp:
         workspace = Path(tmp)
         fixture = catalog.get(task["fixture"])
         if not isinstance(fixture, dict) or not all(isinstance(key, str) and isinstance(value, str) for key, value in fixture.items()):
@@ -197,7 +197,7 @@ def execute(
             raise ValueError("the proposed variant requires --proposed-root")
         configuration = configure(run["variant"], task, workspace, source_root)
         before = snapshot(workspace)
-        final_message = workspace / ".tuxedo-final.txt"
+        final_message = workspace / ".baseline-final.txt"
         command = build_command(codex, workspace, final_message, task["prompt"], model, reasoning_effort)
 
         started = time.monotonic()
@@ -272,7 +272,7 @@ def build_matrix(
 def valid_root(path: Path, label: str) -> Path:
     resolved = path.resolve()
     if not (resolved / "AGENTS.md").is_file() or not (resolved / "skills").is_dir():
-        raise ValueError(f"{label} is not a Tuxedo root: {resolved}")
+        raise ValueError(f"{label} is not a Baseline root: {resolved}")
     return resolved
 
 

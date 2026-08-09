@@ -1,4 +1,4 @@
-# Developing Tuxedo
+# Developing Baseline
 
 This guide covers the repository layout, the toolchain, and how to develop and
 test changes. The authoritative rules are in the
@@ -6,19 +6,19 @@ test changes. The authoritative rules are in the
 
 ## The product is the repository
 
-Tuxedo is not a program with a build step. The repository contains the complete
+Baseline is not a program with a build step. The repository contains the complete
 product contract and repository evidence; its directly installable plugin
-package is committed under `plugins/tuxedo/`. There is intentionally no CLI,
+package is committed under `plugins/baseline/`. There is intentionally no CLI,
 daemon, package manager, sync layer, telemetry, client generator, generated
 distribution directory, or runtime dependency, and none should be added.
 
 ## Repository layout
 
-- `plugins/tuxedo/` is the complete installed plugin package. It contains the
+- `plugins/baseline/` is the complete installed plugin package. It contains the
   manifest and the 17 distributed workflow skills, and nothing from the
   development-only toolchain.
 - `skills/` is a repository compatibility symlink to
-  `plugins/tuxedo/skills/`. It keeps existing repository and evaluation paths
+  `plugins/baseline/skills/`. It keeps existing repository and evaluation paths
   stable without creating a second skill tree or a package-generation step.
 - Each distributed skill is a `SKILL.md` with optional `references/`, `assets/`,
   and `agents/` beside it.
@@ -41,12 +41,12 @@ of the installed plugin surface.
   package commands with `pnpm run` or `pnpm exec`. Do not use npm or maintain a
   `package-lock.json`.
 
-These are development toolchain conventions. Installed Tuxedo skills do not run
+These are development toolchain conventions. Installed Baseline skills do not run
 UV, Python, PNPM, or Node.js in consumer projects.
 
 The Python development group contains only PyYAML, used by the official
 Codex plugin and skill validators to parse frontmatter. PyYAML is MIT-licensed,
-version-pinned, lockfile-resolved, and absent from `plugins/tuxedo/`; it is not a
+version-pinned, lockfile-resolved, and absent from `plugins/baseline/`; it is not a
 consumer runtime dependency.
 
 ## How to develop
@@ -65,20 +65,19 @@ consumer runtime dependency.
 ## Local development installation
 
 The supported consumer installation is documented in the [top-level README](../README.md):
-Codex can fetch `woliveiras/tuxedo` as a GitHub marketplace and install
-`tuxedo@tuxedo` without a Tuxedo checkout on the consumer machine. The
-stable remote ref is the latest published `vX.Y.Z` tag. The initial release is
-`v0.1.0`; `main` is a mutable development channel rather than a reproducible
-consumer installation.
+Codex can fetch `woliveiras/baseline` as a GitHub marketplace and install
+`baseline@baseline` without a Baseline checkout on the consumer machine. The
+stable remote ref is the latest published `vX.Y.Z` tag. `main` is a mutable
+development channel rather than a reproducible consumer installation.
 
 For people developing the repository itself, keep the local marketplace
 flow so changes can be inspected directly from the checkout:
 
 ```bash
-git clone https://github.com/woliveiras/tuxedo.git
-cd tuxedo
+git clone https://github.com/woliveiras/baseline.git
+cd baseline
 codex plugin marketplace add "$(pwd)"
-codex plugin add tuxedo@tuxedo
+codex plugin add baseline@baseline
 ```
 
 This local clone is a development convenience, not a prerequisite for users.
@@ -96,7 +95,7 @@ uv run --locked python evals/run.py --dry-run
 ```
 
 `evals/run.py` never calls a model unless a user explicitly passes `--execute`. The
-legacy runner compares baseline, minimal core, focal skill, broad configuration,
+legacy runner compares control, minimal core, focal skill, broad configuration,
 and distinct current-versus-proposed roots with seeded ordering and hidden
 deterministic oracles. Architectural and intent-sensitive tasks stay
 `needs-review` until the secondary rubric is applied; response keywords never
@@ -122,4 +121,4 @@ implied by installation or a Git push.
 Commit coherent, task-owned slices locally with Conventional Commits
 (`type(scope): subject`). Never infer authority for push, force-push, amend,
 rebase, tag, release, publication, or deploy. See the
-[`git-commit` skill](../plugins/tuxedo/skills/git-commit/SKILL.md) for the safe procedure.
+[`git-commit` skill](../plugins/baseline/skills/git-commit/SKILL.md) for the safe procedure.

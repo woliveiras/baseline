@@ -18,10 +18,10 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_HOME_NAME = ".codex-tuxedo-evals"
-EVAL_HOME_ENV = "TUXEDO_EVAL_CODEX_HOME"
+DEFAULT_HOME_NAME = ".codex-baseline-evals"
+EVAL_HOME_ENV = "BASELINE_EVAL_CODEX_HOME"
 PERSONAL_HOME_ENV = "CODEX_HOME"
-CODEX_PATH_ENV = "TUXEDO_EVAL_CODEX_PATH"
+CODEX_PATH_ENV = "BASELINE_EVAL_CODEX_PATH"
 API_KEY_ENV_NAMES = ("OPENAI_API_KEY", "CODEX_API_KEY")
 
 # These are behavior-bearing content surfaces. Authentication, configuration,
@@ -115,7 +115,7 @@ def resolve_dedicated_home() -> Path:
 
     checkout = ROOT.resolve()
     if lexical == checkout or checkout in lexical.parents:
-        raise RuntimeError(f"{EVAL_HOME_ENV} must not be inside the Tuxedo checkout")
+        raise RuntimeError(f"{EVAL_HOME_ENV} must not be inside the Baseline checkout")
 
     resolved = _resolve_path(raw)
     home_root = Path.home().resolve()
@@ -125,7 +125,7 @@ def resolve_dedicated_home() -> Path:
         personal_roots.add(configured_personal)
 
     if resolved == checkout or checkout in resolved.parents:
-        raise RuntimeError(f"{EVAL_HOME_ENV} must not be inside the Tuxedo checkout")
+        raise RuntimeError(f"{EVAL_HOME_ENV} must not be inside the Baseline checkout")
     if resolved == Path(resolved.anchor):
         raise RuntimeError(f"{EVAL_HOME_ENV} must identify a dedicated directory, not a filesystem root")
     for personal in personal_roots:
@@ -262,7 +262,7 @@ def _run_login_status(home: Path) -> subprocess.CompletedProcess[str]:
         )
     except OSError as exc:
         raise RuntimeError(
-            "Codex CLI is unavailable; set TUXEDO_EVAL_CODEX_PATH to the configured executable"
+            "Codex CLI is unavailable; set BASELINE_EVAL_CODEX_PATH to the configured executable"
         ) from exc
 
 
@@ -343,7 +343,7 @@ def login() -> int:
         )
     except OSError as exc:
         raise RuntimeError(
-            "Codex CLI is unavailable; set TUXEDO_EVAL_CODEX_PATH to the configured executable"
+            "Codex CLI is unavailable; set BASELINE_EVAL_CODEX_PATH to the configured executable"
         ) from exc
     return result.returncode
 
@@ -363,7 +363,7 @@ def status() -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Manage the dedicated Tuxedo evaluation Codex home")
+    parser = argparse.ArgumentParser(description="Manage the dedicated Baseline evaluation Codex home")
     parser.add_argument("command", choices=("login", "status"))
     args = parser.parse_args(argv)
     try:

@@ -7,18 +7,18 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILLS = ROOT / "plugins" / "tuxedo" / "skills"
+SKILLS = ROOT / "plugins" / "baseline" / "skills"
 
 
 class BaselineBoundaryTests(unittest.TestCase):
     def test_product_identity_is_not_spec_driven(self) -> None:
-        for relative in ("AGENTS.md", "README.md", "plugins/tuxedo/.codex-plugin/plugin.json"):
+        for relative in ("AGENTS.md", "README.md", "plugins/baseline/.codex-plugin/plugin.json"):
             text = (ROOT / relative).read_text(encoding="utf-8").lower()
             self.assertNotIn("spec-driven", text, relative)
             self.assertNotIn("specification-driven development toolkit", text, relative)
         self.assertIn(
-            "portable baseline for disciplined, proportional software engineering",
-            (ROOT / "plugins/tuxedo/.codex-plugin/plugin.json").read_text(encoding="utf-8").lower(),
+            "portable minimum for disciplined, proportional software engineering",
+            (ROOT / "plugins/baseline/.codex-plugin/plugin.json").read_text(encoding="utf-8").lower(),
         )
 
     def test_distributed_inventory_replaces_spec_with_measurer(self) -> None:
@@ -105,10 +105,10 @@ class BaselineBoundaryTests(unittest.TestCase):
     def test_sdd_templates_and_references_are_not_distributed(self) -> None:
         for relative in (
             "templates/spec",
-            "plugins/tuxedo/skills/spec",
-            "plugins/tuxedo/skills/tdd/references/provenance.md",
-            "plugins/tuxedo/skills/verify/references/review-contract.md",
-            "plugins/tuxedo/skills/verify/assets/evidence-template.md",
+            "plugins/baseline/skills/spec",
+            "plugins/baseline/skills/tdd/references/provenance.md",
+            "plugins/baseline/skills/verify/references/review-contract.md",
+            "plugins/baseline/skills/verify/assets/evidence-template.md",
         ):
             self.assertFalse((ROOT / relative).exists(), relative)
 
@@ -134,12 +134,12 @@ class BaselineBoundaryTests(unittest.TestCase):
         ):
             self.assertFalse((ROOT / relative).exists(), relative)
         contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
-        docs_skill = (ROOT / "plugins/tuxedo/skills/docs/SKILL.md").read_text(encoding="utf-8")
+        docs_skill = (ROOT / "plugins/baseline/skills/docs/SKILL.md").read_text(encoding="utf-8")
         self.assertIn("Git is the default archive", contract)
         self.assertIn("Git as the default historical archive", docs_skill)
 
     def test_distribution_has_no_runtime_or_storehouse_dependency(self) -> None:
-        plugin_files = [path for path in (ROOT / "plugins" / "tuxedo").rglob("*") if path.is_file()]
+        plugin_files = [path for path in (ROOT / "plugins" / "baseline").rglob("*") if path.is_file()]
         self.assertFalse(any(path.name in {"package.json", "pyproject.toml", "requirements.txt"} for path in plugin_files))
         text = "\n".join(path.read_text(encoding="utf-8", errors="ignore") for path in plugin_files)
         self.assertNotIn("/Developer/woliveiras/agent-skills", text)

@@ -1,6 +1,6 @@
 # Skill creator limitations
 
-These limitations define the current threshold before Tuxedo considers a
+These limitations define the current threshold before Baseline considers a
 catalog-governance skill.
 
 - The generic validator checks frontmatter shape and naming but does not detect overlap between 17 related engineering skills.

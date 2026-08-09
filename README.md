@@ -1,12 +1,12 @@
-# Tuxedo
+# Baseline
 
-Tuxedo is a portable baseline for disciplined, proportional software engineering. It is distributed as a Codex plugin and portable Agent Skills for coding agents.
+Baseline is the portable minimum for disciplined software engineering. It is distributed as a Codex plugin and portable Agent Skills for coding agents.
 
-If you want to *use* Tuxedo with your agent, this page is enough to get started. If you want to *work on* Tuxedo itself, go to the [documentation hub](docs/README.md). I'll really appreciate your help, feedback, and contributions.
+If you want to *use* Baseline with your agent, this page is enough to get started. If you want to *work on* Baseline itself, go to the [documentation hub](docs/README.md). I'll really appreciate your help, feedback, and contributions.
 
-## Why Tuxedo
+## Why Baseline
 
-Coding agents drift, overcomplicate routine work, and may cross authority boundaries. Tuxedo keeps the baseline small while making risk, ambiguity, verification, durable knowledge, review, and Git authority explicit:
+Coding agents drift, overcomplicate routine work, and may cross authority boundaries. Baseline keeps the engineering foundation small while making risk, ambiguity, verification, durable knowledge, review, and Git authority explicit:
 
 ```text
 input
@@ -19,11 +19,11 @@ input
   -> explicitly authorized Git operation
 ```
 
-The input can be a request, issue, bug report, external contract, accepted architecture decision, or explicitly approved behavior. Tuxedo does not require a persistent specification, behavior/oracle matrix, formal provenance, evidence file, or review file. Teams that choose Specification-Driven Development can install the independent `sdd` collection from [Storehouse](https://github.com/woliveiras/storehouse); Tuxedo does not depend on it.
+The input can be a request, issue, bug report, external contract, accepted architecture decision, or explicitly approved behavior. Baseline does not require a persistent specification, behavior/oracle matrix, formal provenance, evidence file, or review file. Teams that choose Specification-Driven Development can install the independent `sdd` collection from [Storehouse](https://github.com/woliveiras/storehouse); Baseline does not depend on it.
 
 ## What's inside
 
-Tuxedo v0.1 distributes workflow skills that your agent loads on demand:
+Baseline distributes workflow skills that your agent loads on demand:
 
 | Category | Skills |
 | --- | --- |
@@ -32,27 +32,27 @@ Tuxedo v0.1 distributes workflow skills that your agent loads on demand:
 | Deep work (explicitly invoked) | `brainstorming`, `premortem`, `session-bridge`, `technical-research` |
 | Safety | `security-review` |
 
-`measurer` is intentionally concise and implicitly classifies work by the highest applicable risk, never line count. `refine` follows only when material ambiguity remains. `brainstorming`, `git-commit`, `improve-architecture`, `premortem`, `session-bridge`, and `technical-research` are explicit-only; the other workflows may be selected automatically when their descriptions match. The [catalog contract](plugins/tuxedo/skills/catalog.md) defines ownership, precedence, stop conditions, and composition without adding a runtime state machine.
+`measurer` is intentionally concise and implicitly classifies work by the highest applicable risk, never line count. `refine` follows only when material ambiguity remains. `brainstorming`, `git-commit`, `improve-architecture`, `premortem`, `session-bridge`, and `technical-research` are explicit-only; the other workflows may be selected automatically when their descriptions match. The [catalog contract](plugins/baseline/skills/catalog.md) defines ownership, precedence, stop conditions, and composition without adding a runtime state machine.
 
 ## Install for Codex
 
-Cloning the repository does not install Tuxedo. Choose either the plugin route for the complete bundle or the standalone route for direct Agent Skills. Neither route installs a Tuxedo runtime, Python, UV, or Node dependency in the consumer project.
+Cloning the repository does not install Baseline. Choose either the plugin route for the complete bundle or the standalone route for direct Agent Skills. Neither route installs a Baseline runtime, Python, UV, or Node dependency in the consumer project.
 
 ### Option A: install from the GitHub marketplace
 
-For another machine, install Tuxedo without keeping a local Tuxedo checkout. Codex fetches the GitHub marketplace snapshot, reads its committed `.agents/plugins/marketplace.json`, and then installs the package at `plugins/tuxedo/`.
+For another machine, install Baseline without keeping a local Baseline checkout. Codex fetches the GitHub marketplace snapshot, reads its committed `.agents/plugins/marketplace.json`, and then installs the package at `plugins/baseline/`.
 
 This repository is public. Install the stable release from its immutable tag:
 
 ```bash
 # x-release-please-start-version
-codex plugin marketplace add woliveiras/tuxedo --ref v0.1.0
-codex plugin add tuxedo@tuxedo
+codex plugin marketplace add woliveiras/baseline --ref v0.2.0
+codex plugin add baseline@baseline
 # x-release-please-end
 ```
 
 <!-- x-release-please-start-version -->
-The `woliveiras/tuxedo` shorthand uses HTTPS. The marketplace and plugin are both named `tuxedo`; `tuxedo@tuxedo` is `plugin@marketplace`, not `name@version`. The installed manifest reports version `0.1.0` separately. Start a new Codex session after installation. You can also open `/plugins` in Codex CLI, select the **Tuxedo** marketplace, and install **Tuxedo**. In Codex desktop, restart the app, open **Plugins**, choose **Tuxedo**, install **Tuxedo**, and start a new task. The installed plugin exposes all distributed skills; you do not have to name the plugin in normal prompts.
+The `woliveiras/baseline` shorthand uses HTTPS. The marketplace and plugin are both named `baseline`; `baseline@baseline` is `plugin@marketplace`, not `name@version`. The installed manifest reports version `0.2.0` separately. Start a new Codex session after installation. You can also open `/plugins` in Codex CLI, select the **Baseline** marketplace, and install **Baseline**. In Codex desktop, restart the app, open **Plugins**, choose **Baseline**, install **Baseline**, and start a new task. The installed plugin exposes all distributed skills; you do not have to name the plugin in normal prompts.
 <!-- x-release-please-end -->
 
 #### Optional sparse checkout
@@ -61,10 +61,10 @@ To fetch only the two paths needed to resolve and install the plugin, repeat `--
 
 ```bash
 # x-release-please-start-version
-codex plugin marketplace add woliveiras/tuxedo --ref v0.1.0 \
+codex plugin marketplace add woliveiras/baseline --ref v0.2.0 \
   --sparse .agents/plugins/marketplace.json \
-  --sparse plugins/tuxedo
-codex plugin add tuxedo@tuxedo
+  --sparse plugins/baseline
+codex plugin add baseline@baseline
 # x-release-please-end
 ```
 
@@ -72,14 +72,14 @@ For a private fork, use the same sparse paths with an SSH source after configuri
 
 ```bash
 # x-release-please-start-version
-codex plugin marketplace add git@github.com:OWNER/tuxedo.git --ref v0.1.0 \
+codex plugin marketplace add git@github.com:OWNER/baseline.git --ref v0.2.0 \
   --sparse .agents/plugins/marketplace.json \
-  --sparse plugins/tuxedo
-codex plugin add tuxedo@tuxedo
+  --sparse plugins/baseline
+codex plugin add baseline@baseline
 # x-release-please-end
 ```
 
-Do not omit either sparse path: the manifest selects the plugin and `plugins/tuxedo/` contains the manifest and distributed skills.
+Do not omit either sparse path: the manifest selects the plugin and `plugins/baseline/` contains the manifest and distributed skills.
 
 #### Private forks and credentials
 
@@ -87,8 +87,8 @@ For a private fork, use an SSH Git URL after configuring the machine's GitHub SS
 
 ```bash
 # x-release-please-start-version
-codex plugin marketplace add git@github.com:OWNER/tuxedo.git --ref v0.1.0
-codex plugin add tuxedo@tuxedo
+codex plugin marketplace add git@github.com:OWNER/baseline.git --ref v0.2.0
+codex plugin add baseline@baseline
 # x-release-please-end
 ```
 
@@ -99,83 +99,83 @@ Codex account authentication and GitHub repository authentication are separate. 
 Tags are immutable, so upgrading replaces the configured marketplace ref and then reinstalls the plugin. For example, after `v0.2.0` exists:
 
 ```bash
-codex plugin remove tuxedo@tuxedo
-codex plugin marketplace remove tuxedo
-codex plugin marketplace add woliveiras/tuxedo --ref v0.2.0
-codex plugin add tuxedo@tuxedo
+codex plugin remove baseline@baseline
+codex plugin marketplace remove baseline
+codex plugin marketplace add woliveiras/baseline --ref v0.2.0
+codex plugin add baseline@baseline
 ```
 
 <!-- x-release-please-start-version -->
-Start a new session afterward. The same lifecycle is available through `/plugins` or the desktop Plugins screen. `v0.1.0` is immutable; a later version always uses a new tag.
+Start a new session afterward. The same lifecycle is available through `/plugins` or the desktop Plugins screen. `v0.2.0` is immutable; a later version always uses a new tag.
 <!-- x-release-please-end -->
 
 #### Reinstall and Remove
 
-To reinstall only Tuxedo:
+To reinstall only Baseline:
 
 ```bash
-codex plugin remove tuxedo@tuxedo
-codex plugin add tuxedo@tuxedo
+codex plugin remove baseline@baseline
+codex plugin add baseline@baseline
 ```
 
-To remove Tuxedo completely, uninstall the plugin before removing its marketplace:
+To remove Baseline completely, uninstall the plugin before removing its marketplace:
 
 ```bash
-codex plugin remove tuxedo@tuxedo
-codex plugin marketplace remove tuxedo
+codex plugin remove baseline@baseline
+codex plugin marketplace remove baseline
 ```
 
 The supported remote route is marketplace-first. Do not use `codex plugin add <URL>`; `codex plugin add` receives the `plugin@marketplace` selector after the marketplace has been configured. For unreleased testing only, `--ref main` remains a mutable development channel; review its source before use and do not treat it as a reproducible release.
 
 ### Option B: clone locally for development
 
-This repository includes a local marketplace entry that points to the dedicated package at `plugins/tuxedo/`. That package contains only the plugin manifest and the distributed skills; repository-only tests, evaluations, documentation, and `node_modules/` are outside it. No package-build or copy script is required. Preserve this flow for developing Tuxedo itself:
+This repository includes a local marketplace entry that points to the dedicated package at `plugins/baseline/`. That package contains only the plugin manifest and the distributed skills; repository-only tests, evaluations, documentation, and `node_modules/` are outside it. No package-build or copy script is required. Preserve this flow for developing Baseline itself:
 
 ```bash
-git clone https://github.com/woliveiras/tuxedo.git
-cd tuxedo
+git clone https://github.com/woliveiras/baseline.git
+cd baseline
 codex plugin marketplace add "$(pwd)"
-codex plugin add tuxedo@tuxedo
+codex plugin add baseline@baseline
 ```
 
 This local-clone route is for people working on the checkout. It is not required for the remote installation above.
 
 ### Option C: install standalone skills
 
-Codex discovers user skills under `$HOME/.agents/skills` and repository skills under `.agents/skills`. It follows symlinked skill directories. The canonical Tuxedo skill tree is `plugins/tuxedo/skills/`. For a personal installation from an existing trusted clone:
+Codex discovers user skills under `$HOME/.agents/skills` and repository skills under `.agents/skills`. It follows symlinked skill directories. The canonical Baseline skill tree is `plugins/baseline/skills/`. For a personal installation from an existing trusted clone:
 
 ```bash
 mkdir -p "$HOME/.agents/skills"
-for skill_dir in "/absolute/path/to/tuxedo/plugins/tuxedo/skills"/*/; do
+for skill_dir in "/absolute/path/to/baseline/plugins/baseline/skills"/*/; do
   ln -s "$skill_dir" "$HOME/.agents/skills/$(basename "$skill_dir")"
 done
 ```
 
-Replace the example path with the absolute path to your clone and restart Codex. For one repository only, use that repository's `.agents/skills` instead of `$HOME/.agents/skills`. Update by pulling the source clone; remove by deleting only the Tuxedo symlinks you created. Do not symlink the whole `skills/` directory as one skill.
+Replace the example path with the absolute path to your clone and restart Codex. For one repository only, use that repository's `.agents/skills` instead of `$HOME/.agents/skills`. Update by pulling the source clone; remove by deleting only the Baseline symlinks you created. Do not symlink the whole `skills/` directory as one skill.
 
 ### Discovery and invocation
 
 - **Implicit invocation:** Codex may select an installed skill when the request matches its frontmatter description and `agents/openai.yaml` permits it. Ask for the outcome normally; no plugin name is required.
-- **Explicit invocation:** use `$skill-name` in Codex CLI/IDE or choose the skill from the UI. Explicit-only Tuxedo workflows require this or an equally direct request.
+- **Explicit invocation:** use `$skill-name` in Codex CLI/IDE or choose the skill from the UI. Explicit-only Baseline workflows require this or an equally direct request.
 - If many skills are installed, Codex may shorten or omit entries from its initial skill list because of the context budget. Use explicit invocation when you need a particular workflow deterministically.
 - Clean-room validation covers plugin installation, discovery of all distributed skills, removal, and reinstallation without Codex authentication or model calls. These checks establish packaging and discovery, not that a model follows a skill correctly.
-- The plugin is supported by Codex CLI and Codex desktop. Codex IDE supports standalone skills but not plugin installation. Tuxedo follows the portable Agent Skills format, but installation, discovery, routing, and composition in other clients remain unverified until client-specific clean-room tests are recorded.
+- The plugin is supported by Codex CLI and Codex desktop. Codex IDE supports standalone skills but not plugin installation. Baseline follows the portable Agent Skills format, but installation, discovery, routing, and composition in other clients remain unverified until client-specific clean-room tests are recorded.
 
 ### Optional command rules
 
-Copy [`templates/codex/tuxedo.rules`](templates/codex/tuxedo.rules) to `.codex/rules/tuxedo.rules` in a trusted project and restart Codex. The rules ask for human approval before push, destructive Git cleanup, release, publication, deploy, selected direct remote database and project mutations, infrastructure changes, and selected direct device mutations, and forbid a few literal broad-deletion forms.
+Copy [`templates/codex/baseline.rules`](templates/codex/baseline.rules) to `.codex/rules/baseline.rules` in a trusted project and restart Codex. The rules ask for human approval before push, destructive Git cleanup, release, publication, deploy, selected direct remote database and project mutations, infrastructure changes, and selected direct device mutations, and forbid a few literal broad-deletion forms.
 
 Once installed, work normally: start from the authorized input, classify proportionally, refine only material ambiguity, run the smallest suitable verification fail-first, stay inside scope, synchronize durable knowledge when needed, and review the complete diff before any explicitly authorized Git operation. Each skill documents its own workflow in `SKILL.md`.
 
 ## Responsibility boundaries
 
-Tuxedo separates command authority from workflow guidance:
+Baseline separates command authority from workflow guidance:
 
 - **Codex Rules** handle command-level safety through native, explicitly listed command prefixes.
 - **`AGENTS.md` and skills** define the proportional, fail-first, scoped, reviewed workflow.
 - **Tests and CI** provide executable evidence for product behavior.
 
-Tuxedo does not install lifecycle hooks or require external dependencies in consumer projects. The workflow requirements are declarative rather than mechanically enforced. They are being validated across real repository tasks before any narrow gate is considered. See [the workflow boundary](docs/architecture/enforcement.md) for responsibilities and the observation protocol.
+Baseline does not install lifecycle hooks or require external dependencies in consumer projects. The workflow requirements are declarative rather than mechanically enforced. They are being validated across real repository tasks before any narrow gate is considered. See [the workflow boundary](docs/architecture/enforcement.md) for responsibilities and the observation protocol.
 
 ## Documentation
 
@@ -184,12 +184,16 @@ Tuxedo does not install lifecycle hooks or require external dependencies in cons
 - **Work on it:** the [documentation hub](docs/README.md) links the development guide, architecture, active decisions (ADRs), and the development-only evaluation harness.
 - **Release it:** the [release guide](docs/releases.md) defines the single product version, protected automation, verification, and rollback.
 
-## Provenance and influences
+## From Geremmyas to Baseline
 
-Tuxedo succeeds Geremmyas and selectively adapts its MIT-licensed work by the same author. The project is named after Geremmyas, the author's tuxedo cat. The workflows were informed by established engineering practice and compared for coverage with community engineering skills (including [Superpowers](https://github.com/obra/superpowers), [Spec Kit](https://github.com/github/spec-kit) and [Matt Pocock's](https://github.com/mattpocock/skills)). No third-party skill text or procedure is copied. Recognized design references include John Ousterhout's *A Philosophy of Software Design* and Andrew Hunt and David Thomas's *The Pragmatic Programmer*, translated into operational checks such as interface comparison, information hiding, locality, reversibility, and validation before broad change.
+Baseline succeeds Geremmyas by extracting the universal engineering minimum that should be available in every software project. Specialized and technology-specific capabilities live in [Storehouse](https://github.com/woliveiras/storehouse) and can be installed only where they are useful.
+
+Baseline provides the foundation. Storehouse provides optional depth. Together they form the complete engineering suite without introducing a runtime dependency, synchronization layer, or permanent skill copies between the projects.
+
+The workflows are informed by established engineering practice and compared for coverage with community engineering skills, including [Superpowers](https://github.com/obra/superpowers), [Spec Kit](https://github.com/github/spec-kit), and [Matt Pocock's skills](https://github.com/mattpocock/skills). No third-party skill text or procedure is copied. Recognized design references include John Ousterhout's *A Philosophy of Software Design* and Andrew Hunt and David Thomas's *The Pragmatic Programmer*.
 
 Only fresh results from the current checkout can support a current evaluation claim.
 
 ## License
 
-Tuxedo is released under the [MIT License](LICENSE).
+Baseline is released under the [MIT License](LICENSE).

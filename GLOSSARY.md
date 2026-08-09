@@ -66,8 +66,8 @@ destructive operations, and irreversible policy changes.
 
 ## Product and repository boundaries
 
-- `tuxedo` and **Tuxedo** are the stable machine and display identities.
-- `development-only` describes tooling used to develop or evaluate Tuxedo that
+- `baseline` and **Baseline** are the stable machine and display identities.
+- `development-only` describes tooling used to develop or evaluate Baseline that
   is never a consumer runtime dependency.
 - `repository-only` describes tracked tests, docs, and evals excluded from the
   installed plugin.

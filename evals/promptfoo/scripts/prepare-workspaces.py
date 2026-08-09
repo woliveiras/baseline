@@ -25,9 +25,9 @@ from run import root_fingerprint, valid_root  # noqa: E402
 from verifiers import snapshot  # noqa: E402
 
 
-CONDITIONS = ("baseline", "core", "focal", "broad", "current", "proposed")
+CONDITIONS = ("control", "core", "focal", "broad", "current", "proposed")
 ALL_SKILLS = tuple(sorted(path.name for path in (ROOT / "skills").iterdir() if path.is_dir()))
-CANARY = "TUXEDO_SYNTHETIC_CANARY_7b4f1c"
+CANARY = "BASELINE_SYNTHETIC_CANARY_7b4f1c"
 
 
 def load_json(path: Path) -> Any:
@@ -145,7 +145,7 @@ def _conditions(suite: str) -> tuple[str, ...]:
         return ("current", "proposed")
     if suite == "smoke":
         return ("current",)
-    return ("baseline", "core", "focal", "broad", "current")
+    return ("control", "core", "focal", "broad", "current")
 
 
 def _protected_hashes(workspace: Path, suite: str, item: dict[str, Any], task: dict[str, Any] | None) -> dict[str, str]:
@@ -186,7 +186,7 @@ def prepare(suite: str, workspace_root: Path, current_root: Path, proposed_root:
     proposed_fingerprint = root_fingerprint(proposed_root) if proposed_root else None
     if suite == "compare":
         if proposed_root is None:
-            raise RuntimeError("TUXEDO_EVAL_PROPOSED_ROOT is required for compare")
+            raise RuntimeError("BASELINE_EVAL_PROPOSED_ROOT is required for compare")
         proposed_root = valid_root(proposed_root, "proposed root")
         if proposed_root == current_root or proposed_fingerprint == current_fingerprint:
             raise RuntimeError("current and proposed roots must have different content fingerprints")
@@ -248,7 +248,7 @@ def main() -> int:
     parser.add_argument("--proposed-root", type=Path)
     args = parser.parse_args()
     preflight_codex_home()
-    root = args.workspace_root or Path(tempfile.mkdtemp(prefix="tuxedo-promptfoo-"))
+    root = args.workspace_root or Path(tempfile.mkdtemp(prefix="baseline-promptfoo-"))
     manifest = prepare(args.suite, root, args.current_root, args.proposed_root)
     print(manifest["manifest_path"])
     return 0

@@ -7,12 +7,12 @@ authentication, and Promptfoo state. Step-by-step usage is in
 
 ## Dedicated Codex home
 
-- The evaluation home defaults to `$HOME/.codex-tuxedo-evals`.
-- `TUXEDO_EVAL_CODEX_HOME` overrides it only with an absolute path outside this
+- The evaluation home defaults to `$HOME/.codex-baseline-evals`.
+- `BASELINE_EVAL_CODEX_HOME` overrides it only with an absolute path outside this
   checkout, distinct from the personal `CODEX_HOME` and `$HOME/.codex`, and safe
   after symlink resolution. Relative, personal, checkout, and unsafe-symlink
   paths are rejected.
-- `TUXEDO_EVAL_CODEX_PATH` selects the Codex executable.
+- `BASELINE_EVAL_CODEX_PATH` selects the Codex executable.
 - The checkout is never a provider work directory.
 
 ## Authentication
@@ -51,7 +51,7 @@ configuration.
   instruction, policy, unknown top-level settings, and other project metadata.
 
 The allowlist recognizes the current CLI-managed surfaces; a future surface or
-unrecognized status label fails closed. Tuxedo does not validate the semantics
+unrecognized status label fails closed. Baseline does not validate the semantics
 of the allowed auth-store value, so keep the file minimal.
 
 ## Model selection

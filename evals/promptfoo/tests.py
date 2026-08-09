@@ -106,7 +106,7 @@ def _behavior_case(item: dict[str, Any]) -> dict[str, Any]:
                 "id": "openai:codex-sdk",
                 "config": {
                     "model_reasoning_effort": "medium",
-                    "working_dir": "{{ env.TUXEDO_EVAL_GRADER_ROOT }}",
+                    "working_dir": "{{ env.BASELINE_EVAL_GRADER_ROOT }}",
                     "sandbox_mode": "read-only",
                     "approval_policy": "never",
                     "network_access_enabled": False,
@@ -114,8 +114,8 @@ def _behavior_case(item: dict[str, Any]) -> dict[str, Any]:
                     "web_search_mode": "disabled",
                     "persist_threads": False,
                     "skip_git_repo_check": True,
-                    "codex_path_override": "{{ env.TUXEDO_EVAL_CODEX_PATH | default(\"codex\") }}",
-                    "cli_env": {"CODEX_HOME": "{{ env.TUXEDO_EVAL_CODEX_HOME }}"},
+                    "codex_path_override": "{{ env.BASELINE_EVAL_CODEX_PATH | default(\"codex\") }}",
+                    "cli_env": {"CODEX_HOME": "{{ env.BASELINE_EVAL_CODEX_HOME }}"},
                 },
             },
         })

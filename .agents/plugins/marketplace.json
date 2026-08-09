@@ -1,14 +1,14 @@
 {
-  "name": "tuxedo",
+  "name": "baseline",
   "interface": {
-    "displayName": "Tuxedo"
+    "displayName": "Baseline"
   },
   "plugins": [
     {
-      "name": "tuxedo",
+      "name": "baseline",
       "source": {
         "source": "local",
-        "path": "./plugins/tuxedo"
+        "path": "./plugins/baseline"
       },
       "policy": {
         "installation": "AVAILABLE",
