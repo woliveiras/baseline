@@ -48,16 +48,21 @@ Keep client-owned lifecycle catalogs outside the installed package. The Codex
 catalog remains at `.agents/plugins/marketplace.json`; the Copilot catalog at
 `.github/plugin/marketplace.json` points to the same `./plugins/baseline`
 directory. The Copilot catalog is necessary because direct repository installs
-are deprecated by the current CLI.
+are deprecated by the current CLI. The Claude catalog at
+`.claude-plugin/marketplace.json` adds its persistent native lifecycle while
+selecting the same package.
 
 Do not add a `.cursor-plugin` adapter until Baseline has a necessary
 Cursor-only component. Do not add an OpenCode executable plugin: `.agents/skills`
 already supplies its static capability. Cursor and Claude marketplace
-publication remain separate decisions until their lifecycle is needed and
-validated.
+submission remain external, explicitly authorized operations. Cursor does not
+need a repository catalog for a single Agent Plugin; its public listing is a
+reviewed submission. Claude's repository marketplace is locally lifecycle
+validated before any optional submission to Anthropic's official catalog.
 
-Release Please updates all four package manifests plus both Copilot catalog
-version fields from the root product version. Deterministic tests reject copied
+Release Please updates all four package manifests, both Copilot catalog version
+fields, and the Claude catalog plugin version from the root product version.
+Deterministic tests reject copied
 skill trees, package scripts or dependencies, executable Claude components,
 unknown open-manifest fields, missing adapters, divergent catalog paths, and
 version drift.
@@ -81,13 +86,15 @@ requires a separate RFC because it changes observable routing semantics.
   behavior adapters; Copilot adds only its client-owned catalog.
 - Codex keeps its existing native package and marketplace compatibility.
 - Claude and Pi can identify the same package without copied content or a
-  consumer runtime.
+  consumer runtime; Claude also receives a persistent native marketplace
+  lifecycle.
 - OpenCode stays plugin-free and can consume the canonical Agent Skills.
 - Agent Plugins does not replace client-owned marketplace, install, update, or
-  removal contracts; the Copilot catalog supplies that missing lifecycle.
-- Copilot local marketplace lifecycle is clean-room validated. Cursor lifecycle,
-  Copilot immutable-tag association, persistent Claude marketplace lifecycle,
-  and behavior under any model remain separate evidence gaps.
+  removal contracts; the Copilot and Claude catalogs supply those native
+  lifecycles.
+- Copilot and Claude local marketplace lifecycles are clean-room validated.
+  Cursor lifecycle, Copilot immutable-tag association, remote Claude tag
+  association, and behavior under any model remain separate evidence gaps.
 - The Pi local package intentionally references a trusted checkout; registry
   publication or a derived artifact needs a separate product and publication
   decision.
@@ -100,9 +107,10 @@ version tests, and isolated lifecycle/discovery checks available without login
 or model calls. Record unavailable client checks as limitations rather than
 passing results.
 
-Rollback of the Copilot lifecycle removes `.github/plugin/marketplace.json` and
-its version/documentation contracts; direct or standalone skill discovery can
-remain as a temporary fallback. Rolling back the broader multiclient package
+Rollback of the Copilot or Claude lifecycle removes its repository marketplace
+and corresponding version, test, and documentation contracts; direct or
+standalone skill discovery can remain as a temporary fallback. Rolling back the
+broader multiclient package
 removes the open, Claude, and Pi descriptors while the unchanged canonical skill
 tree, Codex adapter, Codex marketplace, and root compatibility symlink continue
 to operate.

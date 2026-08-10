@@ -1,0 +1,15 @@
+{
+  "name": "baseline",
+  "owner": {
+    "name": "William Oliveira"
+  },
+  "description": "The portable minimum for disciplined, proportional software engineering",
+  "plugins": [
+    {
+      "name": "baseline",
+      "description": "The portable minimum for disciplined, proportional software engineering",
+      "version": "0.2.0",
+      "source": "./plugins/baseline"
+    }
+  ]
+}

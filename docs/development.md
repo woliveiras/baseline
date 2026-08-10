@@ -18,9 +18,10 @@ distribution directory, or runtime dependency, and none should be added.
   Codex and Claude manifest directories, and private Pi `package.json` are thin
   declarative adapters around the same 17 distributed workflow skills. It
   contains nothing from the development-only toolchain.
-- `.agents/plugins/marketplace.json` and `.github/plugin/marketplace.json` are
-  the Codex and Copilot repository catalogs. Both point to
-  `plugins/baseline/`; neither contains or generates skill behavior.
+- `.agents/plugins/marketplace.json`, `.github/plugin/marketplace.json`, and
+  `.claude-plugin/marketplace.json` are the Codex, Copilot, and Claude
+  repository catalogs. All point to `plugins/baseline/`; none contains or
+  generates skill behavior.
 - `skills/` is a repository compatibility symlink to
   `plugins/baseline/skills/`. It keeps existing repository and evaluation paths
   stable without creating a second skill tree or a package-generation step.
@@ -91,6 +92,9 @@ codex plugin add baseline@baseline
 
 copilot plugin marketplace add "$(pwd)"
 copilot plugin install baseline@baseline
+
+claude plugin marketplace add "$(pwd)"
+claude plugin install baseline@baseline
 ```
 
 This local clone is a development convenience, not a prerequisite for users.
@@ -126,10 +130,15 @@ deterministic suite enforces the closed open-manifest fields, one canonical
 skill tree, exact Pi allowlist, declarative adapter boundary, package contents,
 identity, catalog source paths, and version parity. Where the CLI is available,
 the Copilot clean-room exercises marketplace add/browse/remove and plugin
-install/list/update/uninstall/reinstall. Client clean rooms use disposable
-`HOME`, XDG, and client configuration directories; an unavailable client or a
-lifecycle that requires a published Git source is recorded as an evidence gap,
-never a pass.
+install/list/update/uninstall/reinstall. The Claude clean-room validates its
+repository catalog, exercises marketplace add/list/update/remove and plugin
+install/disable/enable/uninstall/reinstall, and checks the exact cached skill
+set for a Git source or the exact selected package for a local source. Claude
+Code 2.0.29 warns about `metadata.description` despite the current documented
+top-level field; keep the current canonical field and record the versioned
+validator divergence. Client clean rooms use disposable `HOME`, XDG, and client
+configuration directories; an unavailable client or a lifecycle that requires
+a published Git source is recorded as an evidence gap, never a pass.
 
 Version increments, protected CI, Release Please, and the explicit publication
 boundary are documented in the [release guide](releases.md). The root Node

@@ -44,7 +44,7 @@ The complete consumer package is [`plugins/baseline/`](plugins/baseline/). It ha
 - `package.json` is a private, dependency-free Pi package descriptor whose exact allowlist selects the 17 canonical `SKILL.md` files;
 - `skills/` contains all behavior, references, assets, scripts, and Codex invocation metadata.
 
-The repository-level `.github/plugin/marketplace.json` adds the native Copilot marketplace lifecycle while pointing to that same package. The adapters and marketplaces add identity, selection, and lifecycle metadata only. They contain no hooks, dependencies, scripts, runtime, copied skills, or client-specific behavior. The root [`skills`](skills) compatibility symlink points to the same canonical tree. Release Please updates every product manifest and marketplace version from one product version.
+The repository-level `.github/plugin/marketplace.json` and `.claude-plugin/marketplace.json` add native Copilot and Claude marketplace lifecycles while pointing to that same package. The adapters and marketplaces add identity, selection, and lifecycle metadata only. They contain no hooks, dependencies, scripts, runtime, copied skills, or client-specific behavior. The root [`skills`](skills) compatibility symlink points to the same canonical tree. Release Please updates every product manifest and marketplace version from one product version.
 
 ## Install
 
@@ -209,14 +209,29 @@ OpenCode 1.16.2 was locally verified to discover all 17 skills through a project
 
 ### Claude Code
 
-Claude Code requires its native `.claude-plugin/plugin.json`; it does not document the common Agent Plugins manifest as its package contract. Validate and load the trusted checkout directly without copying skills:
+Claude Code requires its native `.claude-plugin/plugin.json`; it does not document the common Agent Plugins manifest as its package contract. Baseline also provides the repository-level `.claude-plugin/marketplace.json` for persistent install, update, enable/disable, and removal. Install the current repository marketplace with:
+
+```bash
+claude plugin marketplace add woliveiras/baseline
+claude plugin install baseline@baseline
+claude plugin marketplace list
+```
+
+The GitHub shorthand tracks the repository's default branch and is therefore a mutable development channel. For a reproducible release, replace it with `https://github.com/woliveiras/baseline.git#vX.Y.Z` after confirming that the tag contains `.claude-plugin/marketplace.json`. Update to another immutable release by uninstalling the current plugin, replacing the marketplace ref, and installing again. To remove Baseline completely:
+
+```bash
+claude plugin uninstall baseline@baseline
+claude plugin marketplace remove baseline
+```
+
+Use `claude plugin disable baseline@baseline` and `claude plugin enable baseline@baseline` to toggle the installed plugin without removing it. For local development, validate and load the trusted checkout directly without copying skills:
 
 ```bash
 claude plugin validate /absolute/path/to/baseline/plugins/baseline
 claude --plugin-dir /absolute/path/to/baseline/plugins/baseline
 ```
 
-The first command performs no model call. `--plugin-dir` loads the local package for that Claude session; a persistent install/update/remove lifecycle requires a Claude marketplace and remains a separate publication concern.
+The first command performs no model call. `--plugin-dir` loads the local package for that Claude session. Claude Code 2.0.29 was clean-room validated locally for marketplace validation, add/list/update/remove, plugin install/disable/enable/uninstall/reinstall, and exact package resolution of all 17 skills. Its validator emits a stale `metadata.description` warning for the current top-level `description`; current Claude documentation defines the top-level field and accepts the metadata form only for backward compatibility, so Baseline keeps the current canonical form. A Git-hosted marketplace copies `plugins/baseline/` into Claude's versioned installed-plugin cache; no Baseline runtime or development dependency is installed in the consumer project.
 
 ### Pi
 

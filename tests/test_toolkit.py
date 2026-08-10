@@ -35,6 +35,7 @@ EXPECTED_PACKAGE_ROOT = {
 }
 AGENT_PLUGIN_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
 COPILOT_MARKETPLACE = ROOT / ".github" / "plugin" / "marketplace.json"
+CLAUDE_MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"
 
 sys.path.insert(0, str(ROOT / "evals"))
 from run import apply_process_checks, parse_events  # noqa: E402
@@ -385,6 +386,9 @@ class ToolkitStructureTests(unittest.TestCase):
         copilot_marketplace = json.loads(
             COPILOT_MARKETPLACE.read_text(encoding="utf-8")
         )
+        claude_marketplace = json.loads(
+            CLAUDE_MARKETPLACE.read_text(encoding="utf-8")
+        )
         manifest = json.loads(
             (ROOT / ".release-please-manifest.json").read_text(encoding="utf-8")
         )
@@ -406,6 +410,7 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertEqual(package["version"], pi_package["version"])
         self.assertEqual(package["version"], copilot_marketplace["metadata"]["version"])
         self.assertEqual(package["version"], copilot_marketplace["plugins"][0]["version"])
+        self.assertEqual(package["version"], claude_marketplace["plugins"][0]["version"])
         self.assertEqual(package["version"], pyproject["project"]["version"])
         locked_project = next(item for item in uv_lock["package"] if item["name"] == "baseline")
         self.assertEqual(package["version"], locked_project["version"])
@@ -449,6 +454,11 @@ class ToolkitStructureTests(unittest.TestCase):
                 {
                     "type": "json",
                     "path": ".github/plugin/marketplace.json",
+                    "jsonpath": "$.plugins[0].version",
+                },
+                {
+                    "type": "json",
+                    "path": ".claude-plugin/marketplace.json",
                     "jsonpath": "$.plugins[0].version",
                 },
                 {
@@ -754,6 +764,27 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertNotIn("hooks", plugin)
         self.assertNotIn("dependencies", plugin)
 
+    def test_claude_marketplace_contract(self):
+        """Claude's repository catalog selects the same declarative package."""
+        marketplace = json.loads(CLAUDE_MARKETPLACE.read_text(encoding="utf-8"))
+        root_package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
+        self.assertEqual({"name", "owner", "description", "plugins"}, set(marketplace))
+        self.assertEqual("baseline", marketplace["name"])
+        self.assertEqual({"name": "William Oliveira"}, marketplace["owner"])
+        self.assertEqual(
+            "The portable minimum for disciplined, proportional software engineering",
+            marketplace["description"],
+        )
+        self.assertEqual(1, len(marketplace["plugins"]))
+        plugin = marketplace["plugins"][0]
+        self.assertEqual({"name", "description", "version", "source"}, set(plugin))
+        self.assertEqual("baseline", plugin["name"])
+        self.assertEqual(root_package["version"], plugin["version"])
+        self.assertEqual("./plugins/baseline", plugin["source"])
+        self.assertEqual(PLUGIN_ROOT, (ROOT / plugin["source"]).resolve())
+        self.assertNotIn("hooks", plugin)
+        self.assertNotIn("dependencies", plugin)
+
     def test_native_adapters_are_declarative_and_share_the_canonical_skills(self):
         """Native descriptors add lifecycle metadata without copying behavior or code."""
         claude = json.loads(
@@ -975,6 +1006,78 @@ class ToolkitStructureTests(unittest.TestCase):
             )
             self.assertEqual(0, result.returncode, result.stdout + result.stderr)
             self.assertIn("Validation passed", result.stdout + result.stderr)
+            self.assertFalse((clean_root / "home" / ".claude").exists())
+
+    @unittest.skipUnless(shutil.which("claude"), "Claude Code CLI is required")
+    def test_claude_marketplace_clean_room_lifecycle_and_discovery(self):
+        """Claude installs, toggles, removes, and rediscovers the canonical package."""
+        with tempfile.TemporaryDirectory(prefix="baseline-claude-marketplace-") as tmp:
+            clean_root = Path(tmp)
+            consumer = clean_root / "consumer"
+            for relative in ("home", "config", "data", "cache", "claude"):
+                (clean_root / relative).mkdir()
+            consumer.mkdir()
+            environment = os.environ.copy()
+            environment.update(
+                {
+                    "HOME": str(clean_root / "home"),
+                    "XDG_CONFIG_HOME": str(clean_root / "config"),
+                    "XDG_DATA_HOME": str(clean_root / "data"),
+                    "XDG_CACHE_HOME": str(clean_root / "cache"),
+                    "CLAUDE_CONFIG_DIR": str(clean_root / "claude"),
+                    "DISABLE_AUTOUPDATER": "1",
+                    "DISABLE_TELEMETRY": "1",
+                }
+            )
+
+            def run_claude(*arguments: str) -> subprocess.CompletedProcess[str]:
+                result = subprocess.run(
+                    ["claude", *arguments],
+                    cwd=consumer,
+                    env=environment,
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                    timeout=45,
+                )
+                self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+                return result
+
+            run_claude("plugin", "validate", str(ROOT))
+            run_claude("plugin", "marketplace", "add", str(ROOT))
+            self.assertIn("baseline", run_claude("plugin", "marketplace", "list").stdout)
+            run_claude("plugin", "install", "baseline@baseline")
+            marketplace = json.loads(CLAUDE_MARKETPLACE.read_text(encoding="utf-8"))
+            selected_package = (ROOT / marketplace["plugins"][0]["source"]).resolve()
+            installed_skills = {
+                path.parent.name
+                for path in (selected_package / "skills").glob("*/SKILL.md")
+            }
+            self.assertEqual(EXPECTED_SKILLS, installed_skills)
+            settings = json.loads(
+                (clean_root / "claude" / "settings.json").read_text(encoding="utf-8")
+            )
+            self.assertTrue(settings["enabledPlugins"]["baseline@baseline"])
+            run_claude("plugin", "disable", "baseline@baseline")
+            settings = json.loads(
+                (clean_root / "claude" / "settings.json").read_text(encoding="utf-8")
+            )
+            self.assertFalse(settings["enabledPlugins"]["baseline@baseline"])
+            run_claude("plugin", "enable", "baseline@baseline")
+            settings = json.loads(
+                (clean_root / "claude" / "settings.json").read_text(encoding="utf-8")
+            )
+            self.assertTrue(settings["enabledPlugins"]["baseline@baseline"])
+            run_claude("plugin", "marketplace", "update", "baseline")
+            run_claude("plugin", "uninstall", "baseline@baseline")
+            settings = json.loads(
+                (clean_root / "claude" / "settings.json").read_text(encoding="utf-8")
+            )
+            self.assertFalse(settings["enabledPlugins"]["baseline@baseline"])
+            run_claude("plugin", "marketplace", "remove", "baseline")
+            self.assertNotIn("baseline", run_claude("plugin", "marketplace", "list").stdout)
+            run_claude("plugin", "marketplace", "add", str(ROOT))
+            run_claude("plugin", "install", "baseline@baseline")
             self.assertFalse((clean_root / "home" / ".claude").exists())
 
     @unittest.skipUnless(shutil.which("copilot"), "Copilot CLI is required")
@@ -1474,6 +1577,9 @@ class ToolkitStructureTests(unittest.TestCase):
             "copilot plugin marketplace add woliveiras/baseline",
             "copilot plugin install baseline@baseline",
             "Copilot marketplace clean-room",
+            "claude plugin marketplace add woliveiras/baseline",
+            "claude plugin install baseline@baseline",
+            "Claude Code 2.0.29",
         ):
             self.assertIn(marker, readme, marker)
         self.assertIn("one canonical `skills/` tree", readme)
