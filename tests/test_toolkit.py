@@ -472,6 +472,7 @@ class ToolkitStructureTests(unittest.TestCase):
                     "jsonpath": "$.package[?(@.name.value=='baseline')].version",
                 },
                 {"type": "generic", "path": "README.md"},
+                {"type": "generic", "path": "docs/guides/installation.md"},
             ],
             root_release["extra-files"],
         )
@@ -496,6 +497,8 @@ class ToolkitStructureTests(unittest.TestCase):
         releases = (ROOT / "docs" / "releases.md").read_text(encoding="utf-8")
         releases_normalized = " ".join(releases.split())
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        installation = (ROOT / "docs" / "guides" / "installation.md").read_text(encoding="utf-8")
+        public_install_docs = readme + "\n" + installation
         current_version = json.loads(
             (ROOT / "package.json").read_text(encoding="utf-8")
         )["version"]
@@ -517,15 +520,15 @@ class ToolkitStructureTests(unittest.TestCase):
         ):
             self.assertIn(marker, releases_normalized, marker)
 
-        self.assertIn(f"--ref v{effective_install_version}", readme)
-        self.assertGreaterEqual(readme.count("x-release-please-start-version"), 5)
+        self.assertIn(f"--ref v{effective_install_version}", public_install_docs)
+        self.assertGreaterEqual(public_install_docs.count("x-release-please-start-version"), 6)
         self.assertEqual(
-            readme.count("x-release-please-start-version"),
-            readme.count("x-release-please-end"),
+            public_install_docs.count("x-release-please-start-version"),
+            public_install_docs.count("x-release-please-end"),
         )
-        self.assertIn("mutable development channel", readme)
-        self.assertIn("`baseline@baseline` is `plugin@marketplace`", readme)
-        self.assertNotIn("no Git tags are published yet", readme)
+        self.assertIn("mutable development channel", public_install_docs)
+        self.assertIn("`baseline@baseline` is `plugin@marketplace`", public_install_docs)
+        self.assertNotIn("no Git tags are published yet", public_install_docs)
 
     def test_ci_and_release_workflow_contract(self):
         """RV-005/RV-006: deterministic CI and release writes stay isolated."""
@@ -1528,6 +1531,8 @@ class ToolkitStructureTests(unittest.TestCase):
 
     def test_readme_documents_codex_installation_and_discovery(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        installation = (ROOT / "docs" / "guides" / "installation.md").read_text(encoding="utf-8")
+        public_install_docs = readme + "\n" + installation
         for marker in (
             "codex plugin marketplace add",
             "codex plugin add baseline@baseline",
@@ -1539,18 +1544,25 @@ class ToolkitStructureTests(unittest.TestCase):
             "Explicit invocation",
             "Update",
             "Remove",
+            "BASELINE_VERSION=",
+            "BASELINE_DIR=\"$HOME/.baseline\"",
+            "git clone --depth 1 --branch",
+            "mkdir -p \"$HOME/.agents/skills\"",
+            "ln -s \"$skill_path\" \"$link_path\"",
+            "pi install \"$BASELINE_PACKAGE\" -l --approve",
+            "pi list --approve",
         ):
-            self.assertIn(marker, readme)
-        self.assertIn("cloning the repository does not install", readme.lower())
-        self.assertIn("Codex CLI", readme)
-        self.assertIn("Codex desktop", readme)
+            self.assertIn(marker, public_install_docs)
+        self.assertIn("does not add a CLI", readme)
+        self.assertIn("Codex CLI", public_install_docs)
+        self.assertIn("Codex desktop", public_install_docs)
         marketplace = json.loads(
             (ROOT / ".agents" / "plugins" / "marketplace.json").read_text(encoding="utf-8")
         )
         self.assertEqual("baseline", marketplace["name"])
         self.assertEqual("Baseline", marketplace["interface"]["displayName"])
         legacy_marketplace_name = "baseline" + "-local"
-        self.assertNotIn(legacy_marketplace_name, readme.lower())
+        self.assertNotIn(legacy_marketplace_name, public_install_docs.lower())
         self.assertNotIn(legacy_marketplace_name, json.dumps(marketplace).lower())
         self.assertEqual("baseline", marketplace["plugins"][0]["name"])
         self.assertEqual(
@@ -1561,6 +1573,8 @@ class ToolkitStructureTests(unittest.TestCase):
 
     def test_docs_describe_multiclient_package_without_overstating_evidence(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        installation = (ROOT / "docs" / "guides" / "installation.md").read_text(encoding="utf-8")
+        public_install_docs = readme + "\n" + installation
         decision = (
             ROOT / "docs" / "decisions"
             / "0004-package-canonical-skills-with-open-and-native-adapters.md"
@@ -1571,7 +1585,7 @@ class ToolkitStructureTests(unittest.TestCase):
             "Agent Plugins 1.0.0",
             "claude plugin validate",
             "claude --plugin-dir",
-            "pi install /absolute/path/to/baseline/plugins/baseline -l --approve",
+            "pi install \"$BASELINE_PACKAGE\" -l --approve",
             "OpenCode 1.16.2",
             "does not invent a metadata field",
             "copilot plugin marketplace add woliveiras/baseline",
@@ -1581,14 +1595,14 @@ class ToolkitStructureTests(unittest.TestCase):
             "claude plugin install baseline@baseline",
             "Claude Code 2.0.29",
         ):
-            self.assertIn(marker, readme, marker)
-        self.assertIn("one canonical `skills/` tree", readme)
+            self.assertIn(marker, public_install_docs, marker)
+        self.assertIn("one canonical `skills/` tree", public_install_docs)
         self.assertIn("skills/` is the sole behavior corpus", decision)
         self.assertIn(".github/plugin/marketplace.json", decision)
         self.assertIn(".github/plugin/marketplace.json", releases)
         self.assertNotIn(
             "copilot plugin install woliveiras/baseline:plugins/baseline",
-            readme,
+            public_install_docs,
         )
         self.assertNotIn("disable-model-invocation", "\n".join(
             path.read_text(encoding="utf-8")
@@ -1598,6 +1612,8 @@ class ToolkitStructureTests(unittest.TestCase):
     def test_readme_documents_remote_marketplace_installation_contract(self):
         """RM-001..RM-010: remote install, identity, lifecycle, access, and development path are explicit."""
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        installation = (ROOT / "docs" / "guides" / "installation.md").read_text(encoding="utf-8")
+        public_install_docs = readme + "\n" + installation
         development = (ROOT / "docs" / "development.md").read_text(encoding="utf-8")
         version = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))["version"]
         if tuple(map(int, version.split("."))) < (0, 2, 0):
@@ -1608,15 +1624,14 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertIn(
             f"codex plugin marketplace add woliveiras/baseline --ref {tag}\n"
             "codex plugin add baseline@baseline",
-            readme,
+            public_install_docs,
         )
-        self.assertIn("without keeping a local Baseline checkout", readme)
+        self.assertIn("without requiring a Baseline checkout", public_install_docs)
         for marker in (
-            "This repository is public",
             "The `woliveiras/baseline` shorthand uses HTTPS",
             "private fork",
         ):
-            self.assertIn(marker, readme, marker)
+            self.assertIn(marker, public_install_docs, marker)
         sparse_command = "\n".join(
             (
                 f"codex plugin marketplace add woliveiras/baseline --ref {tag} \\",
@@ -1624,7 +1639,7 @@ class ToolkitStructureTests(unittest.TestCase):
                 "  --sparse plugins/baseline",
             )
         )
-        self.assertIn(sparse_command, readme)
+        self.assertIn(sparse_command, public_install_docs)
         for marker in (
             "--sparse .agents/plugins/marketplace.json",
             "--sparse plugins/baseline",
@@ -1638,21 +1653,21 @@ class ToolkitStructureTests(unittest.TestCase):
             "Do not use `codex plugin add <URL>`",
             "No credential, token, private key, or credential-bearing URL",
         ):
-            self.assertIn(marker, readme, marker)
+            self.assertIn(marker, public_install_docs, marker)
 
         reinstall = (
             "codex plugin remove baseline@baseline\n"
             "codex plugin add baseline@baseline"
         )
-        self.assertIn(reinstall, readme)
+        self.assertIn(reinstall, public_install_docs)
         full_removal = (
             "codex plugin remove baseline@baseline\n"
             "codex plugin marketplace remove baseline"
         )
-        self.assertIn(full_removal, readme)
-        self.assertNotRegex(readme, r"codex plugin add\s+(?:https?|ssh|git@)")
-        self.assertNotRegex(readme, r"https?://[^\s`]+:[^\s`]+@")
-        self.assertIn("clone locally for development", readme.lower())
+        self.assertIn(full_removal, public_install_docs)
+        self.assertNotRegex(public_install_docs, r"codex plugin add\s+(?:https?|ssh|git@)")
+        self.assertNotRegex(public_install_docs, r"https?://[^\s`]+:[^\s`]+@")
+        self.assertIn("local development", public_install_docs.lower())
         for marker in (
             "git clone https://github.com/woliveiras/baseline.git",
             'codex plugin marketplace add "$(pwd)"',

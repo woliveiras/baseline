@@ -75,7 +75,8 @@ consumer runtime dependency.
 
 ## Local development installation
 
-The consumer installation routes are documented in the [top-level README](../README.md).
+The consumer installation routes are documented in the [top-level README](../README.md)
+and the [complete installation guide](guides/installation.md).
 Codex can fetch an immutable `vX.Y.Z` marketplace ref; Copilot registers the
 repository's native marketplace and installs the same `baseline@baseline`
 selector. `main` remains a mutable development channel rather than an immutable

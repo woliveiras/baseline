@@ -152,10 +152,12 @@ class ProductIdentityTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         self.assertIn("# Baseline", readme)
         self.assertIn("Baseline is the portable minimum for disciplined software engineering.", readme)
-        self.assertIn("## From Geremmyas to Baseline", readme)
+        self.assertIn("## Install", readme)
+        self.assertIn("## Use Baseline", readme)
         self.assertIn("woliveiras/baseline", readme)
         self.assertIn("baseline@baseline", readme)
         self.assertIn("Storehouse", readme)
+        self.assertNotIn("## From Geremmyas to Baseline", readme)
 
 
 if __name__ == "__main__":

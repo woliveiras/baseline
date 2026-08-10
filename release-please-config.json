@@ -56,6 +56,10 @@
         {
           "type": "generic",
           "path": "README.md"
+        },
+        {
+          "type": "generic",
+          "path": "docs/guides/installation.md"
         }
       ]
     }

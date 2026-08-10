@@ -12,6 +12,8 @@ superseded material; the current tree contains only current documentation.
 
 ## Start here
 
+- [Installation guide](guides/installation.md) covers the complete client
+  installation, update, removal, and compatibility paths.
 - [Engineering contract](../AGENTS.md) is the operating agreement: the
   proportional engineering flow, authority rules, toolchain conventions, and required
   checks. Read it before changing behavior.
