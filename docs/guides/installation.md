@@ -7,6 +7,25 @@ Baseline is distributed as static Agent Skills. Consumer projects receive no
 Baseline runtime, CLI, Python, UV, PNPM, Node dependency, lifecycle hook, or
 generated build output.
 
+## Required project initialization
+
+Client installation makes the skills discoverable but does not modify the
+consumer repository. After completing one of the installation routes below,
+start a new agent session at the target repository root and invoke the setup
+skill once per project:
+
+```text
+Use $setup-baseline to create or safely reconcile this project's AGENTS.md.
+```
+
+This establishes the project-owned Baseline foundation from current repository
+evidence. The skill creates the root file when absent, preserves stronger
+existing instructions, reports an already conforming file without changing it,
+and stops when a material conflict needs human resolution. It neither installs
+a consumer runtime nor commits the resulting instructions. Request Claude Code
+compatibility explicitly when the project also needs a minimal `CLAUDE.md`
+import of `@AGENTS.md`.
+
 ## Codex
 
 ### Stable remote installation
@@ -149,7 +168,7 @@ copilot plugin marketplace remove baseline
 ```
 
 The committed catalog points to `./plugins/baseline`. Copilot marketplace clean-room
-checks cover add, browse, install, discovery of 17 skills, update, uninstall,
+checks cover add, browse, install, discovery of 18 skills, update, uninstall,
 marketplace removal, and reinstall without login or model calls.
 Copilot's current marketplace command follows the repository marketplace rather
 than exposing Codex's explicit immutable `--ref` option.
@@ -186,7 +205,7 @@ claude --plugin-dir /absolute/path/to/baseline/plugins/baseline
 ```
 
 The first command performs no model call. Claude Code 2.0.29 was validated for
-marketplace lifecycle and discovery of all 17 skills. Its validator emits a
+marketplace lifecycle and discovery of all 18 skills. Its validator emits a
 stale `metadata.description` warning for the current top-level field; the
 current Claude documentation defines the top-level field, so Baseline keeps it.
 
@@ -200,7 +219,7 @@ an existing skill, and links every distributed skill.
 The command uses symlinks intentionally. Updating the checkout updates the
 skills without copying a second behavior tree.
 
-OpenCode 1.16.2 was locally verified to discover all 17 Baseline skills through
+OpenCode 1.16.2 was locally verified to discover all 18 Baseline skills through
 a project `.agents/skills` link. Cursor remains at static format compatibility
 until its native loader and lifecycle can be exercised locally.
 

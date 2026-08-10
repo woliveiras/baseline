@@ -1,0 +1,6 @@
+interface:
+  display_name: "Setup Baseline"
+  short_description: "Create safe project instructions"
+  default_prompt: "Use $setup-baseline to create or safely reconcile the project root AGENTS.md."
+policy:
+  allow_implicit_invocation: false

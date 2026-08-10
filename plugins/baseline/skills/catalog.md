@@ -9,6 +9,7 @@ This declarative catalog describes ownership and agent-mediated composition. It 
 - Use `tdd` for approved new behavior and `bugfix` for an existing defect. Both begin directly from sufficient governing input.
 - Use `docs` only when knowledge must outlive the task. Prefer code and tests for local truth; use RFC, ADR, C4, API/operations docs, or postmortem at the appropriate time.
 - Use `verify` at review or completion boundaries with the depth selected by `measurer`. It reports findings and residual risk in the final response; it creates no review files by default.
+- Use `setup-baseline` only when explicitly requested to create, audit, or safely reconcile a repository-root `AGENTS.md`. It changes project instructions but never installs a runtime or overwrites a conflicting contract.
 - Use `git-commit` only with explicit local commit authority. No workflow implies push, release, publication, deploy, or production authority.
 - No matching skill means normal scoped work under repository instructions. Explicit-only skills never activate from broad similarity.
 
@@ -43,6 +44,7 @@ flowchart TD
 | `bugfix` | Existing defect | Bug report and expected behavior | Reproduction, regression test, causal repair, focused review | Regression and nearest checks pass; residual risk is explicit |
 | `verify` | Proportional review | Governing input, tests, complete diff, risks, fresh results | Findings, commands/results, residual risk, limitations | Findings are reconciled or reported honestly |
 | `docs` | Durable knowledge | Shipped behavior, stable boundary, decision, incident, or non-obvious reason | Smallest appropriate docs surface or `ENG-NOTE` | Claims, links, timing, and examples are checked |
+| `setup-baseline` | Project instruction foundation | Explicit request plus current repository evidence | Created, reconciled, or confirmed root `AGENTS.md` | Instructions are evidence-backed or a material conflict is awaiting a decision |
 | `git-commit` | Atomic local commit | Explicit commit authority and reviewed task-owned changes | One local Conventional Commit | Post-commit state is reported; no remote action inferred |
 | `ci-workflow` | CI mechanics and results | Expected checks, scripts, platform, trust boundaries | Least-privilege workflow and validation summary | Local syntax and available remote results are reported |
 | `shape-domain` | Domain language and context boundaries | Conflicting terms, invariants, scenarios, integrations | Reconciled vocabulary and ownership guidance | Meanings and boundaries are coherent or explicitly open |
@@ -55,4 +57,4 @@ flowchart TD
 | `technical-research` | Current technical evidence | Explicit uncertain technical question | Answer, sources, limitations, derived rule | The decision question is answered or uncertainty bounded |
 | `security-review` | Security and authority risk | Security-relevant design, code, CI, or data flow | Prioritized findings, mitigations, residual risk | Material threats are addressed or awaiting explicit authority |
 
-`brainstorming`, `git-commit`, `improve-architecture`, `premortem`, `session-bridge`, and `technical-research` are explicit-only. All other skills may be selected implicitly when their descriptions match.
+`brainstorming`, `git-commit`, `improve-architecture`, `premortem`, `session-bridge`, `setup-baseline`, and `technical-research` are explicit-only. All other skills may be selected implicitly when their descriptions match.

@@ -20,7 +20,7 @@ superseded material; the current tree contains only current documentation.
 - [Repository glossary](../GLOSSARY.md) defines governing input, measurer,
   material ambiguity, fail-first, task ownership, review depth, and `ENG-NOTE`.
 - [Skill catalog contract](../plugins/baseline/skills/catalog.md) defines ownership, composition,
-  precedence, stop conditions, and fallback for all 17 installed workflows.
+  precedence, stop conditions, and fallback for all 18 installed workflows.
 - [Development guide](development.md) covers the repository layout, the
   toolchain, how to develop a change, and how to test it.
 - [Release guide](releases.md) defines the shared version, protected Release

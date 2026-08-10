@@ -119,6 +119,13 @@
     "workspace_key": "routing-positive-security-review"
   },
   {
+    "id": "positive-setup-baseline",
+    "kind": "positive",
+    "skill": "setup-baseline",
+    "request": "Use the setup-baseline skill to create or safely reconcile the repository-root AGENTS.md with the Baseline engineering contract.",
+    "workspace_key": "routing-positive-setup-baseline"
+  },
+  {
     "id": "negative-refine",
     "kind": "negative",
     "avoid_skill": "refine",
@@ -257,6 +264,14 @@
     "expected_skill": "verify",
     "request": "Verify the completed change against its governing input, tests, complete diff, and fresh results; security analysis is not requested.",
     "workspace_key": "routing-negative-security-review"
+  },
+  {
+    "id": "negative-setup-baseline",
+    "kind": "negative",
+    "avoid_skill": "setup-baseline",
+    "expected_skill": null,
+    "request": "Explain what the existing AGENTS.md says without creating, auditing, reconciling, or editing project instructions.",
+    "workspace_key": "routing-negative-setup-baseline"
   },
   {
     "id": "small-ambiguous-refine",

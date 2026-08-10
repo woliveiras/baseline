@@ -28,7 +28,7 @@ EXPECTED_SKILLS = {
     "measurer", "refine", "brainstorming", "tdd", "bugfix", "verify", "docs",
     "git-commit", "ci-workflow", "shape-domain", "design-deep-modules",
     "improve-architecture", "decision-framework", "premortem", "session-bridge",
-    "technical-research", "security-review",
+    "technical-research", "security-review", "setup-baseline",
 }
 EXPECTED_PACKAGE_ROOT = {
     ".claude-plugin", ".codex-plugin", "package.json", "plugin.json", "skills",
@@ -1124,7 +1124,7 @@ class ToolkitStructureTests(unittest.TestCase):
             self.assertIn("baseline", run_copilot("plugin", "marketplace", "list").stdout)
             self.assertIn("baseline", run_copilot("plugin", "marketplace", "browse", "baseline").stdout)
             installed = run_copilot("plugin", "install", "baseline@baseline")
-            self.assertIn("Installed 17 skills", installed.stdout + installed.stderr)
+            self.assertIn("Installed 18 skills", installed.stdout + installed.stderr)
             self.assertNotIn("deprecated", (installed.stdout + installed.stderr).lower())
             self.assertIn("baseline", run_copilot("plugin", "list").stdout)
 
@@ -1422,9 +1422,56 @@ class ToolkitStructureTests(unittest.TestCase):
             self.assertIn(f"name: {name}", match.group(1))
             ui = (ROOT / "skills" / name / "agents" / "openai.yaml").read_text()
             self.assertIn(f"$%s" % name, ui)
-        for name in {"brainstorming", "session-bridge", "improve-architecture"}:
+        for name in {"brainstorming", "session-bridge", "improve-architecture", "setup-baseline"}:
             ui = (ROOT / "skills" / name / "agents" / "openai.yaml").read_text()
             self.assertIn("allow_implicit_invocation: false", ui)
+
+    def test_setup_baseline_safely_reconciles_project_instructions(self):
+        skill_root = ROOT / "skills" / "setup-baseline"
+        skill = (skill_root / "SKILL.md").read_text(encoding="utf-8")
+        reference = (skill_root / "references" / "agents-contract.md").read_text(
+            encoding="utf-8"
+        )
+        metadata = (skill_root / "agents" / "openai.yaml").read_text(encoding="utf-8")
+
+        frontmatter = skill.split("---", 2)[1]
+        self.assertIn("only when the user explicitly asks", frontmatter.lower())
+        self.assertIn("./references/agents-contract.md", skill)
+        for marker in (
+            "repository root",
+            "preserve",
+            "do not overwrite",
+            "do not invent commands",
+            "material conflict",
+            "task-owned diff",
+        ):
+            self.assertIn(marker, skill.lower())
+        for heading in (
+            "## Project identity and boundaries",
+            "## Governing sources and repository map",
+            "## Baseline engineering flow",
+            "## Scope and authority",
+            "## Security and trust",
+            "## Durable knowledge",
+            "## Verified project commands",
+            "## Completion and handoff",
+        ):
+            self.assertIn(heading, reference)
+        self.assertIn("@AGENTS.md", reference)
+        self.assertIn("only when the user explicitly requests Claude Code compatibility", reference)
+        self.assertIn("allow_implicit_invocation: false", metadata)
+        self.assertFalse((skill_root / "scripts").exists())
+        self.assertFalse((skill_root / "assets").exists())
+
+    def test_baseline_contract_names_repository_invariants_and_trust_boundary(self):
+        contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        self.assertIn("## Governing sources and repository map", contract)
+        self.assertIn("## Security and trust", contract)
+        self.assertIn("## Baseline repository invariants", contract)
+        self.assertNotIn("## Toolkit maintenance", contract)
+        self.assertIn("do not expose secrets", contract.lower())
+        self.assertIn("declarative guidance", contract.lower())
+        self.assertIn("sandbox", contract.lower())
 
     def test_skill_catalog_contract_covers_every_distributed_skill(self):
         catalog = (ROOT / "skills" / "catalog.md").read_text(encoding="utf-8")
@@ -1489,7 +1536,7 @@ class ToolkitStructureTests(unittest.TestCase):
     def test_explicit_only_skill_policies_match_catalog_contract(self):
         explicit_only = {
             "brainstorming", "git-commit", "improve-architecture", "premortem",
-            "session-bridge", "technical-research",
+            "session-bridge", "technical-research", "setup-baseline",
         }
         for name in explicit_only:
             ui = (ROOT / "skills" / name / "agents" / "openai.yaml").read_text(encoding="utf-8")
@@ -1570,6 +1617,20 @@ class ToolkitStructureTests(unittest.TestCase):
             marketplace["plugins"][0]["source"],
         )
         self.assertTrue((PLUGIN_ROOT / ".codex-plugin" / "plugin.json").is_file())
+
+    def test_installation_requires_project_setup_after_skill_discovery(self):
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        installation = (ROOT / "docs" / "guides" / "installation.md").read_text(
+            encoding="utf-8"
+        )
+        public_install_docs = readme + "\n" + installation
+        normalized_docs = " ".join(public_install_docs.split())
+
+        self.assertIn("$setup-baseline", readme)
+        self.assertIn("$setup-baseline", installation)
+        self.assertIn("does not modify the consumer repository", normalized_docs)
+        self.assertIn("once per project", normalized_docs)
+        self.assertIn("create or safely reconcile", normalized_docs)
 
     def test_docs_describe_multiclient_package_without_overstating_evidence(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
@@ -2536,6 +2597,11 @@ class EvaluationVerifierTests(unittest.TestCase):
         negative_types = {(item["type"], item.get("value")) for item in negative["assert"]}
         self.assertIn(("not-skill-used", "refine"), negative_types)
 
+        descriptions = {case["description"] for case in cases}
+        for skill in EXPECTED_SKILLS:
+            self.assertIn(f"positive-{skill}", descriptions)
+            self.assertIn(f"negative-{skill}", descriptions)
+
         for case in cases:
             self.assertEqual(case["description"], case["vars"]["criterion_id"])
             assertions = {(item["type"], item.get("value")) for item in case["assert"]}
@@ -2610,7 +2676,7 @@ class EvaluationVerifierTests(unittest.TestCase):
         self.assertIn("src/payments.py", architecture_item["fixture"])
         self.assertNotIn("design-deep-modules", architecture_item["request"])
 
-        self.assertEqual(41, len(cases))
+        self.assertEqual(43, len(cases))
 
     def test_promptfoo_routing_materializes_case_specific_fixture(self):
         cases = PROMPTFOO_PREPARE._cases("routing")
@@ -3353,7 +3419,7 @@ class EvaluationVerifierTests(unittest.TestCase):
         """EV-SHD-01/EV-AGG-01: full coverage runs before one aggregate verdict."""
         self.assertEqual(2, PROMPTFOO_RUNNER.FULL_MAX_WORKERS)
         self.assertEqual(
-            [(0, 21), (21, 41)],
+            [(0, 22), (22, 43)],
             [PROMPTFOO_RUNNER._parse_filter_range(shard.filter_range) for shard in PROMPTFOO_RUNNER.SUITE_SHARDS["routing"]],
         )
         self.assertEqual(

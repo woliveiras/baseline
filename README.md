@@ -133,6 +133,23 @@ pi list --approve
 ```
 <!-- x-release-please-end -->
 
+## Initialize a project
+
+Installing Baseline makes its skills discoverable but does not modify the
+consumer repository. To adopt the complete Baseline engineering contract,
+start a new agent session at the repository root and run this explicit skill
+once per project before relying on the workflow:
+
+```text
+Use $setup-baseline to create or safely reconcile this project's AGENTS.md.
+```
+
+The skill inspects current project evidence, creates `AGENTS.md` when absent,
+preserves stronger existing instructions, and stops for a material conflict
+instead of overwriting it. Ask it explicitly for Claude Code compatibility when
+you also want a minimal `CLAUDE.md` that imports `@AGENTS.md` without copying the
+contract.
+
 ## Use Baseline
 
 After installation, start a new agent session and ask for the work you need:
@@ -147,6 +164,7 @@ The main workflow groups are:
 
 | Group | Skills |
 | --- | --- |
+| Project foundation | `setup-baseline` |
 | Change workflow | `measurer`, `refine`, `tdd`, `bugfix`, `verify`, `git-commit`, `ci-workflow`, `docs` |
 | Design and architecture | `shape-domain`, `design-deep-modules`, `improve-architecture`, `decision-framework` |
 | Explicit deep work | `brainstorming`, `premortem`, `session-bridge`, `technical-research` |

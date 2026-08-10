@@ -64,7 +64,7 @@ class SuiteOutcome(NamedTuple):
 
 
 SUITE_SHARDS = {
-    "routing": (Shard("1-of-2", "0:21"), Shard("2-of-2", "21:41")),
+    "routing": (Shard("1-of-2", "0:22"), Shard("2-of-2", "22:43")),
     "behavior": (
         Shard("1-of-4", "0:2"),
         Shard("2-of-4", "2:4"),
