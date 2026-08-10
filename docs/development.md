@@ -133,12 +133,14 @@ the Copilot clean-room exercises marketplace add/browse/remove and plugin
 install/list/update/uninstall/reinstall. The Claude clean-room validates its
 repository catalog, exercises marketplace add/list/update/remove and plugin
 install/disable/enable/uninstall/reinstall, and checks the exact cached skill
-set for a Git source or the exact selected package for a local source. Claude
-Code 2.0.29 warns about `metadata.description` despite the current documented
-top-level field; keep the current canonical field and record the versioned
-validator divergence. Client clean rooms use disposable `HOME`, XDG, and client
-configuration directories; an unavailable client or a lifecycle that requires
-a published Git source is recorded as an evidence gap, never a pass.
+set or selected package. Claude Code 2.0.29 keeps the complete Git marketplace
+checkout in its private configuration directory and resolves the plugin
+subdirectory in place; current documentation describes a separate versioned
+plugin cache. The same version warns about `metadata.description` despite the
+current documented top-level field. Keep the current canonical field and record
+both versioned divergences. Client clean rooms use disposable `HOME`, XDG, and
+client configuration directories; an unavailable client or a lifecycle that
+requires a published Git source is recorded as an evidence gap, never a pass.
 
 Version increments, protected CI, Release Please, and the explicit publication
 boundary are documented in the [release guide](releases.md). The root Node

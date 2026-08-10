@@ -93,8 +93,10 @@ requires a separate RFC because it changes observable routing semantics.
   removal contracts; the Copilot and Claude catalogs supply those native
   lifecycles.
 - Copilot and Claude local marketplace lifecycles are clean-room validated.
-  Cursor lifecycle, Copilot immutable-tag association, remote Claude tag
-  association, and behavior under any model remain separate evidence gaps.
+  Claude's public HTTPS default-branch lifecycle is also validated on 2.0.29,
+  which keeps a full private marketplace checkout while selecting only the
+  consumer package. Cursor lifecycle, immutable-tag association for Copilot and
+  Claude, and behavior under any model remain separate evidence gaps.
 - The Pi local package intentionally references a trusted checkout; registry
   publication or a derived artifact needs a separate product and publication
   decision.

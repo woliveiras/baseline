@@ -212,12 +212,12 @@ OpenCode 1.16.2 was locally verified to discover all 17 skills through a project
 Claude Code requires its native `.claude-plugin/plugin.json`; it does not document the common Agent Plugins manifest as its package contract. Baseline also provides the repository-level `.claude-plugin/marketplace.json` for persistent install, update, enable/disable, and removal. Install the current repository marketplace with:
 
 ```bash
-claude plugin marketplace add woliveiras/baseline
+claude plugin marketplace add https://github.com/woliveiras/baseline.git
 claude plugin install baseline@baseline
 claude plugin marketplace list
 ```
 
-The GitHub shorthand tracks the repository's default branch and is therefore a mutable development channel. For a reproducible release, replace it with `https://github.com/woliveiras/baseline.git#vX.Y.Z` after confirming that the tag contains `.claude-plugin/marketplace.json`. Update to another immutable release by uninstalling the current plugin, replacing the marketplace ref, and installing again. To remove Baseline completely:
+The HTTPS source tracks the repository's default branch and is therefore a mutable development channel. The explicit URL also avoids Claude Code 2.0.29's `owner/repo` shorthand choosing SSH. For a reproducible release, append `#vX.Y.Z` after confirming that the tag contains `.claude-plugin/marketplace.json`. Update to another immutable release by uninstalling the current plugin, replacing the marketplace ref, and installing again. To remove Baseline completely:
 
 ```bash
 claude plugin uninstall baseline@baseline
@@ -231,7 +231,7 @@ claude plugin validate /absolute/path/to/baseline/plugins/baseline
 claude --plugin-dir /absolute/path/to/baseline/plugins/baseline
 ```
 
-The first command performs no model call. `--plugin-dir` loads the local package for that Claude session. Claude Code 2.0.29 was clean-room validated locally for marketplace validation, add/list/update/remove, plugin install/disable/enable/uninstall/reinstall, and exact package resolution of all 17 skills. Its validator emits a stale `metadata.description` warning for the current top-level `description`; current Claude documentation defines the top-level field and accepts the metadata form only for backward compatibility, so Baseline keeps the current canonical form. A Git-hosted marketplace copies `plugins/baseline/` into Claude's versioned installed-plugin cache; no Baseline runtime or development dependency is installed in the consumer project.
+The first command performs no model call. `--plugin-dir` loads the local package for that Claude session. Claude Code 2.0.29 was clean-room validated locally and from the public HTTPS Git source for marketplace validation, add/list/update/remove, plugin install/disable/enable/uninstall/reinstall, and exact package resolution of all 17 skills. Its validator emits a stale `metadata.description` warning for the current top-level `description`; current Claude documentation defines the top-level field and accepts the metadata form only for backward compatibility, so Baseline keeps the current canonical form. Version 2.0.29 retains the complete marketplace checkout in Claude's private configuration cache and resolves only `plugins/baseline/` as the plugin; current documentation describes newer clients copying that selected package into a versioned plugin cache. In either case the consumer project receives no Baseline tooling, and the selected package contains no development dependency or runtime. Do not interpret the 2.0.29 checkout behavior as package-only cache evidence.
 
 ### Pi
 

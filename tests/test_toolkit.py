@@ -1577,7 +1577,7 @@ class ToolkitStructureTests(unittest.TestCase):
             "copilot plugin marketplace add woliveiras/baseline",
             "copilot plugin install baseline@baseline",
             "Copilot marketplace clean-room",
-            "claude plugin marketplace add woliveiras/baseline",
+            "claude plugin marketplace add https://github.com/woliveiras/baseline.git",
             "claude plugin install baseline@baseline",
             "Claude Code 2.0.29",
         ):
