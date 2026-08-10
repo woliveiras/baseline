@@ -10,7 +10,22 @@
       "extra-files": [
         {
           "type": "json",
+          "path": "plugins/baseline/plugin.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "plugins/baseline/.codex-plugin/plugin.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "plugins/baseline/.claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "plugins/baseline/package.json",
           "jsonpath": "$.version"
         },
         {

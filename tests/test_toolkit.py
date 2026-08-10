@@ -30,6 +30,10 @@ EXPECTED_SKILLS = {
     "improve-architecture", "decision-framework", "premortem", "session-bridge",
     "technical-research", "security-review",
 }
+EXPECTED_PACKAGE_ROOT = {
+    ".claude-plugin", ".codex-plugin", "package.json", "plugin.json", "skills",
+}
+AGENT_PLUGIN_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
 
 sys.path.insert(0, str(ROOT / "evals"))
 from run import apply_process_checks, parse_events  # noqa: E402
@@ -360,13 +364,22 @@ class ToolkitStructureTests(unittest.TestCase):
 
         manifest = json.loads((PLUGIN_ROOT / ".codex-plugin" / "plugin.json").read_text())
         self.assertEqual("baseline", manifest["name"])
-        self.assertEqual({".codex-plugin", "skills"}, {path.name for path in PLUGIN_ROOT.iterdir()})
+        self.assertEqual(EXPECTED_PACKAGE_ROOT, {path.name for path in PLUGIN_ROOT.iterdir()})
 
     def test_release_version_and_release_please_contract(self):
         """RV-001/RV-002: one root product version drives immutable releases."""
         package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
         plugin = json.loads(
             (PLUGIN_ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8")
+        )
+        open_plugin = json.loads(
+            (PLUGIN_ROOT / "plugin.json").read_text(encoding="utf-8")
+        )
+        claude_plugin = json.loads(
+            (PLUGIN_ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8")
+        )
+        pi_package = json.loads(
+            (PLUGIN_ROOT / "package.json").read_text(encoding="utf-8")
         )
         manifest = json.loads(
             (ROOT / ".release-please-manifest.json").read_text(encoding="utf-8")
@@ -384,6 +397,9 @@ class ToolkitStructureTests(unittest.TestCase):
             r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$",
         )
         self.assertEqual(package["version"], plugin["version"])
+        self.assertEqual(package["version"], open_plugin["version"])
+        self.assertEqual(package["version"], claude_plugin["version"])
+        self.assertEqual(package["version"], pi_package["version"])
         self.assertEqual(package["version"], pyproject["project"]["version"])
         locked_project = next(item for item in uv_lock["package"] if item["name"] == "baseline")
         self.assertEqual(package["version"], locked_project["version"])
@@ -401,7 +417,22 @@ class ToolkitStructureTests(unittest.TestCase):
             [
                 {
                     "type": "json",
+                    "path": "plugins/baseline/plugin.json",
+                    "jsonpath": "$.version",
+                },
+                {
+                    "type": "json",
                     "path": "plugins/baseline/.codex-plugin/plugin.json",
+                    "jsonpath": "$.version",
+                },
+                {
+                    "type": "json",
+                    "path": "plugins/baseline/.claude-plugin/plugin.json",
+                    "jsonpath": "$.version",
+                },
+                {
+                    "type": "json",
+                    "path": "plugins/baseline/package.json",
                     "jsonpath": "$.version",
                 },
                 {
@@ -622,7 +653,10 @@ class ToolkitStructureTests(unittest.TestCase):
             self.assertIn(required, normalized_decision)
 
         tracked_plugin_paths = subprocess.run(
-            ["git", "ls-files", "plugins/baseline"],
+            [
+                "git", "ls-files", "--cached", "--others", "--exclude-standard",
+                "plugins/baseline",
+            ],
             cwd=ROOT,
             capture_output=True,
             check=True,
@@ -631,7 +665,7 @@ class ToolkitStructureTests(unittest.TestCase):
         tracked_top_level = {
             Path(path).relative_to("plugins/baseline").parts[0] for path in tracked_plugin_paths
         }
-        self.assertEqual({".codex-plugin", "skills"}, tracked_top_level)
+        self.assertEqual(EXPECTED_PACKAGE_ROOT, tracked_top_level)
 
     def test_full_evaluation_is_explicit_and_not_a_push_gate(self):
         package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
@@ -651,6 +685,62 @@ class ToolkitStructureTests(unittest.TestCase):
         actual = {path.name for path in (ROOT / "skills").iterdir() if path.is_dir()}
         self.assertEqual(EXPECTED_SKILLS, actual)
 
+    def test_open_agent_plugin_manifest_contract(self):
+        """The portable package conforms to the closed Agent Plugins 1.0.0 manifest."""
+        manifest = json.loads((PLUGIN_ROOT / "plugin.json").read_text(encoding="utf-8"))
+        self.assertEqual(
+            {
+                "$schema", "name", "version", "description", "author",
+                "homepage", "repository", "license", "keywords",
+            },
+            set(manifest),
+        )
+        self.assertEqual(AGENT_PLUGIN_SCHEMA, manifest["$schema"])
+        self.assertEqual("baseline", manifest["name"])
+        self.assertEqual("MIT", manifest["license"])
+        self.assertEqual(
+            {"name": "William Oliveira", "url": "https://github.com/woliveiras"},
+            manifest["author"],
+        )
+        self.assertNotIn("skills", manifest, "Agent Plugins discovers the fixed skills/ directory")
+        self.assertNotIn("extensions", manifest)
+        discovered = {
+            path.name
+            for path in (PLUGIN_ROOT / "skills").iterdir()
+            if path.is_dir() and (path / "SKILL.md").is_file()
+        }
+        self.assertEqual(EXPECTED_SKILLS, discovered)
+
+    def test_native_adapters_are_declarative_and_share_the_canonical_skills(self):
+        """Native descriptors add lifecycle metadata without copying behavior or code."""
+        claude = json.loads(
+            (PLUGIN_ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8")
+        )
+        pi_package = json.loads((PLUGIN_ROOT / "package.json").read_text(encoding="utf-8"))
+        root_package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
+
+        self.assertEqual("baseline", claude["name"])
+        self.assertEqual(root_package["version"], claude["version"])
+        for executable_component in (
+            "hooks", "mcpServers", "agents", "commands", "workflows",
+            "lspServers", "dependencies", "experimental",
+        ):
+            self.assertNotIn(executable_component, claude)
+
+        self.assertTrue(pi_package["private"])
+        self.assertIn("pi-package", pi_package["keywords"])
+        self.assertEqual({"skills": ["./skills/*/SKILL.md"]}, pi_package["pi"])
+        for executable_component in (
+            "scripts", "dependencies", "devDependencies", "optionalDependencies",
+            "peerDependencies", "bundledDependencies",
+        ):
+            self.assertNotIn(executable_component, pi_package)
+
+        skill_roots = [
+            path for path in PLUGIN_ROOT.rglob("skills") if path.is_dir()
+        ]
+        self.assertEqual([PLUGIN_ROOT / "skills"], skill_roots)
+
     def test_plugin_package_boundary_and_canonical_skill_tree(self):
         """CP-001/CP-002/CP-003: the marketplace installs only canonical product content."""
         marketplace = json.loads(
@@ -662,7 +752,7 @@ class ToolkitStructureTests(unittest.TestCase):
         manifest_path = PLUGIN_ROOT / ".codex-plugin" / "plugin.json"
         self.assertTrue(manifest_path.is_file())
         self.assertEqual("baseline", json.loads(manifest_path.read_text())["name"])
-        self.assertEqual({".codex-plugin", "skills"}, {path.name for path in PLUGIN_ROOT.iterdir()})
+        self.assertEqual(EXPECTED_PACKAGE_ROOT, {path.name for path in PLUGIN_ROOT.iterdir()})
         self.assertFalse(any(path.is_symlink() for path in PLUGIN_ROOT.rglob("*")))
         for forbidden in ("node_modules", "evals", "specs", "tests", "docs", "AGENTS.md"):
             self.assertFalse((PLUGIN_ROOT / forbidden).exists(), forbidden)
@@ -715,7 +805,7 @@ class ToolkitStructureTests(unittest.TestCase):
             installed_path = Path(installed["installedPath"]).resolve()
             self.assertTrue(installed_path.is_relative_to(isolated_codex_home.resolve()))
             self.assertEqual(
-                {".codex-plugin", "skills"},
+                EXPECTED_PACKAGE_ROOT,
                 {path.name for path in installed_path.iterdir()},
             )
             self.assertFalse((isolated_codex_home / "auth.json").exists())
@@ -811,6 +901,137 @@ class ToolkitStructureTests(unittest.TestCase):
                 run_cli("plugin", "add", "baseline@baseline", "--json").stdout
             )
             self.assertEqual("baseline@baseline", reinstalled["pluginId"])
+
+    @unittest.skipUnless(shutil.which("claude"), "Claude Code CLI is required")
+    def test_claude_plugin_manifest_validates_in_an_isolated_home(self):
+        """The native adapter validates without login, model calls, or personal state."""
+        with tempfile.TemporaryDirectory(prefix="baseline-claude-") as tmp:
+            clean_root = Path(tmp)
+            for relative in ("home", "config", "data", "cache", "claude"):
+                (clean_root / relative).mkdir()
+            environment = os.environ.copy()
+            environment.update(
+                {
+                    "HOME": str(clean_root / "home"),
+                    "XDG_CONFIG_HOME": str(clean_root / "config"),
+                    "XDG_DATA_HOME": str(clean_root / "data"),
+                    "XDG_CACHE_HOME": str(clean_root / "cache"),
+                    "CLAUDE_CONFIG_DIR": str(clean_root / "claude"),
+                    "DISABLE_AUTOUPDATER": "1",
+                    "DISABLE_TELEMETRY": "1",
+                }
+            )
+            result = subprocess.run(
+                ["claude", "plugin", "validate", str(PLUGIN_ROOT)],
+                cwd=clean_root,
+                env=environment,
+                text=True,
+                capture_output=True,
+                check=False,
+                timeout=30,
+            )
+            self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+            self.assertIn("Validation passed", result.stdout + result.stderr)
+            self.assertFalse((clean_root / "home" / ".claude").exists())
+
+    @unittest.skipUnless(shutil.which("pi"), "Pi CLI is required")
+    def test_pi_package_clean_room_install_remove_and_exact_skill_allowlist(self):
+        """Pi lifecycle uses the package in place and excludes catalog.md."""
+        package = json.loads((PLUGIN_ROOT / "package.json").read_text(encoding="utf-8"))
+        declared = package["pi"]["skills"]
+        resolved = {
+            path.parent.name
+            for pattern in declared
+            for path in PLUGIN_ROOT.glob(pattern.removeprefix("./"))
+        }
+        self.assertEqual(EXPECTED_SKILLS, resolved)
+
+        with tempfile.TemporaryDirectory(prefix="baseline-pi-") as tmp:
+            clean_root = Path(tmp)
+            home = clean_root / "home"
+            pi_home = clean_root / "pi"
+            consumer = clean_root / "consumer"
+            for path in (home, pi_home, consumer):
+                path.mkdir()
+            environment = os.environ.copy()
+            environment.update(
+                {
+                    "HOME": str(home),
+                    "PI_CODING_AGENT_DIR": str(pi_home),
+                    "PI_OFFLINE": "1",
+                    "PI_TELEMETRY": "0",
+                }
+            )
+
+            def run_pi(*arguments: str) -> subprocess.CompletedProcess[str]:
+                result = subprocess.run(
+                    ["pi", *arguments],
+                    cwd=consumer,
+                    env=environment,
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                    timeout=30,
+                )
+                self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+                return result
+
+            source = str(PLUGIN_ROOT.resolve())
+            run_pi("install", source, "-l", "--approve")
+            self.assertIn(source, run_pi("list", "--approve").stdout)
+            run_pi("remove", source, "-l", "--approve")
+            self.assertIn("No packages installed", run_pi("list", "--approve").stdout)
+            run_pi("install", source, "-l", "--approve")
+            self.assertIn(source, run_pi("list", "--approve").stdout)
+            settings = json.loads(
+                (consumer / ".pi" / "settings.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(1, len(settings["packages"]))
+
+    @unittest.skipUnless(shutil.which("opencode"), "OpenCode CLI is required")
+    @unittest.skipIf(os.name == "nt", "symlink clean room requires Windows privileges")
+    def test_opencode_discovers_all_canonical_skills_from_agents_symlink(self):
+        """OpenCode discovery works without adding an executable OpenCode plugin."""
+        with tempfile.TemporaryDirectory(prefix="baseline-opencode-") as tmp:
+            clean_root = Path(tmp)
+            consumer = clean_root / "consumer"
+            nested = consumer / "nested" / "work"
+            agents = consumer / ".agents"
+            for relative in ("home", "config", "data", "cache", "opencode"):
+                (clean_root / relative).mkdir()
+            agents.mkdir(parents=True)
+            nested.mkdir(parents=True)
+            (agents / "skills").symlink_to(PLUGIN_ROOT / "skills", target_is_directory=True)
+            environment = os.environ.copy()
+            environment.update(
+                {
+                    "HOME": str(clean_root / "home"),
+                    "XDG_CONFIG_HOME": str(clean_root / "config"),
+                    "XDG_DATA_HOME": str(clean_root / "data"),
+                    "XDG_CACHE_HOME": str(clean_root / "cache"),
+                    "OPENCODE_CONFIG_DIR": str(clean_root / "opencode"),
+                }
+            )
+
+            for cwd in (consumer, nested):
+                result = subprocess.run(
+                    ["opencode", "debug", "skill"],
+                    cwd=cwd,
+                    env=environment,
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                    timeout=30,
+                )
+                self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+                payload = json.loads(result.stdout)
+                items = payload if isinstance(payload, list) else payload.get("skills", payload)
+                actual = set(
+                    items
+                    if isinstance(items, dict)
+                    else (item.get("name") for item in items)
+                )
+                self.assertTrue(EXPECTED_SKILLS.issubset(actual), cwd)
 
     def test_distributed_product_has_no_lifecycle_runtime(self):
         """DW-001/DW-005: no dormant hook or receipt runtime remains installed."""

@@ -48,6 +48,15 @@ class ProductIdentityTests(unittest.TestCase):
         plugin = json.loads(
             (ROOT / "plugins/baseline/.codex-plugin/plugin.json").read_text(encoding="utf-8")
         )
+        open_plugin = json.loads(
+            (ROOT / "plugins/baseline/plugin.json").read_text(encoding="utf-8")
+        )
+        claude_plugin = json.loads(
+            (ROOT / "plugins/baseline/.claude-plugin/plugin.json").read_text(encoding="utf-8")
+        )
+        pi_package = json.loads(
+            (ROOT / "plugins/baseline/package.json").read_text(encoding="utf-8")
+        )
         self.assertEqual("baseline", marketplace["name"])
         self.assertEqual("Baseline", marketplace["interface"]["displayName"])
         self.assertEqual("baseline", marketplace["plugins"][0]["name"])
@@ -57,6 +66,9 @@ class ProductIdentityTests(unittest.TestCase):
         )
         self.assertEqual("baseline", plugin["name"])
         self.assertEqual("Baseline", plugin["interface"]["displayName"])
+        self.assertEqual("baseline", open_plugin["name"])
+        self.assertEqual("baseline", claude_plugin["name"])
+        self.assertEqual("baseline", pi_package["name"])
         self.assertEqual("plugins/baseline/skills", os.readlink(ROOT / "skills"))
         self.assertFalse((ROOT / "plugins" / LEGACY_TOKEN).exists())
 
@@ -73,6 +85,19 @@ class ProductIdentityTests(unittest.TestCase):
         self.assertIn(
             "plugins/baseline/.codex-plugin/plugin.json",
             {item["path"] for item in root_release["extra-files"]},
+        )
+        self.assertEqual(
+            {
+                "plugins/baseline/plugin.json",
+                "plugins/baseline/.codex-plugin/plugin.json",
+                "plugins/baseline/.claude-plugin/plugin.json",
+                "plugins/baseline/package.json",
+            },
+            {
+                item["path"]
+                for item in root_release["extra-files"]
+                if item["path"].startswith("plugins/baseline/")
+            },
         )
         self.assertTrue((ROOT / "templates/codex/baseline.rules").is_file())
 

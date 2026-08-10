@@ -133,7 +133,21 @@ class BaselineBoundaryTests(unittest.TestCase):
 
     def test_distribution_has_no_runtime_or_storehouse_dependency(self) -> None:
         plugin_files = [path for path in (ROOT / "plugins" / "baseline").rglob("*") if path.is_file()]
-        self.assertFalse(any(path.name in {"package.json", "pyproject.toml", "requirements.txt"} for path in plugin_files))
+        pi_package = ROOT / "plugins" / "baseline" / "package.json"
+        self.assertIn(pi_package, plugin_files)
+        package = json.loads(pi_package.read_text(encoding="utf-8"))
+        self.assertTrue(package["private"])
+        self.assertEqual({"skills": ["./skills/*/SKILL.md"]}, package["pi"])
+        for forbidden in (
+            "scripts",
+            "dependencies",
+            "devDependencies",
+            "optionalDependencies",
+            "peerDependencies",
+            "bundledDependencies",
+        ):
+            self.assertNotIn(forbidden, package)
+        self.assertFalse(any(path.name in {"pyproject.toml", "requirements.txt"} for path in plugin_files))
         text = "\n".join(path.read_text(encoding="utf-8", errors="ignore") for path in plugin_files)
         self.assertNotIn("/Developer/woliveiras/agent-skills", text)
         self.assertNotIn("woliveiras/storehouse", text)
