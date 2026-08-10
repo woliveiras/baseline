@@ -1,6 +1,6 @@
 [project]
 name = "baseline"
-version = "0.2.0"
+version = "0.3.0"
 description = "Development tooling for the Baseline engineering foundation"
 requires-python = ">=3.12"
 dependencies = []
