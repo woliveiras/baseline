@@ -7,6 +7,11 @@ Baseline is distributed as static Agent Skills. Consumer projects receive no
 Baseline runtime, CLI, Python, UV, PNPM, Node dependency, lifecycle hook, or
 generated build output.
 
+The package follows the open [Agent Skills](https://agentskills.io) and
+[Agent Plugins](https://agent-plugins.org) specifications. Agent Skills defines
+the canonical content, Agent Plugins defines the open package, and thin native
+adapters add lifecycle integration only where a client requires it.
+
 ## Required project initialization
 
 Client installation makes the skills discoverable but does not modify the
@@ -103,6 +108,22 @@ codex plugin marketplace add woliveiras/baseline --ref v0.3.0
 codex plugin add baseline@baseline
 ```
 <!-- x-release-please-end -->
+
+`codex plugin marketplace upgrade baseline` refreshes the marketplace at its
+configured source but does not move an immutable tag pin to a newer release.
+The remove, re-add, and reinstall sequence above is therefore also the upgrade
+path from an earlier pinned release.
+
+Confirm the installed manifest version and source with:
+
+```bash
+codex plugin list
+```
+
+After an upgrade, start a new agent session so it loads the new skills. For an
+existing consumer project, invoke `$setup-baseline` once to create or safely
+reconcile its project instructions; an already conforming file is left
+unchanged.
 
 To reinstall the same marketplace:
 
@@ -297,7 +318,13 @@ validators. Baseline does not invent a metadata field and call it portable
 enforcement. Other clients may select skills differently; discovery is not proof
 that an agent followed every instruction.
 
-The package uses the open Agent Plugins 1.0.0 manifest where supported, plus
-thin native adapters for clients with their own package contract. All adapters
-point to one canonical `skills/` tree and contain no copied behavior, hooks,
-dependencies, scripts, or runtime.
+The canonical skill name comes from each `SKILL.md`. A client may add a package
+namespace when presenting an installed plugin: Codex discovery currently
+reports `baseline:setup-baseline`, for example. Use the name shown by the active
+client in its skill picker or list; the `$setup-baseline` form in this guide
+names the canonical skill rather than promising one universal prompt syntax.
+
+The package uses the open [Agent Plugins 1.0.0](https://agent-plugins.org)
+manifest where supported, plus thin native adapters for clients with their own
+package contract. All adapters point to one canonical `skills/` tree and
+contain no copied behavior, hooks, dependencies, scripts, or runtime.

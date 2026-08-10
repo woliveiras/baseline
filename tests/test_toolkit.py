@@ -1631,11 +1631,15 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertIn("does not modify the consumer repository", normalized_docs)
         self.assertIn("once per project", normalized_docs)
         self.assertIn("create or safely reconcile", normalized_docs)
+        self.assertIn("canonical skill name", normalized_docs)
+        self.assertIn("baseline:setup-baseline", public_install_docs)
+        self.assertIn("name shown by the active client", normalized_docs)
 
     def test_docs_describe_multiclient_package_without_overstating_evidence(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         installation = (ROOT / "docs" / "guides" / "installation.md").read_text(encoding="utf-8")
         public_install_docs = readme + "\n" + installation
+        normalized_docs = " ".join(public_install_docs.split())
         decision = (
             ROOT / "docs" / "decisions"
             / "0004-package-canonical-skills-with-open-and-native-adapters.md"
@@ -1644,6 +1648,8 @@ class ToolkitStructureTests(unittest.TestCase):
 
         for marker in (
             "Agent Plugins 1.0.0",
+            "https://agentskills.io",
+            "https://agent-plugins.org",
             "claude plugin validate",
             "claude --plugin-dir",
             "pi install \"$BASELINE_PACKAGE\" -l --approve",
@@ -1657,7 +1663,16 @@ class ToolkitStructureTests(unittest.TestCase):
             "Claude Code 2.0.29",
         ):
             self.assertIn(marker, public_install_docs, marker)
+        self.assertIn("Agent Skills defines the canonical content", normalized_docs)
+        self.assertIn("Agent Plugins defines the open package", normalized_docs)
         self.assertIn("one canonical `skills/` tree", public_install_docs)
+        for marker in (
+            "Lifecycle and discovery validated",
+            "Project discovery validated",
+            "Static format validation only",
+            "No model-backed behavioral certification",
+        ):
+            self.assertIn(marker, public_install_docs, marker)
         self.assertIn("skills/` is the sole behavior corpus", decision)
         self.assertIn(".github/plugin/marketplace.json", decision)
         self.assertIn(".github/plugin/marketplace.json", releases)
@@ -1713,6 +1728,9 @@ class ToolkitStructureTests(unittest.TestCase):
             "mutable development channel",
             "Do not use `codex plugin add <URL>`",
             "No credential, token, private key, or credential-bearing URL",
+            "does not move an immutable tag pin",
+            "codex plugin list",
+            "start a new agent session",
         ):
             self.assertIn(marker, public_install_docs, marker)
 

@@ -106,7 +106,7 @@ pnpm run eval:full
 ```
 
 This runs the official validators, Python and shell checks, all six Promptfoo
-config validations, fixture checks, 41 routing cases, 40 behavior-provider
+config validations, fixture checks, 43 routing cases, 40 behavior-provider
 trials, and 12 security probes, then checks that Git status is unchanged. It
 requires an authenticated dedicated evaluation home and consumes model quota.
 Routing is split into two disjoint shards and behavior into four disjoint
@@ -119,9 +119,9 @@ three suite outcomes exist, `eval:full` writes a full aggregate with total wall
 duration before checking final assertion verdicts or concurrent checkout drift.
 It then returns one aggregate failure if any outcome failed or needs review.
 
-The 93 target-agent calls are the expected upper bound for one non-repeated
+The 95 target-agent calls are the expected upper bound for one non-repeated
 run. The five semantic tasks across five behavior conditions add up to 25
-secondary Codex rubric calls, for an upper bound of 118 model calls. Sharding
+secondary Codex rubric calls, for an upper bound of 120 model calls. Sharding
 changes scheduling, not coverage. Current wall duration and per-row outcomes
 are recorded in ignored JSON reports under `evals/promptfoo/results/`.
 `eval:full` is
