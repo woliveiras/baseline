@@ -57,6 +57,9 @@ class ProductIdentityTests(unittest.TestCase):
         pi_package = json.loads(
             (ROOT / "plugins/baseline/package.json").read_text(encoding="utf-8")
         )
+        copilot_marketplace = json.loads(
+            (ROOT / ".github/plugin/marketplace.json").read_text(encoding="utf-8")
+        )
         self.assertEqual("baseline", marketplace["name"])
         self.assertEqual("Baseline", marketplace["interface"]["displayName"])
         self.assertEqual("baseline", marketplace["plugins"][0]["name"])
@@ -69,6 +72,9 @@ class ProductIdentityTests(unittest.TestCase):
         self.assertEqual("baseline", open_plugin["name"])
         self.assertEqual("baseline", claude_plugin["name"])
         self.assertEqual("baseline", pi_package["name"])
+        self.assertEqual("baseline", copilot_marketplace["name"])
+        self.assertEqual("baseline", copilot_marketplace["plugins"][0]["name"])
+        self.assertEqual("./plugins/baseline", copilot_marketplace["plugins"][0]["source"])
         self.assertEqual("plugins/baseline/skills", os.readlink(ROOT / "skills"))
         self.assertFalse((ROOT / "plugins" / LEGACY_TOKEN).exists())
 
@@ -98,6 +104,13 @@ class ProductIdentityTests(unittest.TestCase):
                 for item in root_release["extra-files"]
                 if item["path"].startswith("plugins/baseline/")
             },
+        )
+        self.assertEqual(
+            2,
+            sum(
+                item["path"] == ".github/plugin/marketplace.json"
+                for item in root_release["extra-files"]
+            ),
         )
         self.assertTrue((ROOT / "templates/codex/baseline.rules").is_file())
 

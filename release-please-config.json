@@ -29,6 +29,16 @@
           "jsonpath": "$.version"
         },
         {
+          "type": "json",
+          "path": ".github/plugin/marketplace.json",
+          "jsonpath": "$.metadata.version"
+        },
+        {
+          "type": "json",
+          "path": ".github/plugin/marketplace.json",
+          "jsonpath": "$.plugins[0].version"
+        },
+        {
           "type": "toml",
           "path": "pyproject.toml",
           "jsonpath": "$.project.version"

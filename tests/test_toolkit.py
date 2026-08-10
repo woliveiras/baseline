@@ -34,6 +34,7 @@ EXPECTED_PACKAGE_ROOT = {
     ".claude-plugin", ".codex-plugin", "package.json", "plugin.json", "skills",
 }
 AGENT_PLUGIN_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
+COPILOT_MARKETPLACE = ROOT / ".github" / "plugin" / "marketplace.json"
 
 sys.path.insert(0, str(ROOT / "evals"))
 from run import apply_process_checks, parse_events  # noqa: E402
@@ -381,6 +382,9 @@ class ToolkitStructureTests(unittest.TestCase):
         pi_package = json.loads(
             (PLUGIN_ROOT / "package.json").read_text(encoding="utf-8")
         )
+        copilot_marketplace = json.loads(
+            COPILOT_MARKETPLACE.read_text(encoding="utf-8")
+        )
         manifest = json.loads(
             (ROOT / ".release-please-manifest.json").read_text(encoding="utf-8")
         )
@@ -400,6 +404,8 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertEqual(package["version"], open_plugin["version"])
         self.assertEqual(package["version"], claude_plugin["version"])
         self.assertEqual(package["version"], pi_package["version"])
+        self.assertEqual(package["version"], copilot_marketplace["metadata"]["version"])
+        self.assertEqual(package["version"], copilot_marketplace["plugins"][0]["version"])
         self.assertEqual(package["version"], pyproject["project"]["version"])
         locked_project = next(item for item in uv_lock["package"] if item["name"] == "baseline")
         self.assertEqual(package["version"], locked_project["version"])
@@ -434,6 +440,16 @@ class ToolkitStructureTests(unittest.TestCase):
                     "type": "json",
                     "path": "plugins/baseline/package.json",
                     "jsonpath": "$.version",
+                },
+                {
+                    "type": "json",
+                    "path": ".github/plugin/marketplace.json",
+                    "jsonpath": "$.metadata.version",
+                },
+                {
+                    "type": "json",
+                    "path": ".github/plugin/marketplace.json",
+                    "jsonpath": "$.plugins[0].version",
                 },
                 {
                     "type": "toml",
@@ -711,6 +727,33 @@ class ToolkitStructureTests(unittest.TestCase):
         }
         self.assertEqual(EXPECTED_SKILLS, discovered)
 
+    def test_copilot_marketplace_contract(self):
+        """The repository catalog adds lifecycle without duplicating the plugin."""
+        marketplace = json.loads(COPILOT_MARKETPLACE.read_text(encoding="utf-8"))
+        root_package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
+        self.assertEqual({"name", "owner", "metadata", "plugins"}, set(marketplace))
+        self.assertEqual("baseline", marketplace["name"])
+        self.assertEqual({"name": "William Oliveira"}, marketplace["owner"])
+        self.assertEqual(
+            {
+                "description": "The portable minimum for disciplined, proportional software engineering",
+                "version": root_package["version"],
+            },
+            marketplace["metadata"],
+        )
+        self.assertEqual(1, len(marketplace["plugins"]))
+        plugin = marketplace["plugins"][0]
+        self.assertEqual(
+            {"name", "description", "version", "source"},
+            set(plugin),
+        )
+        self.assertEqual("baseline", plugin["name"])
+        self.assertEqual(root_package["version"], plugin["version"])
+        self.assertEqual("./plugins/baseline", plugin["source"])
+        self.assertEqual(PLUGIN_ROOT, (ROOT / plugin["source"]).resolve())
+        self.assertNotIn("hooks", plugin)
+        self.assertNotIn("dependencies", plugin)
+
     def test_native_adapters_are_declarative_and_share_the_canonical_skills(self):
         """Native descriptors add lifecycle metadata without copying behavior or code."""
         claude = json.loads(
@@ -933,6 +976,72 @@ class ToolkitStructureTests(unittest.TestCase):
             self.assertEqual(0, result.returncode, result.stdout + result.stderr)
             self.assertIn("Validation passed", result.stdout + result.stderr)
             self.assertFalse((clean_root / "home" / ".claude").exists())
+
+    @unittest.skipUnless(shutil.which("copilot"), "Copilot CLI is required")
+    def test_copilot_marketplace_clean_room_lifecycle_and_discovery(self):
+        """Copilot uses plugin@marketplace without login, model calls, or personal state."""
+        with tempfile.TemporaryDirectory(prefix="baseline-copilot-") as tmp:
+            clean_root = Path(tmp)
+            consumer = clean_root / "consumer"
+            for relative in (
+                "home", "config", "data", "cache", "copilot-home", "copilot-cache",
+            ):
+                (clean_root / relative).mkdir()
+            consumer.mkdir()
+            environment = os.environ.copy()
+            environment.update(
+                {
+                    "HOME": str(clean_root / "home"),
+                    "XDG_CONFIG_HOME": str(clean_root / "config"),
+                    "XDG_DATA_HOME": str(clean_root / "data"),
+                    "XDG_CACHE_HOME": str(clean_root / "cache"),
+                    "COPILOT_HOME": str(clean_root / "copilot-home"),
+                    "COPILOT_CACHE_HOME": str(clean_root / "copilot-cache"),
+                }
+            )
+
+            def run_copilot(*arguments: str) -> subprocess.CompletedProcess[str]:
+                result = subprocess.run(
+                    ["copilot", *arguments],
+                    cwd=consumer,
+                    env=environment,
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                    timeout=45,
+                )
+                self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+                return result
+
+            added = run_copilot("plugin", "marketplace", "add", str(ROOT))
+            self.assertNotIn("deprecated", (added.stdout + added.stderr).lower())
+            self.assertIn("baseline", run_copilot("plugin", "marketplace", "list").stdout)
+            self.assertIn("baseline", run_copilot("plugin", "marketplace", "browse", "baseline").stdout)
+            installed = run_copilot("plugin", "install", "baseline@baseline")
+            self.assertIn("Installed 17 skills", installed.stdout + installed.stderr)
+            self.assertNotIn("deprecated", (installed.stdout + installed.stderr).lower())
+            self.assertIn("baseline", run_copilot("plugin", "list").stdout)
+
+            skill_output = run_copilot("skill", "list").stdout
+            plugin_section = skill_output.split("Plugin skills:\n", 1)[1].split(
+                "\nBuiltin skills:", 1
+            )[0]
+            discovered = {
+                match.group(1)
+                for line in plugin_section.splitlines()
+                if (match := re.match(r"  ([a-z0-9-]+) - ", line))
+            }
+            self.assertEqual(EXPECTED_SKILLS, discovered)
+
+            run_copilot("plugin", "update", "baseline")
+            run_copilot("plugin", "uninstall", "baseline")
+            self.assertIn("No plugins installed", run_copilot("plugin", "list").stdout)
+            run_copilot("plugin", "marketplace", "remove", "baseline")
+            self.assertNotIn("baseline", run_copilot("plugin", "marketplace", "list").stdout)
+            run_copilot("plugin", "marketplace", "add", str(ROOT))
+            run_copilot("plugin", "install", "baseline@baseline")
+            self.assertIn("baseline", run_copilot("plugin", "list").stdout)
+            self.assertFalse((clean_root / "home" / ".copilot").exists())
 
     @unittest.skipUnless(shutil.which("pi"), "Pi CLI is required")
     def test_pi_package_clean_room_install_remove_and_exact_skill_allowlist(self):
@@ -1362,12 +1471,19 @@ class ToolkitStructureTests(unittest.TestCase):
             "pi install /absolute/path/to/baseline/plugins/baseline -l --approve",
             "OpenCode 1.16.2",
             "does not invent a metadata field",
-            "not documented as a completed lifecycle",
+            "copilot plugin marketplace add woliveiras/baseline",
+            "copilot plugin install baseline@baseline",
+            "Copilot marketplace clean-room",
         ):
             self.assertIn(marker, readme, marker)
         self.assertIn("one canonical `skills/` tree", readme)
         self.assertIn("skills/` is the sole behavior corpus", decision)
-        self.assertIn("Client marketplace submission", releases)
+        self.assertIn(".github/plugin/marketplace.json", decision)
+        self.assertIn(".github/plugin/marketplace.json", releases)
+        self.assertNotIn(
+            "copilot plugin install woliveiras/baseline:plugins/baseline",
+            readme,
+        )
         self.assertNotIn("disable-model-invocation", "\n".join(
             path.read_text(encoding="utf-8")
             for path in (PLUGIN_ROOT / "skills").glob("*/SKILL.md")

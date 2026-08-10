@@ -62,7 +62,8 @@ Use the [repository glossary](GLOSSARY.md) and route work through:
   `.claude-plugin/`, and the canonical `skills/` at its top level. Adapters may
   describe native lifecycle but must not add behavior, dependencies, scripts,
   or copied skills. Keep root `skills` as the relative compatibility symlink
-  and the Codex marketplace pointed at `./plugins/baseline`.
+  and keep the Codex and Copilot marketplace entries pointed at the same
+  `./plugins/baseline` package.
 - Keep `SKILL.md` files concise and client-neutral; put conditional detail one
   level down in `references/` and Codex policy in `agents/openai.yaml`.
 - Add deterministic tests for mechanical invariants. Keep repository-only

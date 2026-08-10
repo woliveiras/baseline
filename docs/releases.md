@@ -9,6 +9,7 @@ entry in `uv.lock`, `plugins/baseline/plugin.json`,
 `plugins/baseline/.codex-plugin/plugin.json`,
 `plugins/baseline/.claude-plugin/plugin.json`,
 `plugins/baseline/package.json`,
+both version fields in `.github/plugin/marketplace.json`,
 `.release-please-manifest.json`, `CHANGELOG.md`, the `vX.Y.Z` Git tag, and its
 GitHub Release. The private Node package is never published to npm, and the
 non-package Python project is never published to PyPI; both exist only for
@@ -50,9 +51,11 @@ separate compatibility decision.
    canonical skill tree atomically. No npm publish, deployment, generated
    client package, or consumer runtime artifact follows.
 
-Client marketplace submission, catalog registration, package-registry
-publication, and support claims are distinct external publication decisions.
-Creating the GitHub Release does not perform or authorize any of them.
+The committed Codex and Copilot catalogs are product manifests that select the
+same in-repository package. External marketplace submission, enterprise catalog
+registration, package-registry publication, and support claims remain distinct
+publication decisions. Creating the GitHub Release does not perform or
+authorize any of them.
 
 The write-token job never checks out or executes repository content. The
 validation job has read-only repository permission and does not receive a
@@ -65,6 +68,7 @@ Before merging a Release PR, require:
 
 - synchronized version files and changelog;
 - a schema-valid Agent Plugins manifest and native Codex and Claude manifests;
+- synchronized Codex and Copilot marketplace entries that resolve the canonical package;
 - an exact Pi skill allowlist with no package scripts or dependencies;
 - the protected `Validate` status on the exact candidate SHA;
 - a task-owned diff with no unexpected installed-plugin content;
@@ -75,11 +79,13 @@ Install the Codex marketplace from the exact tag in disposable `HOME` and
 `CODEX_HOME` directories, confirm `baseline@baseline` reports the released
 version, and confirm all distributed skills are discovered. Validate the same
 tagged package with the Agent Plugins schema and Claude validator, exercise the
-Pi package allowlist and lifecycle, and run Cursor and Copilot native lifecycle
-checks only through their exact supported immutable source form. These checks
-perform no login or model call. If a client cannot pin the exact tag or is not
-available, record that limitation instead of promoting a static format result
-to lifecycle evidence.
+Pi package allowlist and lifecycle, and exercise the Copilot marketplace from a
+repository whose `main` and release tag resolve to the same release commit.
+Confirm marketplace add/browse, plugin install/update/remove/reinstall, installed
+version, and exact discovery. Run Cursor lifecycle checks only when its client
+is available. These checks perform no login or model call. If a client cannot
+pin the exact tag or is not available, record that limitation instead of
+promoting a static format result to lifecycle evidence.
 
 ## Rollback
 

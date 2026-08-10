@@ -44,7 +44,7 @@ The complete consumer package is [`plugins/baseline/`](plugins/baseline/). It ha
 - `package.json` is a private, dependency-free Pi package descriptor whose exact allowlist selects the 17 canonical `SKILL.md` files;
 - `skills/` contains all behavior, references, assets, scripts, and Codex invocation metadata.
 
-The adapters add identity and lifecycle metadata only. They contain no hooks, dependencies, scripts, runtime, copied skills, or client-specific behavior. The root [`skills`](skills) compatibility symlink points to the same canonical tree. Release Please updates every product manifest from one product version.
+The repository-level `.github/plugin/marketplace.json` adds the native Copilot marketplace lifecycle while pointing to that same package. The adapters and marketplaces add identity, selection, and lifecycle metadata only. They contain no hooks, dependencies, scripts, runtime, copied skills, or client-specific behavior. The root [`skills`](skills) compatibility symlink points to the same canonical tree. Release Please updates every product manifest and marketplace version from one product version.
 
 ## Install
 
@@ -173,7 +173,37 @@ All three clients consume Agent Skills from `.agents/skills`. Use the standalone
 
 Cursor and GitHub Copilot also implement the open Agent Plugins package contract represented by `plugins/baseline/plugin.json`. That common manifest validates against Agent Plugins 1.0.0, but marketplace installation and update remain client-owned lifecycle features. The current checkout has no Cursor-specific manifest because Baseline ships no Cursor-only hooks, agents, rules, commands, or MCP servers. OpenCode needs no JavaScript or TypeScript plugin for static skills.
 
-Native Cursor and Copilot installation is intentionally not documented as a completed lifecycle yet: Cursor was unavailable for the current local validation, and Copilot CLI accepts repositories or Git URLs but not a local path or `file://` clean-room fixture. Use standalone `.agents/skills` links from this checkout until the exact tagged Git package has passed each client's install, list, update, and remove checks.
+#### GitHub Copilot plugin marketplace
+
+Copilot direct repository installation works today but is deprecated by the CLI. Register the repository marketplace and install through `plugin@marketplace` instead:
+
+```bash
+copilot plugin marketplace add woliveiras/baseline
+copilot plugin install baseline@baseline
+copilot skill list
+```
+
+Update the catalog before updating the plugin:
+
+```bash
+copilot plugin marketplace update baseline
+copilot plugin update baseline
+```
+
+Reinstall or remove Baseline with:
+
+```bash
+copilot plugin uninstall baseline
+copilot plugin install baseline@baseline
+
+# Complete removal
+copilot plugin uninstall baseline
+copilot plugin marketplace remove baseline
+```
+
+The marketplace and plugin share the `baseline` identity. The committed catalog points to `./plugins/baseline`, and its catalog and plugin versions are synchronized with the other product manifests. The Copilot marketplace clean-room covers add, browse, install, exact discovery of 17 skills, update, uninstall, marketplace removal, and reinstall without login or model calls. Copilot's current `marketplace add OWNER/REPO` command follows the repository marketplace rather than exposing Codex's explicit immutable `--ref` option; release verification therefore checks main/tag parity and the installed version instead of claiming an untested ref pin.
+
+Cursor remains at static format compatibility until its native loader and lifecycle can be exercised locally. Standalone `.agents/skills` remains the usable no-copy route in the meantime.
 
 OpenCode 1.16.2 was locally verified to discover all 17 skills through a project `.agents/skills` link. Its catalog also contains host-provided skills, so discovery checks compare the Baseline subset rather than requiring an otherwise empty catalog.
 

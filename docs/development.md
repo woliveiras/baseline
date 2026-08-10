@@ -18,6 +18,9 @@ distribution directory, or runtime dependency, and none should be added.
   Codex and Claude manifest directories, and private Pi `package.json` are thin
   declarative adapters around the same 17 distributed workflow skills. It
   contains nothing from the development-only toolchain.
+- `.agents/plugins/marketplace.json` and `.github/plugin/marketplace.json` are
+  the Codex and Copilot repository catalogs. Both point to
+  `plugins/baseline/`; neither contains or generates skill behavior.
 - `skills/` is a repository compatibility symlink to
   `plugins/baseline/skills/`. It keeps existing repository and evaluation paths
   stable without creating a second skill tree or a package-generation step.
@@ -71,11 +74,11 @@ consumer runtime dependency.
 
 ## Local development installation
 
-The supported consumer installation is documented in the [top-level README](../README.md):
-Codex can fetch `woliveiras/baseline` as a GitHub marketplace and install
-`baseline@baseline` without a Baseline checkout on the consumer machine. The
-stable remote ref is the latest published `vX.Y.Z` tag. `main` is a mutable
-development channel rather than a reproducible consumer installation.
+The consumer installation routes are documented in the [top-level README](../README.md).
+Codex can fetch an immutable `vX.Y.Z` marketplace ref; Copilot registers the
+repository's native marketplace and installs the same `baseline@baseline`
+selector. `main` remains a mutable development channel rather than an immutable
+release source.
 
 For people developing the repository itself, keep the local marketplace
 flow so changes can be inspected directly from the checkout:
@@ -85,6 +88,9 @@ git clone https://github.com/woliveiras/baseline.git
 cd baseline
 codex plugin marketplace add "$(pwd)"
 codex plugin add baseline@baseline
+
+copilot plugin marketplace add "$(pwd)"
+copilot plugin install baseline@baseline
 ```
 
 This local clone is a development convenience, not a prerequisite for users.
@@ -118,10 +124,12 @@ against the exact Agent Plugins schema declared by its `$schema` field and run
 the native validators already available without login or model calls. The
 deterministic suite enforces the closed open-manifest fields, one canonical
 skill tree, exact Pi allowlist, declarative adapter boundary, package contents,
-identity, and version parity. Client clean rooms use disposable `HOME`, XDG,
-and client configuration directories; an unavailable client or a lifecycle
-that requires a published Git source is recorded as an evidence gap, never a
-pass.
+identity, catalog source paths, and version parity. Where the CLI is available,
+the Copilot clean-room exercises marketplace add/browse/remove and plugin
+install/list/update/uninstall/reinstall. Client clean rooms use disposable
+`HOME`, XDG, and client configuration directories; an unavailable client or a
+lifecycle that requires a published Git source is recorded as an evidence gap,
+never a pass.
 
 Version increments, protected CI, Release Please, and the explicit publication
 boundary are documented in the [release guide](releases.md). The root Node
