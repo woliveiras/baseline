@@ -1,6 +1,6 @@
 # Baseline
 
-Baseline is the portable minimum for disciplined software engineering. It is distributed as a Codex plugin and portable Agent Skills for coding agents.
+Baseline is the portable minimum for disciplined software engineering. It is distributed as portable Agent Skills inside one open Agent Plugin package, with thin declarative adapters for clients that require their own package contract.
 
 If you want to *use* Baseline with your agent, this page is enough to get started. If you want to *work on* Baseline itself, go to the [documentation hub](docs/README.md). I'll really appreciate your help, feedback, and contributions.
 
@@ -32,9 +32,23 @@ Baseline distributes workflow skills that your agent loads on demand:
 | Deep work (explicitly invoked) | `brainstorming`, `premortem`, `session-bridge`, `technical-research` |
 | Safety | `security-review` |
 
-`measurer` is intentionally concise and implicitly classifies work by the highest applicable risk, never line count. `refine` follows only when material ambiguity remains. `brainstorming`, `git-commit`, `improve-architecture`, `premortem`, `session-bridge`, and `technical-research` are explicit-only; the other workflows may be selected automatically when their descriptions match. The [catalog contract](plugins/baseline/skills/catalog.md) defines ownership, precedence, stop conditions, and composition without adding a runtime state machine.
+`measurer` is intentionally concise and implicitly classifies work by the highest applicable risk, never line count. `refine` follows only when material ambiguity remains. Baseline classifies `brainstorming`, `git-commit`, `improve-architecture`, `premortem`, `session-bridge`, and `technical-research` as explicit-only; the other workflows may be selected automatically when their descriptions match. Codex preserves this policy through `agents/openai.yaml`. Other clients do not share one portable invocation-policy contract, so their limitation is documented below instead of being hidden behind custom metadata. The [catalog contract](plugins/baseline/skills/catalog.md) defines ownership, precedence, stop conditions, and composition without adding a runtime state machine.
 
-## Install for Codex
+## Package architecture
+
+The complete consumer package is [`plugins/baseline/`](plugins/baseline/). It has one canonical `skills/` tree and no copied or generated client variants:
+
+- `plugin.json` implements the open [Agent Plugins 1.0.0](https://agent-plugins.org/) package manifest used by compatible clients such as Cursor and GitHub Copilot;
+- `.codex-plugin/plugin.json` preserves the existing Codex package and marketplace lifecycle;
+- `.claude-plugin/plugin.json` is the minimal Claude Code package adapter;
+- `package.json` is a private, dependency-free Pi package descriptor whose exact allowlist selects the 17 canonical `SKILL.md` files;
+- `skills/` contains all behavior, references, assets, scripts, and Codex invocation metadata.
+
+The adapters add identity and lifecycle metadata only. They contain no hooks, dependencies, scripts, runtime, copied skills, or client-specific behavior. The root [`skills`](skills) compatibility symlink points to the same canonical tree. Release Please updates every product manifest from one product version.
+
+## Install
+
+### Codex
 
 Cloning the repository does not install Baseline. Choose either the plugin route for the complete bundle or the standalone route for direct Agent Skills. Neither route installs a Baseline runtime, Python, UV, or Node dependency in the consumer project.
 
@@ -153,13 +167,57 @@ done
 
 Replace the example path with the absolute path to your clone and restart Codex. For one repository only, use that repository's `.agents/skills` instead of `$HOME/.agents/skills`. Update by pulling the source clone; remove by deleting only the Baseline symlinks you created. Do not symlink the whole `skills/` directory as one skill.
 
+### Cursor, GitHub Copilot, and OpenCode
+
+All three clients consume Agent Skills from `.agents/skills`. Use the standalone loop above for a personal user installation, or point the loop at a repository's `.agents/skills` for project scope. This keeps every link attached to one canonical skill directory and requires no Baseline process in the consumer project.
+
+Cursor and GitHub Copilot also implement the open Agent Plugins package contract represented by `plugins/baseline/plugin.json`. That common manifest validates against Agent Plugins 1.0.0, but marketplace installation and update remain client-owned lifecycle features. The current checkout has no Cursor-specific manifest because Baseline ships no Cursor-only hooks, agents, rules, commands, or MCP servers. OpenCode needs no JavaScript or TypeScript plugin for static skills.
+
+Native Cursor and Copilot installation is intentionally not documented as a completed lifecycle yet: Cursor was unavailable for the current local validation, and Copilot CLI accepts repositories or Git URLs but not a local path or `file://` clean-room fixture. Use standalone `.agents/skills` links from this checkout until the exact tagged Git package has passed each client's install, list, update, and remove checks.
+
+OpenCode 1.16.2 was locally verified to discover all 17 skills through a project `.agents/skills` link. Its catalog also contains host-provided skills, so discovery checks compare the Baseline subset rather than requiring an otherwise empty catalog.
+
+### Claude Code
+
+Claude Code requires its native `.claude-plugin/plugin.json`; it does not document the common Agent Plugins manifest as its package contract. Validate and load the trusted checkout directly without copying skills:
+
+```bash
+claude plugin validate /absolute/path/to/baseline/plugins/baseline
+claude --plugin-dir /absolute/path/to/baseline/plugins/baseline
+```
+
+The first command performs no model call. `--plugin-dir` loads the local package for that Claude session; a persistent install/update/remove lifecycle requires a Claude marketplace and remains a separate publication concern.
+
+### Pi
+
+Pi can register the package directory directly. For one project:
+
+```bash
+cd /path/to/consumer-project
+pi install /absolute/path/to/baseline/plugins/baseline -l --approve
+pi list --approve
+```
+
+Remove and reinstall the same source with:
+
+```bash
+pi remove /absolute/path/to/baseline/plugins/baseline -l --approve
+pi install /absolute/path/to/baseline/plugins/baseline -l --approve
+```
+
+The package stays loaded from the Baseline checkout. Its dependency-free `package.json` uses `pi.skills` to select only `skills/*/SKILL.md`, preventing `skills/catalog.md` from being mistaken for an eighteenth skill. The adapter is private and is not an npm publication.
+
+### Cross-client invocation boundary
+
+The canonical `SKILL.md` files deliberately use only the strict Agent Skills frontmatter shared by validators. Baseline does not invent a metadata field and call it portable enforcement. Today, Codex is the only packaged client in this repository whose explicit-only policy is mechanically mapped by an adapter. Cursor, Copilot, OpenCode, Pi, and Claude may advertise or select a workflow differently; invoke the six explicit-only workflows deliberately and do not interpret static discovery as evidence that routing, composition, authority, or model behavior has been validated.
+
 ### Discovery and invocation
 
 - **Implicit invocation:** Codex may select an installed skill when the request matches its frontmatter description and `agents/openai.yaml` permits it. Ask for the outcome normally; no plugin name is required.
 - **Explicit invocation:** use `$skill-name` in Codex CLI/IDE or choose the skill from the UI. Explicit-only Baseline workflows require this or an equally direct request.
 - If many skills are installed, Codex may shorten or omit entries from its initial skill list because of the context budget. Use explicit invocation when you need a particular workflow deterministically.
-- Clean-room validation covers plugin installation, discovery of all distributed skills, removal, and reinstallation without Codex authentication or model calls. These checks establish packaging and discovery, not that a model follows a skill correctly.
-- The plugin is supported by Codex CLI and Codex desktop. Codex IDE supports standalone skills but not plugin installation. Baseline follows the portable Agent Skills format, but installation, discovery, routing, and composition in other clients remain unverified until client-specific clean-room tests are recorded.
+- Codex clean-room validation covers plugin installation, discovery of all distributed skills, removal, and reinstallation without authentication or model calls. Client-specific evidence and limitations are stated in their installation sections. These checks establish packaging and discovery, not that a model follows a skill correctly.
+- Codex CLI and Codex desktop retain their existing plugin route. Codex IDE supports standalone skills but not plugin installation. Recognition of `SKILL.md`, static schema validation, discovery, native lifecycle, invocation policy, and behavioral evaluation are distinct evidence levels; the sections above state which level was actually reached for each other client.
 
 ### Optional command rules
 

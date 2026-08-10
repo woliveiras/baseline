@@ -1347,6 +1347,32 @@ class ToolkitStructureTests(unittest.TestCase):
         )
         self.assertTrue((PLUGIN_ROOT / ".codex-plugin" / "plugin.json").is_file())
 
+    def test_docs_describe_multiclient_package_without_overstating_evidence(self):
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        decision = (
+            ROOT / "docs" / "decisions"
+            / "0004-package-canonical-skills-with-open-and-native-adapters.md"
+        ).read_text(encoding="utf-8")
+        releases = (ROOT / "docs" / "releases.md").read_text(encoding="utf-8")
+
+        for marker in (
+            "Agent Plugins 1.0.0",
+            "claude plugin validate",
+            "claude --plugin-dir",
+            "pi install /absolute/path/to/baseline/plugins/baseline -l --approve",
+            "OpenCode 1.16.2",
+            "does not invent a metadata field",
+            "not documented as a completed lifecycle",
+        ):
+            self.assertIn(marker, readme, marker)
+        self.assertIn("one canonical `skills/` tree", readme)
+        self.assertIn("skills/` is the sole behavior corpus", decision)
+        self.assertIn("Client marketplace submission", releases)
+        self.assertNotIn("disable-model-invocation", "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in (PLUGIN_ROOT / "skills").glob("*/SKILL.md")
+        ))
+
     def test_readme_documents_remote_marketplace_installation_contract(self):
         """RM-001..RM-010: remote install, identity, lifecycle, access, and development path are explicit."""
         readme = (ROOT / "README.md").read_text(encoding="utf-8")

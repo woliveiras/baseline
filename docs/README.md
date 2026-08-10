@@ -41,6 +41,7 @@ superseded material; the current tree contains only current documentation.
 - [ADR 0001: Promptfoo as evaluation orchestrator](decisions/0001-use-promptfoo-as-evaluation-orchestrator.md)
 - [ADR 0002: defer lifecycle hooks](decisions/0002-defer-lifecycle-hooks-pending-empirical-need.md)
 - [ADR 0003: foundation and optional SDD ownership](decisions/0003-separate-foundation-and-optional-sdd.md)
+- [ADR 0004: open multiclient package and thin adapters](decisions/0004-package-canonical-skills-with-open-and-native-adapters.md)
 
 ## Working with the evaluation harness
 

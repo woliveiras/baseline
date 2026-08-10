@@ -7,16 +7,17 @@ test changes. The authoritative rules are in the
 ## The product is the repository
 
 Baseline is not a program with a build step. The repository contains the complete
-product contract and repository evidence; its directly installable plugin
+product contract and repository evidence; its directly consumable multiclient
 package is committed under `plugins/baseline/`. There is intentionally no CLI,
 daemon, package manager, sync layer, telemetry, client generator, generated
 distribution directory, or runtime dependency, and none should be added.
 
 ## Repository layout
 
-- `plugins/baseline/` is the complete installed plugin package. It contains the
-  manifest and the 17 distributed workflow skills, and nothing from the
-  development-only toolchain.
+- `plugins/baseline/` is the complete consumer package. Its open `plugin.json`,
+  Codex and Claude manifest directories, and private Pi `package.json` are thin
+  declarative adapters around the same 17 distributed workflow skills. It
+  contains nothing from the development-only toolchain.
 - `skills/` is a repository compatibility symlink to
   `plugins/baseline/skills/`. It keeps existing repository and evaluation paths
   stable without creating a second skill tree or a package-generation step.
@@ -58,6 +59,12 @@ consumer runtime dependency.
   in `references/`.
 - Keep portable workflow logic client-neutral. Codex invocation policy belongs
   in `agents/openai.yaml`.
+- Keep `plugins/baseline/skills/` as the only skill tree. Agent Plugins and
+  native client descriptors may identify or select it, but must not copy,
+  generate, patch, or wrap its behavior.
+- Keep package descriptors data-only. Adding hooks, package scripts,
+  dependencies, commands, agents, MCP servers, or client-specific behavior is
+  a separate architecture and security decision.
 - Add a deterministic test for every mechanical invariant you introduce.
 - Classify work by the highest applicable proportionality tier (see the
   contract), never by line count.
@@ -105,6 +112,16 @@ Before completing a material change, run the checks listed in the
 [engineering contract](../AGENTS.md): the official plugin validator, the
 official skill validator for every skill, the unit tests, the eval dry-run,
 shell syntax checks, `git diff --check`, and `git status --short`.
+
+Multiclient package changes also validate `plugins/baseline/plugin.json`
+against the exact Agent Plugins schema declared by its `$schema` field and run
+the native validators already available without login or model calls. The
+deterministic suite enforces the closed open-manifest fields, one canonical
+skill tree, exact Pi allowlist, declarative adapter boundary, package contents,
+identity, and version parity. Client clean rooms use disposable `HOME`, XDG,
+and client configuration directories; an unavailable client or a lifecycle
+that requires a published Git source is recorded as an evidence gap, never a
+pass.
 
 Version increments, protected CI, Release Please, and the explicit publication
 boundary are documented in the [release guide](releases.md). The root Node
