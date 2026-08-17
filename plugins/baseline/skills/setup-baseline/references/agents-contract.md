@@ -94,6 +94,49 @@ record, evidence file, or review file as a universal Baseline dependency.
   chronology, scope, review quality, command authorization, or security policy.
   Mechanical controls remain authoritative where configured.
 
+## Execution isolation selection
+
+Before running commands that install dependencies, execute repository-defined
+or generated code, start processes, create containers, modify mutable services,
+or access external systems, select an execution boundary proportionally to the
+task. Use the strongest boundary triggered below:
+
+| Task characteristics | Required starting boundary |
+| --- | --- |
+| Short, supervised, single-stream work with trusted commands and simple recovery | Current checkout |
+| Asynchronous or concurrent source changes, using only trusted and non-stateful checks | Dedicated branch and worktree |
+| Conflicting dependencies, concurrent processes, development servers, generated commands, or task-specific runtime state | Worktree plus a configured task container or equivalent host sandbox |
+| Integration tests, migrations, queues, databases, buckets, emulators, or other mutable application state | Worktree, execution boundary, and task-specific service resources |
+| Unfamiliar, potentially hostile, or kernel/device-adjacent code; broad unsupervised execution | Dedicated VM, microVM, or remote sandbox with minimal host sharing |
+| Sensitive external systems, credentials, personal data, or externally visible/destructive actions | The selected local boundary plus narrowly scoped credentials and explicit approval gates |
+
+- A branch or worktree isolates source state only. Do not treat it as process,
+  network, credential, service, or host-filesystem isolation.
+- A container is an effective boundary only to the extent that its mounts,
+  user, capabilities, network, resources, credentials, and control-plane access
+  are constrained. Do not treat a container as sufficient containment for
+  potentially hostile code.
+- Scope service resources by task using unique ports, databases, schemas,
+  queues, buckets, tenants, prefixes, volumes, or equivalent identifiers.
+- Treat credentials and approvals as independent boundaries. Stronger local
+  isolation does not authorize broader external access.
+- By default, do not expose the entire home directory, host root, Docker socket,
+  production credentials, privileged mode, host networking, or shared writable
+  application state.
+- Prefer narrowly mounted task source, task-owned writable state, unique
+  resource names, non-production credentials, and explicit resource limits.
+- Verification is required at every level: preserve the task diff, relevant
+  logs, test results, and any approval records. Independently passing isolated
+  tasks still require integrated verification.
+- Before cleanup, inventory task-owned source and runtime state. Remove only
+  resources proven to belong to the task.
+- Selecting a boundary does not itself authorize provisioning,
+  reconfiguration, external mutations, or destructive cleanup.
+- If the required boundary is unavailable, stop before executing the command.
+  Report the missing boundary, remaining shared state, and likely blast radius;
+  request provisioning or explicit acceptance of the weaker boundary instead
+  of silently continuing.
+
 ## Durable knowledge
 
 Prefer expressive names, focused modules, intention-revealing types, and tests

@@ -1463,6 +1463,84 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertFalse((skill_root / "scripts").exists())
         self.assertFalse((skill_root / "assets").exists())
 
+    def test_execution_isolation_selection_is_shared_with_setup_contract(self):
+        contracts = {
+            "repository": (ROOT / "AGENTS.md").read_text(encoding="utf-8"),
+            "setup-baseline": (
+                ROOT / "skills" / "setup-baseline" / "references" / "agents-contract.md"
+            ).read_text(encoding="utf-8"),
+        }
+        required_markers = (
+            "## Execution isolation selection",
+            "Use the strongest boundary triggered below",
+            (
+                "| Short, supervised, single-stream work with trusted commands and "
+                "simple recovery | Current checkout |"
+            ),
+            (
+                "| Asynchronous or concurrent source changes, using only trusted and "
+                "non-stateful checks | Dedicated branch and worktree |"
+            ),
+            (
+                "| Conflicting dependencies, concurrent processes, development servers, "
+                "generated commands, or task-specific runtime state | Worktree plus a "
+                "configured task container or equivalent host sandbox |"
+            ),
+            (
+                "| Integration tests, migrations, queues, databases, buckets, emulators, "
+                "or other mutable application state | Worktree, execution boundary, and "
+                "task-specific service resources |"
+            ),
+            (
+                "| Unfamiliar, potentially hostile, or kernel/device-adjacent code; broad "
+                "unsupervised execution | Dedicated VM, microVM, or remote sandbox with "
+                "minimal host sharing |"
+            ),
+            (
+                "| Sensitive external systems, credentials, personal data, or externally "
+                "visible/destructive actions | The selected local boundary plus narrowly "
+                "scoped credentials and explicit approval gates |"
+            ),
+            "isolates source state only",
+            "network, credential, service, or host-filesystem isolation",
+            (
+                "A container is an effective boundary only to the extent that its mounts, "
+                "user, capabilities, network, resources, credentials, and control-plane "
+                "access are constrained"
+            ),
+            "container as sufficient containment for potentially hostile code",
+            "Scope service resources by task",
+            "Treat credentials and approvals as independent boundaries",
+            "Stronger local isolation does not authorize broader external access",
+            (
+                "entire home directory, host root, Docker socket, production credentials, "
+                "privileged mode, host networking, or shared writable application state"
+            ),
+            (
+                "Prefer narrowly mounted task source, task-owned writable state, unique "
+                "resource names, non-production credentials, and explicit resource limits"
+            ),
+            "Verification is required at every level",
+            "Independently passing isolated tasks still require integrated verification",
+            "inventory task-owned source and runtime state",
+            "Remove only resources proven to belong to the task",
+            (
+                "Selecting a boundary does not itself authorize provisioning, "
+                "reconfiguration, external mutations, or destructive cleanup"
+            ),
+            "If the required boundary is unavailable, stop before executing the command",
+            "Report the missing boundary, remaining shared state, and likely blast radius",
+            (
+                "request provisioning or explicit acceptance of the weaker boundary "
+                "instead of silently continuing"
+            ),
+        )
+
+        for name, contract in contracts.items():
+            normalized = " ".join(contract.split())
+            for marker in required_markers:
+                self.assertIn(marker, normalized, f"{name}: {marker}")
+
     def test_baseline_contract_names_repository_invariants_and_trust_boundary(self):
         contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
         self.assertIn("## Governing sources and repository map", contract)
