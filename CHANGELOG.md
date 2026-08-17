@@ -4,6 +4,13 @@ All current Baseline releases are documented in this file. Releases follow
 [Semantic Versioning](https://semver.org/) and are prepared from Conventional
 Commits by Release Please.
 
+## [0.4.0](https://github.com/woliveiras/baseline/compare/v0.3.0...v0.4.0) (2026-08-17)
+
+
+### Features
+
+* **agents:** add execution isolation selection guidelines to AGENTS.md and agents-contract.md ([0204949](https://github.com/woliveiras/baseline/commit/0204949a083dd215fc222e7ebec2e577bb199bfe))
+
 ## [0.3.0](https://github.com/woliveiras/baseline/compare/v0.2.0...v0.3.0) (2026-08-10)
 
 
