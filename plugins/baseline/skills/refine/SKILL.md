@@ -1,6 +1,6 @@
 ---
 name: refine
-description: Resolve material ambiguity in a software request with a proportional decision tree. Use only when objective, behavior, scope, constraints, compatibility, or authority admits incompatible interpretations; do not use because a task is large or when repository evidence already makes the path clear.
+description: Resolve material ambiguity in a software request with a proportional decision tree. Invoke from incompatible interpretations even without naming this skill; do not use because a task is large or when repository evidence already makes the path clear.
 ---
 
 # Refine

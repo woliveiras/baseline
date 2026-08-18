@@ -26,6 +26,9 @@ Use the [repository glossary](GLOSSARY.md) and route work through:
   decision, or explicitly approved behavior can be sufficient input.
 - `measurer` classifies the highest applicable risk and boundary, never line
   count. Use `refine` only when material ambiguity remains.
+- Classification intent invokes `measurer`; materially incompatible
+  interpretations invoke `refine`, without requiring skill names. Preserve
+  their order when the request asks for both activities.
 - Route an explicitly requested activity by its intent, without requiring the
   user to name a skill: divergent exploration before selection uses
   `brainstorming`; current external technical evidence uses

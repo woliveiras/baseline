@@ -2945,6 +2945,7 @@ class EvaluationVerifierTests(unittest.TestCase):
                 "bugfix",
                 "tdd",
                 "brainstorming",
+                "refine",
                 "session-bridge",
                 "shape-domain",
                 "technical-research",
@@ -2954,6 +2955,7 @@ class EvaluationVerifierTests(unittest.TestCase):
         self.assertIn("do not invoke for a reported existing defect", descriptions["tdd"])
         for name in (
             "brainstorming",
+            "refine",
             "session-bridge",
             "shape-domain",
             "technical-research",
@@ -2967,6 +2969,10 @@ class EvaluationVerifierTests(unittest.TestCase):
         self.assertIn("Preserve an explicitly requested activity phase", measurer)
         contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
         self.assertIn("Route an explicitly requested activity by its intent", contract)
+        self.assertIn(
+            "Classification intent invokes `measurer`; materially incompatible interpretations invoke `refine`",
+            " ".join(contract.split()),
+        )
         self.assertIn("without requiring the user to name a skill", " ".join(contract.split()))
         self.assertIn("Missing evidence access does not change ownership", contract)
         self.assertIn("Keep that owner selected when evidence access", measurer)
@@ -2974,6 +2980,7 @@ class EvaluationVerifierTests(unittest.TestCase):
         self.assertIn("must request the activity, but does not need to name the skill", catalog)
         for name in (
             "brainstorming",
+            "refine",
             "session-bridge",
             "shape-domain",
             "technical-research",
