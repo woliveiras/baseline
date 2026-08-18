@@ -65,6 +65,27 @@ class BaselineBoundaryTests(unittest.TestCase):
         self.assertIn("conversation", text)
         self.assertNotIn("creates a specification", text)
 
+    def test_brainstorming_bounds_nebulous_discovery_without_artifacts(self) -> None:
+        skill_root = SKILLS / "brainstorming"
+        skill = (skill_root / "SKILL.md").read_text(encoding="utf-8")
+        reference = skill_root / "references" / "discovery-frontier.md"
+        self.assertTrue(reference.is_file())
+        self.assertIn("./references/discovery-frontier.md", skill)
+        text = reference.read_text(encoding="utf-8").lower()
+        for required in (
+            "researchable fact",
+            "owner decision",
+            "testable uncertainty",
+            "blocking",
+            "three",
+            "one focused question",
+            "separately authorized",
+            "do not create a file",
+        ):
+            self.assertIn(required, text)
+        for forbidden in ("to-spec", "to-tickets", "issue tracker", "mandatory specification"):
+            self.assertNotIn(forbidden, text)
+
     def test_tdd_starts_from_input_without_sdd_artifacts(self) -> None:
         text = "\n".join(path.read_text(encoding="utf-8") for path in (SKILLS / "tdd").rglob("*.md")).lower()
         for forbidden in ("behavior/oracle matrix", "oracle provenance", "evidence artifact", "full spec"):

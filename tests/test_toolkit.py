@@ -2498,6 +2498,7 @@ class EvaluationVerifierTests(unittest.TestCase):
             "real-ambiguity": ("exactly one focused question",),
             "measurer-classification": ("Return exactly one valid JSON object",),
             "post-hoc-contamination": ("read-only commands only", "next valid verification step"),
+            "bounded-discovery": ("ask exactly one focused question", "Do not select a design"),
         }
         for task_id, task_phrases in expected.items():
             task = self.task(task_id)
@@ -2632,6 +2633,22 @@ class EvaluationVerifierTests(unittest.TestCase):
         self.assertIn("completion report that mirrors the durable artifact", skill)
         self.assertIn("alternatives and trade-offs", skill)
         self.assertIn("reversible validation or migration", skill)
+
+    def test_bounded_discovery_task_exercises_the_frontier_without_writing_files(self):
+        task = self.task("bounded-discovery")
+        self.assertEqual("BH-BRAINSTORM-01", task["criterion_id"])
+        self.assertEqual("brainstorming", task["focal_skill"])
+        self.assertEqual("forbidden", task["mutation_policy"])
+        self.assertEqual("read-only-inspection", task["execution_policy"])
+        for required in (
+            "researchable facts",
+            "owner decisions",
+            "testable uncertainties",
+            "blocking dependencies",
+            "three rounds",
+            "separately authorized",
+        ):
+            self.assertIn(required, task["secondary_criteria"])
 
     def test_behavior_tasks_have_unique_stable_criterion_ids(self):
         tasks = [self.task(item["task_id"]) for item in json.loads(
