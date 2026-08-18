@@ -2547,7 +2547,12 @@ class EvaluationVerifierTests(unittest.TestCase):
             "post-hoc-contamination": ("read-only commands only", "next valid verification step"),
             "bounded-discovery": ("ask exactly one focused question", "Do not select a design"),
             "two-lens-review": ("behavior lens", "engineering lens"),
-            "resistant-diagnosis": ("competing hypotheses", "Do not implement a fix"),
+            "resistant-diagnosis": (
+                "competing hypotheses",
+                "conditional diagnostic guidance",
+                "order- or process-dependent",
+                "Do not implement a fix",
+            ),
             "compact-session-pause": ("compact continuation", "Do not create a handoff file"),
         }
         for task_id, task_phrases in expected.items():
