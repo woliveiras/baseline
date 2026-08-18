@@ -2500,6 +2500,7 @@ class EvaluationVerifierTests(unittest.TestCase):
             "post-hoc-contamination": ("read-only commands only", "next valid verification step"),
             "bounded-discovery": ("ask exactly one focused question", "Do not select a design"),
             "two-lens-review": ("behavior lens", "engineering lens"),
+            "resistant-diagnosis": ("competing hypotheses", "Do not implement a fix"),
         }
         for task_id, task_phrases in expected.items():
             task = self.task(task_id)
@@ -2664,6 +2665,24 @@ class EvaluationVerifierTests(unittest.TestCase):
             "behavior lens",
             "engineering lens",
             "same reviewer",
+        ):
+            self.assertIn(required, task["secondary_criteria"])
+
+    def test_resistant_diagnosis_task_requires_falsifiable_hypotheses(self):
+        task = self.task("resistant-diagnosis")
+        self.assertEqual("BH-BUG-02", task["criterion_id"])
+        self.assertEqual("bugfix", task["focal_skill"])
+        self.assertEqual("forbidden", task["mutation_policy"])
+        self.assertEqual("read-only-inspection", task["execution_policy"])
+        for required in (
+            "order-dependent sequence",
+            "mutable default cache",
+            "competing hypotheses",
+            "prediction",
+            "falsifier",
+            "discriminating probe",
+            "regression seam",
+            "temporary instrumentation",
         ):
             self.assertIn(required, task["secondary_criteria"])
 

@@ -8,5 +8,6 @@
   {"task_id": "multi-module-change"},
   {"task_id": "security-authority"},
   {"task_id": "bounded-discovery"},
-  {"task_id": "two-lens-review"}
+  {"task_id": "two-lens-review"},
+  {"task_id": "resistant-diagnosis"}
 ]

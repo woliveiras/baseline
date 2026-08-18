@@ -104,6 +104,28 @@ class BaselineBoundaryTests(unittest.TestCase):
         for forbidden in ("requires a specification", "requires a behavior/oracle matrix", "requires an evidence file", "requires review files"):
             self.assertNotIn(forbidden, text)
 
+    def test_bugfix_escalates_only_resistant_diagnosis_and_cleans_probes(self) -> None:
+        skill_root = SKILLS / "bugfix"
+        skill = (skill_root / "SKILL.md").read_text(encoding="utf-8")
+        reference = skill_root / "references" / "diagnostic-escalation.md"
+        self.assertTrue(reference.is_file())
+        self.assertIn("./references/diagnostic-escalation.md", skill)
+        text = reference.read_text(encoding="utf-8").lower()
+        for required in (
+            "ordinary",
+            "minimize",
+            "competing hypotheses",
+            "prediction",
+            "falsif",
+            "instrumentation",
+            "bisect",
+            "differential",
+            "remove temporary probes",
+            "residual uncertainty",
+        ):
+            self.assertIn(required, text)
+        self.assertIn("do not create a diagnostic artifact", text)
+
     def test_verify_is_proportional_and_does_not_require_sdd_review_files(self) -> None:
         text = "\n".join(path.read_text(encoding="utf-8") for path in (SKILLS / "verify").rglob("*.md")).lower()
         for forbidden in ("three-phase", "three review files", "requires an evidence artifact", "canonical matrix"):
