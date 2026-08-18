@@ -2932,6 +2932,12 @@ class EvaluationVerifierTests(unittest.TestCase):
         self.assertIn("do not invoke for a reported existing defect", descriptions["tdd"])
         for name in ("brainstorming", "session-bridge", "technical-research"):
             self.assertIn("even without naming this skill", descriptions[name])
+        self.assertIn("security and domain concerns", descriptions["brainstorming"])
+        self.assertIn("current external evidence over docs", descriptions["technical-research"])
+        shape_domain = (ROOT / "skills" / "shape-domain" / "SKILL.md").read_text(encoding="utf-8").split("---", 2)[1]
+        self.assertIn("semantic reconciliation over refine", shape_domain)
+        measurer = (ROOT / "skills" / "measurer" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("Preserve an explicitly requested activity phase", measurer)
         catalog = (ROOT / "skills" / "catalog.md").read_text(encoding="utf-8")
         self.assertIn("must request the activity, but does not need to name the skill", catalog)
 

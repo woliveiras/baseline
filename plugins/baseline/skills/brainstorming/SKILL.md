@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: Explore a software problem space deeply before choosing a direction. Use when the user explicitly requests divergent investigation, materially different alternatives, hidden assumptions, or opportunity discovery, even without naming this skill; that request takes precedence over refine while exploration remains divergent. Do not trigger for ordinary clarification or implementation.
+description: Explore a software problem space deeply before choosing a direction. Use when the user explicitly asks to explore materially different alternatives, hidden assumptions, or opportunity discovery before selecting a design, even without naming this skill. This owns the divergent phase over refine; security and domain concerns may stress the options but do not replace exploration. Do not trigger for ordinary clarification or implementation.
 ---
 
 # Brainstorming

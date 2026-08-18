@@ -1,6 +1,6 @@
 ---
 name: shape-domain
-description: Continuously align domain language, invariants, scenarios, bounded contexts, integration translations, governing inputs, tests, and code. Use when vocabulary or ownership boundaries affect behavior or design; do not use for cosmetic wording changes.
+description: Continuously align domain language, invariants, scenarios, bounded contexts, integration translations, governing inputs, tests, and code. Use when conflicting or overlapping terms across APIs, persistence, tests, and product language need reconciliation, or when vocabulary and ownership boundaries affect behavior or design. This owns semantic reconciliation over refine until a concrete incompatible decision remains; do not use for cosmetic wording changes.
 ---
 
 # Shape Domain
