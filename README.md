@@ -49,7 +49,7 @@ Install the latest published version from the GitHub marketplace:
 
 <!-- x-release-please-start-version -->
 ```bash
-codex plugin marketplace add woliveiras/baseline --ref v0.3.0
+codex plugin marketplace add woliveiras/baseline --ref v0.4.0
 codex plugin add baseline@baseline
 ```
 <!-- x-release-please-end -->
@@ -82,7 +82,7 @@ Run this block as-is. It downloads the published Baseline tag, creates
 
 <!-- x-release-please-start-version -->
 ```bash
-BASELINE_VERSION="v0.3.0"
+BASELINE_VERSION="v0.4.0"
 BASELINE_DIR="$HOME/.baseline"
 BASELINE_SKILLS="$BASELINE_DIR/plugins/baseline/skills"
 
@@ -129,7 +129,7 @@ local Pi package, and lists the installed package:
 ```bash
 set -eu
 
-BASELINE_VERSION="v0.3.0"
+BASELINE_VERSION="v0.4.0"
 BASELINE_DIR="$HOME/.baseline"
 BASELINE_PACKAGE="$BASELINE_DIR/plugins/baseline"
 

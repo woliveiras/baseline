@@ -40,10 +40,10 @@ without requiring a Baseline checkout on the consumer machine:
 
 <!-- x-release-please-start-version -->
 ```bash
-codex plugin marketplace add woliveiras/baseline --ref v0.3.0
+codex plugin marketplace add woliveiras/baseline --ref v0.4.0
 codex plugin add baseline@baseline
 ```
-The release tag `v0.3.0` is immutable; a later release uses a new tag.
+The release tag `v0.4.0` is immutable; a later release uses a new tag.
 <!-- x-release-please-end -->
 
 The `woliveiras/baseline` shorthand uses HTTPS. The marketplace and plugin are
@@ -59,7 +59,7 @@ useful:
 
 <!-- x-release-please-start-version -->
 ```bash
-codex plugin marketplace add woliveiras/baseline --ref v0.3.0 \
+codex plugin marketplace add woliveiras/baseline --ref v0.4.0 \
   --sparse .agents/plugins/marketplace.json \
   --sparse plugins/baseline
 codex plugin add baseline@baseline
@@ -76,7 +76,7 @@ configuring GitHub access on the machine:
 
 <!-- x-release-please-start-version -->
 ```bash
-codex plugin marketplace add git@github.com:OWNER/baseline.git --ref v0.3.0 \
+codex plugin marketplace add git@github.com:OWNER/baseline.git --ref v0.4.0 \
   --sparse .agents/plugins/marketplace.json \
   --sparse plugins/baseline
 codex plugin add baseline@baseline
@@ -87,7 +87,7 @@ The complete private-fork form is:
 
 <!-- x-release-please-start-version -->
 ```bash
-codex plugin marketplace add git@github.com:OWNER/baseline.git --ref v0.3.0
+codex plugin marketplace add git@github.com:OWNER/baseline.git --ref v0.4.0
 codex plugin add baseline@baseline
 ```
 <!-- x-release-please-end -->
@@ -104,7 +104,7 @@ update:
 ```bash
 codex plugin remove baseline@baseline
 codex plugin marketplace remove baseline
-codex plugin marketplace add woliveiras/baseline --ref v0.3.0
+codex plugin marketplace add woliveiras/baseline --ref v0.4.0
 codex plugin add baseline@baseline
 ```
 <!-- x-release-please-end -->
@@ -253,7 +253,7 @@ local Pi package, and lists the installed package:
 ```bash
 set -eu
 
-BASELINE_VERSION="v0.3.0"
+BASELINE_VERSION="v0.4.0"
 BASELINE_DIR="$HOME/.baseline"
 BASELINE_PACKAGE="$BASELINE_DIR/plugins/baseline"
 
