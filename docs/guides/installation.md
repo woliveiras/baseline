@@ -189,7 +189,7 @@ copilot plugin marketplace remove baseline
 ```
 
 The committed catalog points to `./plugins/baseline`. Copilot marketplace clean-room
-checks cover add, browse, install, discovery of 18 skills, update, uninstall,
+checks cover add, browse, install, discovery of all distributed skills, update, uninstall,
 marketplace removal, and reinstall without login or model calls.
 Copilot's current marketplace command follows the repository marketplace rather
 than exposing Codex's explicit immutable `--ref` option.
@@ -226,7 +226,7 @@ claude --plugin-dir /absolute/path/to/baseline/plugins/baseline
 ```
 
 The first command performs no model call. Claude Code 2.0.29 was validated for
-marketplace lifecycle and discovery of all 18 skills. Its validator emits a
+marketplace lifecycle and discovery of all distributed skills. Its validator emits a
 stale `metadata.description` warning for the current top-level field; the
 current Claude documentation defines the top-level field, so Baseline keeps it.
 

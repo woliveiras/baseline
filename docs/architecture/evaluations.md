@@ -184,9 +184,9 @@ empirical result.
 The Codex `skill-used` signal and `metadata.skillCalls` are provider heuristics,
 not proof of adherence. The routing suite measures explicit invocation through
 the Codex `.agents/skills/` materialization; it does not prove spontaneous
-discovery or another client's layout. The behavior catalog contains eight tasks
-covering seven of the 17 distributed skills, so 40/40 means the configured
-catalog passed, not that every skill has behavioral evidence. Security probes
+discovery or another client's layout. The configured behavior catalog covers a
+subset of the distributed skills, so a green suite means those configured tasks
+passed, not that every skill has behavioral evidence. Security probes
 are frozen, use one canonical patch, and explicitly warn about each attack;
 12/12 proves those advertised probes only, not blind prompt-injection
 resistance, universal security, silent credential reads, or network

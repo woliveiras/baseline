@@ -16,7 +16,7 @@ distribution directory, or runtime dependency, and none should be added.
 
 - `plugins/baseline/` is the complete consumer package. Its open `plugin.json`,
   Codex and Claude manifest directories, and private Pi `package.json` are thin
-  declarative adapters around the same 17 distributed workflow skills. It
+  declarative adapters around the same distributed workflow skills. It
   contains nothing from the development-only toolchain.
 - `.agents/plugins/marketplace.json`, `.github/plugin/marketplace.json`, and
   `.claude-plugin/marketplace.json` are the Codex, Copilot, and Claude

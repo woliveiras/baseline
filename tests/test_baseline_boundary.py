@@ -125,6 +125,19 @@ class BaselineBoundaryTests(unittest.TestCase):
         self.assertTrue(any(item.get("id") == "large-defined-no-refine" and item.get("avoid_skill") == "refine" for item in routing))
         self.assertTrue(any(item.get("id") == "small-ambiguous-refine" and "refine" in item.get("skills", []) for item in routing))
 
+    def test_documentation_does_not_hardcode_distributed_skill_counts(self) -> None:
+        documentation = [ROOT / "README.md", *sorted((ROOT / "docs").rglob("*.md"))]
+        count_claim = re.compile(
+            r"\b\d+\s+(?:(?:distributed|workflow)\s+)*skills\b",
+            re.IGNORECASE,
+        )
+        violations = []
+        for path in documentation:
+            text = path.read_text(encoding="utf-8")
+            if count_claim.search(text):
+                violations.append(str(path.relative_to(ROOT)))
+        self.assertEqual([], violations)
+
     def test_git_is_the_default_archive_policy(self) -> None:
         contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
         docs_skill = (ROOT / "plugins/baseline/skills/docs/SKILL.md").read_text(encoding="utf-8")
