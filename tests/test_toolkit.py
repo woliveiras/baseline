@@ -2951,7 +2951,12 @@ class EvaluationVerifierTests(unittest.TestCase):
         self.assertIn("Keep that owner selected when evidence access", measurer)
         catalog = (ROOT / "skills" / "catalog.md").read_text(encoding="utf-8")
         self.assertIn("must request the activity, but does not need to name the skill", catalog)
-        for name in ("brainstorming", "session-bridge", "technical-research"):
+        for name in (
+            "brainstorming",
+            "session-bridge",
+            "shape-domain",
+            "technical-research",
+        ):
             adapter = yaml.safe_load(
                 (ROOT / "skills" / name / "agents" / "openai.yaml").read_text(encoding="utf-8")
             )

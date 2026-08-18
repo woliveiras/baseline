@@ -2,3 +2,5 @@ interface:
   display_name: "Shape Domain"
   short_description: "Align language invariants contexts and code"
   default_prompt: "Use $shape-domain to reconcile domain language and behavior."
+policy:
+  allow_implicit_invocation: true
