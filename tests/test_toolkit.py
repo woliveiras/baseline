@@ -1455,9 +1455,6 @@ class ToolkitStructureTests(unittest.TestCase):
             self.assertIn(f"name: {name}", match.group(1))
             ui = (ROOT / "skills" / name / "agents" / "openai.yaml").read_text()
             self.assertIn(f"$%s" % name, ui)
-        for name in {"brainstorming", "session-bridge", "improve-architecture", "setup-baseline"}:
-            ui = (ROOT / "skills" / name / "agents" / "openai.yaml").read_text()
-            self.assertIn("allow_implicit_invocation: false", ui)
 
     def test_setup_baseline_safely_reconciles_project_instructions(self):
         skill_root = ROOT / "skills" / "setup-baseline"
@@ -1645,13 +1642,20 @@ class ToolkitStructureTests(unittest.TestCase):
             self.assertIn(requirement, security)
 
     def test_explicit_only_skill_policies_match_catalog_contract(self):
-        explicit_only = {
-            "brainstorming", "git-commit", "improve-architecture", "premortem",
-            "session-bridge", "technical-research", "setup-baseline",
-        }
-        for name in explicit_only:
-            ui = (ROOT / "skills" / name / "agents" / "openai.yaml").read_text(encoding="utf-8")
-            self.assertIn("allow_implicit_invocation: false", ui, name)
+        explicit_only = set()
+        for name in EXPECTED_SKILLS:
+            adapter = yaml.safe_load(
+                (ROOT / "skills" / name / "agents" / "openai.yaml").read_text(
+                    encoding="utf-8"
+                )
+            )
+            policy = adapter.get("policy", {})
+            if policy.get("allow_implicit_invocation") is False:
+                explicit_only.add(name)
+        self.assertEqual(
+            {"git-commit", "improve-architecture", "premortem", "setup-baseline"},
+            explicit_only,
+        )
 
     def test_sdd_templates_are_not_part_of_the_baseline(self):
         for relative in (
