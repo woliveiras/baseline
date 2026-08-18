@@ -2499,6 +2499,7 @@ class EvaluationVerifierTests(unittest.TestCase):
             "measurer-classification": ("Return exactly one valid JSON object",),
             "post-hoc-contamination": ("read-only commands only", "next valid verification step"),
             "bounded-discovery": ("ask exactly one focused question", "Do not select a design"),
+            "two-lens-review": ("behavior lens", "engineering lens"),
         }
         for task_id, task_phrases in expected.items():
             task = self.task(task_id)
@@ -2647,6 +2648,22 @@ class EvaluationVerifierTests(unittest.TestCase):
             "blocking dependencies",
             "three rounds",
             "separately authorized",
+        ):
+            self.assertIn(required, task["secondary_criteria"])
+
+    def test_two_lens_review_task_requires_distinct_behavior_and_risk_findings(self):
+        task = self.task("two-lens-review")
+        self.assertEqual("BH-VERIFY-02", task["criterion_id"])
+        self.assertEqual("verify", task["focal_skill"])
+        self.assertEqual("forbidden", task["mutation_policy"])
+        self.assertEqual("read-only-inspection", task["execution_policy"])
+        for required in (
+            "preserve input order",
+            "incorrect sorted expectation",
+            "access token",
+            "behavior lens",
+            "engineering lens",
+            "same reviewer",
         ):
             self.assertIn(required, task["secondary_criteria"])
 

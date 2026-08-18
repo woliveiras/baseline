@@ -111,6 +111,25 @@ class BaselineBoundaryTests(unittest.TestCase):
         for required in ("governing input", "complete diff", "unrelated", "residual risk", "inline", "focused", "expanded", "independent"):
             self.assertIn(required, text)
 
+    def test_verify_separates_behavior_and_engineering_lenses_without_extra_agents(self) -> None:
+        skill_root = SKILLS / "verify"
+        skill = (skill_root / "SKILL.md").read_text(encoding="utf-8")
+        reference = skill_root / "references" / "review-lenses.md"
+        self.assertTrue(reference.is_file())
+        self.assertIn("./references/review-lenses.md", skill)
+        text = reference.read_text(encoding="utf-8").lower()
+        for required in (
+            "behavior lens",
+            "engineering lens",
+            "same reviewer",
+            "expanded",
+            "independent",
+            "do not create a review file",
+        ):
+            self.assertIn(required, text)
+        self.assertNotIn("two agents", text)
+        self.assertNotIn("specification required", text)
+
     def test_documentation_timing_and_eng_note_convention_are_durable(self) -> None:
         docs = "\n".join(path.read_text(encoding="utf-8") for path in (SKILLS / "docs").rglob("*.md"))
         for token in ("RFC", "ADR", "C4", "API", "operations", "postmortem"):

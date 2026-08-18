@@ -6,6 +6,7 @@ description: Review a software change proportionally against its governing input
 # Verify
 
 Use the review depth selected by `measurer`; load [review depth](./references/review-depth.md) when the classification or required validation is uncertain.
+For `expanded` or `independent` review, or when behavioral correctness and engineering risk may diverge, load [review lenses](./references/review-lenses.md).
 
 1. Read the governing input and state the expected behavior and explicit exclusions.
 2. Inspect tests and the fail-first observation where available. Check assertion strength, boundary and failure cases, and whether a plausible wrong implementation could pass.
