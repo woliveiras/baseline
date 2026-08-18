@@ -2938,11 +2938,23 @@ class EvaluationVerifierTests(unittest.TestCase):
 
         descriptions = {
             name: (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8").split("---", 2)[1]
-            for name in ("bugfix", "tdd", "brainstorming", "session-bridge", "technical-research")
+            for name in (
+                "bugfix",
+                "tdd",
+                "brainstorming",
+                "session-bridge",
+                "shape-domain",
+                "technical-research",
+            )
         }
         self.assertIn("do not also invoke tdd", descriptions["bugfix"])
         self.assertIn("do not invoke for a reported existing defect", descriptions["tdd"])
-        for name in ("brainstorming", "session-bridge", "technical-research"):
+        for name in (
+            "brainstorming",
+            "session-bridge",
+            "shape-domain",
+            "technical-research",
+        ):
             self.assertIn("even without naming this skill", descriptions[name])
         self.assertIn("security and domain concerns", descriptions["brainstorming"])
         self.assertIn("current external evidence over docs", descriptions["technical-research"])
