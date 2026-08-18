@@ -128,6 +128,8 @@ class BaselineBoundaryTests(unittest.TestCase):
         ):
             self.assertIn(required, text)
         self.assertIn("fresh process", text)
+        self.assertIn("probe itself must compare", text)
+        self.assertIn("do not substitute internal-state instrumentation alone", text)
         self.assertIn("secrets, personal data, and sensitive values", text)
         self.assertIn("do not create a diagnostic artifact", text)
 
