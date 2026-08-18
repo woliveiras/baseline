@@ -12,6 +12,7 @@ Classify by the highest applicable risk or boundary, never by line count or text
 ## Difficult classifications
 
 - A one-line authorization-default change can be `XL` because it changes a structural security boundary across production consumers.
+- When that authorization behavior is already accepted, select an ADR before implementation rather than an RFC: rollback uncertainty raises risk but does not reopen the decision. Use an RFC only while materially different behaviors remain open.
 - A mechanical rename spanning hundreds of lines can be `M` when it stays within one boundary, preserves behavior, has deterministic validation, and is easy to revert.
 - Text size does not determine risk. Promote for blast radius, compatibility, sensitive data, rollout, rollback, or hard-to-observe failure even when the diff is tiny.
 - A completely defined `L` or `XL` task can proceed without `refine`. A conflicting `S` or `M` request can require `refine`.

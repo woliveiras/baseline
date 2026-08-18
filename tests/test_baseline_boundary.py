@@ -39,6 +39,8 @@ class BaselineBoundaryTests(unittest.TestCase):
         self.assertIn("never", reference.lower())
         self.assertIn("line", reference.lower())
         self.assertRegex(reference, r"(?is)one.line.*XL|XL.*one.line")
+        self.assertIn("select an ADR before implementation rather than an RFC", reference)
+        self.assertIn("rollback uncertainty raises risk but does not reopen the decision", reference)
         self.assertRegex(reference, r"(?is)hundreds.*M|M.*hundreds")
 
     def test_measurer_examples_use_only_the_json_contract(self) -> None:

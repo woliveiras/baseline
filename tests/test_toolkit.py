@@ -2561,6 +2561,8 @@ class EvaluationVerifierTests(unittest.TestCase):
         self.assertNotIn("seven-year", self.task("real-ambiguity")["prompt"])
         self.assertIn("both conflicting retention durations found", self.task("real-ambiguity")["prompt"])
         self.assertNotIn("regression oracle", self.task("post-hoc-contamination")["prompt"])
+        self.assertIn("exactly one ADR before implementation", self.task("measurer-classification")["secondary_criteria"])
+        self.assertIn("do not select an RFC", self.task("measurer-classification")["secondary_criteria"])
 
     def test_promptfoo_read_only_execution_policy_uses_structured_commands(self):
         with tempfile.TemporaryDirectory() as tmp:
