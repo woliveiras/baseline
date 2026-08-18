@@ -1903,8 +1903,14 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertEqual(first.stdout, second.stdout)
         payload = json.loads(first.stdout)
         runs = payload["runs"]
-        self.assertEqual(48, len(runs))
-        self.assertEqual({"control", "core", "focal", "broad", "current", "proposed"}, {run["variant"] for run in runs})
+        expected_variants = {"control", "core", "focal", "broad", "current", "proposed"}
+        expected_tasks = {
+            json.loads(path.read_text(encoding="utf-8"))["id"]
+            for path in (ROOT / "evals" / "tasks").glob("*.json")
+        }
+        self.assertEqual(expected_tasks, {run["task"] for run in runs})
+        self.assertEqual(len(expected_tasks) * len(expected_variants), len(runs))
+        self.assertEqual(expected_variants, {run["variant"] for run in runs})
         self.assertTrue(all("verifier" in run and "repetition" in run for run in runs))
         self.assertRegex(payload["current_fingerprint"], r"^[0-9a-f]{64}$")
 
