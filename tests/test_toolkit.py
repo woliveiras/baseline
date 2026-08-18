@@ -54,6 +54,9 @@ def load_promptfoo_module(name: str, path: Path):
 
 
 PROMPTFOO_TESTS = load_promptfoo_module("baseline_promptfoo_tests", ROOT / "evals" / "promptfoo" / "tests.py")
+PROMPTFOO_PROMPTS = load_promptfoo_module(
+    "baseline_promptfoo_prompts", ROOT / "evals" / "promptfoo" / "prompts.py"
+)
 PROMPTFOO_ROUTING = load_promptfoo_module(
     "baseline_promptfoo_routing", ROOT / "evals" / "promptfoo" / "assertions" / "routing.py"
 )
@@ -3031,6 +3034,43 @@ class EvaluationVerifierTests(unittest.TestCase):
             task = json.loads(task_path.read_text(encoding="utf-8"))
             if task["secondary_review"]:
                 self.assertTrue(task.get("secondary_criteria"), task_path.name)
+
+    def test_promptfoo_behavior_conditionally_loads_the_focal_skill(self):
+        prompt = PROMPTFOO_PROMPTS.create_prompt({"vars": {"task_id": "measurer-classification"}})
+        self.assertIn("`.agents/skills/measurer/SKILL.md`", prompt)
+        self.assertIn("when it is available", prompt)
+        self.assertIn("otherwise proceed", prompt)
+
+    def test_promptfoo_behavior_gates_focal_and_current_without_hiding_comparisons(self):
+        def row(provider: str, passed: bool) -> dict[str, object]:
+            return {
+                "description": "semantic-case",
+                "vars": {"task_id": "semantic-case", "criterion_id": "BH-TEST-01"},
+                "provider": provider,
+                "success": passed,
+                "response": {"output": "controlled"},
+                "gradingResult": {
+                    "pass": passed,
+                    "componentResults": [{"pass": passed, "assertion": {"type": "llm-rubric"}}],
+                },
+            }
+
+        passing_gate = PROMPTFOO_RUNNER._report(
+            [row("control", False), row("focal", True), row("current", True)],
+            {}, "behavior", 1, 1.0, "codex-test", "promptfoo-test", None, 100,
+        )
+        self.assertEqual("pass", passing_gate["summary"]["status"])
+        self.assertEqual(1, passing_gate["summary"]["failed"])
+        self.assertEqual(0, passing_gate["summary"]["gating_failed"])
+        self.assertFalse(passing_gate["runs"][0]["gating"])
+        self.assertTrue(passing_gate["runs"][1]["gating"])
+
+        failing_gate = PROMPTFOO_RUNNER._report(
+            [row("control", True), row("focal", False), row("current", True)],
+            {}, "behavior", 1, 1.0, "codex-test", "promptfoo-test", None, 100,
+        )
+        self.assertEqual("fail", failing_gate["summary"]["status"])
+        self.assertEqual(1, failing_gate["summary"]["gating_failed"])
 
     def test_promptfoo_report_does_not_hide_hard_failure_behind_needs_review(self):
         needs_review_row = {

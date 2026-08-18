@@ -36,6 +36,11 @@ CONFIGS = (
 )
 PROMPTFOO_ASSERTION_FAILURE_EXIT_CODE = 100
 FULL_MAX_WORKERS = 2
+GATING_CONDITIONS = {
+    "behavior": frozenset({"focal", "current"}),
+    "compare": frozenset({"proposed"}),
+}
+KNOWN_CONDITIONS = ("control", "core", "focal", "broad", "current", "proposed")
 FULL_EXECUTION_CONTROLS = {
     "dedicated_codex_home": True,
     "network_access": False,
@@ -385,6 +390,19 @@ def _row_status(row: dict[str, Any]) -> str:
     return "pass"
 
 
+def _gating_run(suite: str, provider: str) -> bool:
+    expected = GATING_CONDITIONS.get(suite)
+    if expected is None:
+        return True
+    normalized = provider.lower()
+    observed = next((
+        condition
+        for condition in KNOWN_CONDITIONS
+        if normalized == condition or normalized.endswith(f":{condition}") or condition in normalized
+    ), None)
+    return True if observed is None else observed in expected
+
+
 def _verdict_status(failed: int, needs_review: int, *, promptfoo_exit_code: int | None = None) -> str:
     if failed:
         return "fail"
@@ -423,10 +441,13 @@ def _report(
         provider = row.get("provider") or row.get("providerId") or "unknown"
         if isinstance(provider, dict):
             provider = provider.get("label") or provider.get("id") or "unknown"
+        provider = _safe_label(provider)
+        gating = _gating_run(suite, provider)
         report_rows.append({
             "test_id": _row_id(row, index),
             "criterion_id": _safe_label(variables.get("criterion_id")) if variables.get("criterion_id") else None,
-            "provider": _safe_label(provider),
+            "provider": provider,
+            "gating": gating,
             "status": status,
             "duration_ms": response.get("latencyMs") or row.get("latencyMs"),
             "tokens": _safe_token_usage(response.get("tokenUsage") or row.get("tokenUsage")),
@@ -436,9 +457,16 @@ def _report(
             "observed": _safe_metadata(row),
         })
     counts = {status: sum(run["status"] == status for run in report_rows) for status in ("pass", "fail", "needs-review")}
-    status = _verdict_status(
-        counts["fail"], counts["needs-review"], promptfoo_exit_code=promptfoo_exit_code
+    gating_counts = {
+        status: sum(run["gating"] and run["status"] == status for run in report_rows)
+        for status in ("pass", "fail", "needs-review")
+    }
+    non_gating_nonpass = any(
+        not run["gating"] and run["status"] != "pass" for run in report_rows
     )
+    status = _verdict_status(gating_counts["fail"], gating_counts["needs-review"])
+    if status == "pass" and promptfoo_exit_code != 0 and not non_gating_nonpass:
+        status = "fail"
     return {
         "version": 2,
         "suite": suite,
@@ -462,6 +490,9 @@ def _report(
             "passed": counts["pass"],
             "failed": counts["fail"],
             "needs_review": counts["needs-review"],
+            "gating_passed": gating_counts["pass"],
+            "gating_failed": gating_counts["fail"],
+            "gating_needs_review": gating_counts["needs-review"],
             "status": status,
         },
         "runs": report_rows,
@@ -469,6 +500,7 @@ def _report(
             "skill-used and metadata.skillCalls are Codex SDK heuristics",
             "deterministic verifiers have precedence over secondary judgments",
             "results are scoped to the recorded model, Codex version, tasks, fixtures, and conditions",
+            "behavior gates focal and current; compare gates proposed; other conditions remain visible comparisons",
         ],
     }
 
@@ -496,7 +528,9 @@ def _load_raw_result(path: Path) -> Any:
 def _outcome(report: dict[str, Any], path: Path) -> SuiteOutcome:
     summary = report["summary"]
     failed_ids = tuple(
-        str(run["test_id"]) for run in report["runs"] if run.get("status") in {"fail", "needs-review"}
+        str(run["test_id"])
+        for run in report["runs"]
+        if run.get("gating", True) and run.get("status") in {"fail", "needs-review"}
     )
     if summary["status"] != "pass" and not failed_ids:
         failed_ids = (f"promptfoo-exit-{report.get('promptfoo_exit_code', 'unknown')}",)
@@ -630,6 +664,10 @@ def _parse_filter_range(value: str) -> tuple[int, int]:
 def _aggregate_shards(suite: str, outcomes: list[SuiteOutcome], duration_seconds: float) -> SuiteOutcome:
     reports = [json.loads(outcome.report_path.read_text(encoding="utf-8")) for outcome in outcomes]
     runs = [run for report in reports for run in report["runs"]]
+    gating_counts = {
+        status: sum(run.get("gating", True) and run.get("status") == status for run in runs)
+        for status in ("pass", "fail", "needs-review")
+    }
     passed = sum(outcome.passed for outcome in outcomes)
     failed = sum(outcome.failed for outcome in outcomes)
     needs_review = sum(outcome.needs_review for outcome in outcomes)
@@ -653,6 +691,9 @@ def _aggregate_shards(suite: str, outcomes: list[SuiteOutcome], duration_seconds
             "passed": passed,
             "failed": failed,
             "needs_review": needs_review,
+            "gating_passed": gating_counts["pass"],
+            "gating_failed": gating_counts["fail"],
+            "gating_needs_review": gating_counts["needs-review"],
             "shards_not_passing": shards_not_passing,
             "status": aggregate_status,
         },
@@ -679,6 +720,10 @@ def _aggregate_repetitions(suite: str, outcomes: list[SuiteOutcome], duration_se
         for repetition, report in enumerate(reports, start=1)
         for run in report["runs"]
     ]
+    gating_counts = {
+        status: sum(run.get("gating", True) and run.get("status") == status for run in runs)
+        for status in ("pass", "fail", "needs-review")
+    }
     passed = sum(outcome.passed for outcome in outcomes)
     failed = sum(outcome.failed for outcome in outcomes)
     needs_review = sum(outcome.needs_review for outcome in outcomes)
@@ -703,6 +748,9 @@ def _aggregate_repetitions(suite: str, outcomes: list[SuiteOutcome], duration_se
             "passed": passed,
             "failed": failed,
             "needs_review": needs_review,
+            "gating_passed": gating_counts["pass"],
+            "gating_failed": gating_counts["fail"],
+            "gating_needs_review": gating_counts["needs-review"],
             "status": _outcomes_status(outcomes),
         },
         "runs": runs,

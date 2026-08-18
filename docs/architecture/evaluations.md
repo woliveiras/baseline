@@ -41,6 +41,7 @@ boundaries.
 | `EV-REP-01` | Every write-capable repetition starts from a fresh fixture and workspace; no Promptfoo process-level repeat may reuse mutated state. | The runner rejects `repeat != 1`, and compare executes three independent single-repetition processes before aggregating their sanitized reports. | independent |
 | `EV-ROA-01` | An analysis-only task may inspect its fixture but must derive the hidden diagnosis itself, without executing project code or tests or creating files, caches, or reconciliation artifacts. | Prompts contain only authority constraints, while task rubrics retain the hidden semantic criteria. A structured-trajectory allowlist accepts read-only inspection, rejects runtimes and mutating commands, and returns `needs-review` when trajectory evidence is unavailable. | independent |
 | `EV-TRC-01` | Every evaluation row carries a stable criterion identifier into sanitized evidence. | Routing and security case IDs are criterion IDs; behavior tasks declare unique `BH-*` IDs; generator and report tests preserve them. | input-derived |
+| `EV-CMP-01` | Behavior trials load the focal workflow when installed, gate focal plus current, and retain control, core, and broad as non-gating comparisons. Current-versus-proposed trials gate proposed while retaining current. | Prompt generation names the conditional focal path; sanitized rows record the gating flag; report tests prove a failed comparison cannot hide a failed focal/current/proposed gate. | input-derived |
 
 ## Isolation and repeatability
 
@@ -129,15 +130,19 @@ itself authorize a push.
 
 The evidence chain answers three different questions:
 
+- Routing uses natural and directed requests to measure whether the applicable workflow is selected and an inapplicable workflow is avoided.
+- Behavior conditionally loads the focal workflow when that skill exists. `focal` and `current` are acceptance gates; `control`, `core`, and `broad` remain visible comparisons and may fail without converting their absence of product behavior into an infrastructure failure.
+- Current-versus-proposed comparison gates `proposed`; `current` remains the recorded baseline. Security and smoke keep every row gating.
+
 1. Routing: when a request directly invokes a skill, implies one from the task,
    or legitimately requires composition, does the agent read the expected
-   workflow set and avoid explicitly inapplicable skills? Each
-   applicable request names the workspace-local `SKILL.md`; the assertion uses
-   structured Codex provider metadata for observed reads. This deterministic
-   invocation signal is not evidence of spontaneous skill discovery or proof
-   of full skill adherence.
+   workflow set and avoid explicitly inapplicable skills? Directed cases name
+   the workspace-local `SKILL.md`; natural cases contain no skill names. The
+   assertion uses structured Codex provider metadata for observed reads. This
+   heuristic invocation signal does not prove full skill adherence.
 2. Behavior: does the skill change the assigned workspace as required across
    controlled control/core/focal/broad/current conditions? Fresh workspaces,
+   conditional loading of the installed focal workflow,
    protected hashes, hidden deterministic oracles, completed-turn checks, and
    no-op rejection make a refusal or “done” response insufficient. Cases that
    cannot be fully decided mechanically add an explicit `llm-rubric` judge
@@ -176,9 +181,9 @@ red-team command is implied by ordinary validation or `eval:full`.
 
 ## Residual limitations
 
-No provider/model evaluation has been executed for the 2026-08-09 control
-catalog, so `measurer` routing and the new behavior task have no current
-empirical result.
+Provider/model results are run-local ignored evidence, not a timeless claim in
+the distributed package. Treat a result as current only for its recorded model,
+Codex version, task catalog, fixtures, and fingerprints.
 
 The Codex `skill-used` signal and `metadata.skillCalls` are provider heuristics,
 not proof of adherence. The routing suite measures explicit invocation through
