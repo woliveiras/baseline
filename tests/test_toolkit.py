@@ -2941,6 +2941,8 @@ class EvaluationVerifierTests(unittest.TestCase):
         contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
         self.assertIn("Route an explicitly requested activity by its intent", contract)
         self.assertIn("without requiring the user to name a skill", " ".join(contract.split()))
+        self.assertIn("Missing evidence access does not change ownership", contract)
+        self.assertIn("Keep that owner selected when evidence access", measurer)
         catalog = (ROOT / "skills" / "catalog.md").read_text(encoding="utf-8")
         self.assertIn("must request the activity, but does not need to name the skill", catalog)
 

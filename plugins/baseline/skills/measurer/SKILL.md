@@ -9,6 +9,7 @@ Classify the highest applicable risk before work begins. Do not reopen clear dec
 
 1. Inspect the governing input and nearby repository evidence.
 2. Preserve an explicitly requested activity phase: route divergent exploration to `brainstorming`, current external technical evidence to `technical-research`, semantic reconciliation to `shape-domain`, and a pause or handoff to `session-bridge`. Topic overlap with security, documentation, or ambiguity does not replace the requested owner.
+   Keep that owner selected when evidence access or execution authority is unavailable; the owning workflow reports the gap.
 3. Set `size` to `S`, `M`, `L`, or `XL` from blast radius, crossed boundaries, reversibility, ambiguity, persistence, public compatibility, sensitive domains, validation difficulty, rollout, and rollback.
 4. Require `refine` only when material ambiguity leaves incompatible behavior, scope, constraints, or authority unresolved.
 5. Select the smallest durable documentation needed and the proportional review depth. An `L` or `XL` task does not automatically require refinement or every documentation type.

@@ -31,7 +31,8 @@ Use the [repository glossary](GLOSSARY.md) and route work through:
   `brainstorming`; current external technical evidence uses
   `technical-research`; semantic reconciliation uses `shape-domain`; and a
   pause or handoff uses `session-bridge`. Topic overlap does not replace the
-  requested activity owner.
+  requested activity owner. Missing evidence access does not change ownership;
+  the selected workflow reports the unavailable check and limitation.
 - Define expected behavior from the governing input, run the smallest suitable
   check fail-first for the correct behavioral reason, then implement the
   smallest coherent change. Do not change an assertion merely to accept current
