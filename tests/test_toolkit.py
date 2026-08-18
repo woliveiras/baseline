@@ -2697,6 +2697,12 @@ class EvaluationVerifierTests(unittest.TestCase):
             "separately authorized",
         ):
             self.assertIn(required, task["secondary_criteria"])
+        for required in (
+            "Keep the problem before solutions",
+            "stop condition",
+            "cheapest next evidence",
+        ):
+            self.assertIn(required, task["prompt"])
 
     def test_two_lens_review_task_requires_distinct_behavior_and_risk_findings(self):
         task = self.task("two-lens-review")
