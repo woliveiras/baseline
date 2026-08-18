@@ -20,6 +20,8 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit
 from unittest.mock import patch
 
+import yaml
+
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN_ROOT = ROOT / "plugins" / "baseline"
@@ -593,6 +595,34 @@ class ToolkitStructureTests(unittest.TestCase):
         mutation_job = release.split("  validate-release-pr:", 1)[0]
         self.assertNotIn("actions/checkout", mutation_job)
         self.assertNotIn("uses: ./.github/actions/validate", mutation_job)
+
+    def test_workflow_feedback_issue_forms_are_sanitized_and_repository_only(self):
+        issue_root = ROOT / ".github" / "ISSUE_TEMPLATE"
+        forms = [issue_root / "routing-failure.yml", issue_root / "workflow-behavior.yml"]
+        self.assertFalse((PLUGIN_ROOT / ".github").exists())
+        for path in forms:
+            value = yaml.safe_load(path.read_text(encoding="utf-8"))
+            self.assertTrue(value["name"])
+            self.assertTrue(value["description"])
+            body = value["body"]
+            ids = [item.get("id") for item in body if item.get("id")]
+            self.assertEqual(len(ids), len(set(ids)), path.name)
+            text = path.read_text(encoding="utf-8").lower()
+            for required in (
+                "minimal synthetic reproduction",
+                "no secrets",
+                "personal data",
+                "production data",
+                "raw model output",
+                "trace",
+                "repository archive",
+                "expected",
+                "observed",
+            ):
+                self.assertIn(required, text, path.name)
+            confirmations = [item for item in body if item.get("type") == "checkboxes"]
+            self.assertTrue(confirmations, path.name)
+            self.assertTrue(all(option.get("required") is True for item in confirmations for option in item["attributes"]["options"]))
 
     def test_development_dependency_security_resolution(self):
         """DS-002/DS-003/DS-004/DS-007/DS-008: constrain the reviewed development graph."""

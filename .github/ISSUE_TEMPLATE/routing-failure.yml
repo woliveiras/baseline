@@ -1,0 +1,70 @@
+name: Routing failure
+description: Report a missing, incorrect, or unnecessary Baseline workflow selection
+title: "[routing]: "
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Reduce the report to a minimal synthetic reproduction. Include no secrets,
+        personal data, production data, raw model output, trace payloads, or repository archive.
+  - type: checkboxes
+    id: sanitation
+    attributes:
+      label: Sanitation
+      options:
+        - label: I used a minimal synthetic reproduction with no secrets, personal data, production data, raw model output, trace payload, or repository archive.
+          required: true
+  - type: dropdown
+    id: client
+    attributes:
+      label: Client
+      options:
+        - Codex
+        - GitHub Copilot
+        - Claude Code
+        - Cursor
+        - OpenCode
+        - Pi
+        - Other Agent Skills client
+    validations:
+      required: true
+  - type: input
+    id: client_version
+    attributes:
+      label: Client version
+      placeholder: Exact version if known
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Model
+      description: Record the resolved model only when the client exposes it; do not guess.
+  - type: textarea
+    id: request
+    attributes:
+      label: Minimal natural request
+      description: The smallest synthetic request that reproduces the routing behavior, without skill names unless explicit invocation is the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected routing
+      description: Skills that should and should not be selected, with the reason.
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed routing
+      description: Sanitized skill-call names or final behavior only; never attach raw model output or traces.
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: Describe missed work, unnecessary questions, extra artifacts, side effects, or authority surprises.
+    validations:
+      required: true

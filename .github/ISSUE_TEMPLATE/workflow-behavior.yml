@@ -1,0 +1,65 @@
+name: Workflow behavior failure
+description: Report a Baseline workflow that routed correctly but produced the wrong behavior
+title: "[behavior]: "
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Reduce the report to a minimal synthetic reproduction. Include no secrets,
+        personal data, production data, raw model output, trace payloads, or repository archive.
+  - type: checkboxes
+    id: sanitation
+    attributes:
+      label: Sanitation
+      options:
+        - label: I used a minimal synthetic reproduction with no secrets, personal data, production data, raw model output, trace payload, or repository archive.
+          required: true
+  - type: input
+    id: workflow
+    attributes:
+      label: Workflow
+      description: Baseline skill or composition that was selected.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Client, version, and model
+      description: Include the resolved model only when exposed by the client; do not guess.
+    validations:
+      required: true
+  - type: textarea
+    id: request
+    attributes:
+      label: Minimal synthetic request
+      description: Preserve only the governing behavior and constraints needed to reproduce the failure.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected observable outcome
+      description: State what should have changed, remained unchanged, or been reported.
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed outcome
+      description: State the smallest behavioral difference without pasting raw model output or traces.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Sanitized evidence
+      description: Focused commands, assertions, and verdicts only; do not upload a repository archive.
+    validations:
+      required: true
+  - type: textarea
+    id: authority
+    attributes:
+      label: Authority and side effects
+      description: Record unexpected files, artifacts, Git actions, external mutations, or withheld authority.
+    validations:
+      required: true
