@@ -2983,7 +2983,7 @@ class EvaluationVerifierTests(unittest.TestCase):
             skill: (ROOT / "skills" / skill / "SKILL.md").read_text(encoding="utf-8").split("---", 2)[1]
             for skill in ("brainstorming", "refine", "design-deep-modules", "improve-architecture")
         }
-        self.assertIn("takes precedence over refine", descriptions["brainstorming"])
+        self.assertIn("owns the divergent phase over refine", descriptions["brainstorming"])
         self.assertIn("material ambiguity", descriptions["refine"])
         self.assertIn("do not use because a task is large", descriptions["refine"])
         self.assertIn("not for whole-architecture audits", descriptions["design-deep-modules"])
@@ -3049,8 +3049,9 @@ class EvaluationVerifierTests(unittest.TestCase):
         semantic = next(case for case in cases if case["description"] == "real-ambiguity")
         deterministic = next(case for case in cases if case["description"] == "clear-local-change")
         self.assertTrue(semantic["vars"]["secondary_review_attached"])
-        self.assertEqual(["python", "llm-rubric"], [item["type"] for item in semantic["assert"]])
-        grader = semantic["assert"][1]["provider"]
+        self.assertEqual(["python", "skill-used", "llm-rubric"], [item["type"] for item in semantic["assert"]])
+        self.assertEqual("refine", semantic["assert"][1]["value"])
+        grader = semantic["assert"][2]["provider"]
         self.assertEqual("openai:codex-sdk", grader["id"])
         self.assertEqual("{{ env.BASELINE_EVAL_GRADER_ROOT }}", grader["config"]["working_dir"])
         self.assertEqual("read-only", grader["config"]["sandbox_mode"])
@@ -3061,7 +3062,8 @@ class EvaluationVerifierTests(unittest.TestCase):
             grader["config"]["cli_env"]["CODEX_HOME"],
         )
         self.assertNotIn("secondary_review_attached", deterministic["vars"])
-        self.assertEqual(["python"], [item["type"] for item in deterministic["assert"]])
+        self.assertEqual(["python", "skill-used"], [item["type"] for item in deterministic["assert"]])
+        self.assertEqual("tdd", deterministic["assert"][1]["value"])
         for task_path in sorted((ROOT / "evals" / "tasks").glob("*.json")):
             task = json.loads(task_path.read_text(encoding="utf-8"))
             if task["secondary_review"]:
@@ -3071,7 +3073,8 @@ class EvaluationVerifierTests(unittest.TestCase):
         prompt = PROMPTFOO_PROMPTS.create_prompt({"vars": {"task_id": "measurer-classification"}})
         self.assertIn("`.agents/skills/measurer/SKILL.md`", prompt)
         self.assertIn("when it is available", prompt)
-        self.assertIn("otherwise proceed", prompt)
+        self.assertIn("If the file is absent, proceed", prompt)
+        self.assertIn("do not infer that workflow from the request wording alone", prompt)
 
     def test_promptfoo_behavior_gates_focal_and_current_without_hiding_comparisons(self):
         def row(provider: str, passed: bool) -> dict[str, object]:

@@ -87,7 +87,8 @@ def _behavior_case(item: dict[str, Any]) -> dict[str, Any]:
         "verifier": task["verifier"],
     }
     assertions: list[dict[str, Any]] = [
-        {"type": "python", "value": "file://assertions/workspace.py"}
+        {"type": "python", "value": "file://assertions/workspace.py"},
+        {"type": "skill-used", "value": task["focal_skill"]},
     ]
     if task["secondary_review"]:
         vars["secondary_review_attached"] = True
