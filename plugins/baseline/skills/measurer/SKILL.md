@@ -12,7 +12,7 @@ Classify the highest applicable risk before work begins. Do not reopen clear dec
    Keep that owner selected when evidence access or execution authority is unavailable; the owning workflow reports the gap.
 3. Set `size` to `S`, `M`, `L`, or `XL` from blast radius, crossed boundaries, reversibility, ambiguity, persistence, public compatibility, sensitive domains, validation difficulty, rollout, and rollback.
 4. Require `refine` only when material ambiguity leaves incompatible behavior, scope, constraints, or authority unresolved.
-5. Select the smallest durable documentation needed and the proportional review depth. An `L` or `XL` task does not automatically require refinement or every documentation type.
+5. Select the smallest durable documentation needed and the proportional review depth. An accepted hard-to-reverse decision uses an ADR; rollback uncertainty alone does not make it an open RFC. An `L` or `XL` task does not automatically require refinement or every documentation type.
 6. Load [classification guidance](./references/classification.md) only when classification is uncertain or resolves to `L` or `XL`.
 
 Return exactly one valid JSON object with no text before or after it. Use only `size`, `drivers`, `refine`, `documentation`, and `review`. `refine` contains `required` and contains `reason` only when required is true. Documentation entries contain only `type` (`rfc`, `adr`, `c4`, `api`, `operations`, or `postmortem`) and `timing` (`before-implementation`, `during-implementation`, or `after-incident`). Review is `inline`, `focused`, `expanded`, or `independent`.

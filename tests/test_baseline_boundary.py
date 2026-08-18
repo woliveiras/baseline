@@ -32,6 +32,7 @@ class BaselineBoundaryTests(unittest.TestCase):
         reference = (SKILLS / "measurer" / "references" / "classification.md").read_text(encoding="utf-8")
         self.assertRegex(skill, r"(?m)^name: measurer$")
         self.assertIn("exactly one valid JSON object", skill)
+        self.assertIn("accepted hard-to-reverse decision uses an ADR", skill)
         self.assertIn("conversation", skill.lower())
         self.assertRegex(skill.lower(), r"do not (?:create|write|save).*(?:file|artifact)")
         self.assertIn("allow_implicit_invocation: true", metadata)
@@ -126,6 +127,8 @@ class BaselineBoundaryTests(unittest.TestCase):
             "residual uncertainty",
         ):
             self.assertIn(required, text)
+        self.assertIn("fresh process", text)
+        self.assertIn("secrets, personal data, and sensitive values", text)
         self.assertIn("do not create a diagnostic artifact", text)
 
     def test_verify_is_proportional_and_does_not_require_sdd_review_files(self) -> None:
@@ -151,6 +154,8 @@ class BaselineBoundaryTests(unittest.TestCase):
             "do not create a review file",
         ):
             self.assertIn(required, text)
+        self.assertIn("same reviewer applied both lenses", text)
+        self.assertIn("next valid behavior and engineering checks", text)
         self.assertNotIn("two agents", text)
         self.assertNotIn("specification required", text)
 
@@ -171,6 +176,9 @@ class BaselineBoundaryTests(unittest.TestCase):
         self.assertLessEqual(len(template.splitlines()), 16)
         for required in ("Canonical artifacts", "Blocking dependencies", "Decision frontier", "Next discriminating check"):
             self.assertIn(required, template)
+        self.assertIn("Unrelated worktree state to preserve", template)
+        self.assertIn("rerun relevant checks", template)
+        self.assertIn("no file created", template)
 
     def test_documentation_timing_and_eng_note_convention_are_durable(self) -> None:
         docs = "\n".join(path.read_text(encoding="utf-8") for path in (SKILLS / "docs").rglob("*.md"))

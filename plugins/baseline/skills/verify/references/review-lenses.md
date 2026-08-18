@@ -13,3 +13,5 @@ Even when behavior is correct, does the complete diff introduce avoidable archit
 The same reviewer applies both lenses by default. `inline` and `focused` review may combine them in concise findings. `expanded` review makes the lens behind each material finding explicit when that distinction improves actionability. `independent` means use an independent reviewer only when `measurer` selected that depth; the two lenses alone never require additional reviewers.
 
 Order findings by severity and point to the tightest evidence. Do not duplicate one issue under both lenses or require a specification. Do not create a review file; return findings and residual risk in the final response as usual.
+
+For a read-only review, state that the same reviewer applied both lenses, distinguish unavailable execution from fresh evidence, and end with the next valid behavior and engineering checks without claiming they ran or that files changed.
