@@ -2924,6 +2924,17 @@ class EvaluationVerifierTests(unittest.TestCase):
                 self.assertIn(("skill-used", skill_name), assertions, case_id)
             self.assertIn(("not-skill-used", avoided), assertions, case_id)
 
+        descriptions = {
+            name: (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8").split("---", 2)[1]
+            for name in ("bugfix", "tdd", "brainstorming", "session-bridge", "technical-research")
+        }
+        self.assertIn("do not also invoke tdd", descriptions["bugfix"])
+        self.assertIn("do not invoke for a reported existing defect", descriptions["tdd"])
+        for name in ("brainstorming", "session-bridge", "technical-research"):
+            self.assertIn("even without naming this skill", descriptions[name])
+        catalog = (ROOT / "skills" / "catalog.md").read_text(encoding="utf-8")
+        self.assertIn("must request the activity, but does not need to name the skill", catalog)
+
     def test_promptfoo_routing_materializes_case_specific_fixture(self):
         cases = PROMPTFOO_PREPARE._cases("routing")
         item = next(case for case in cases if case["id"] == "composition-ci-security")

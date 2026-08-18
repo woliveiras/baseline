@@ -1,6 +1,6 @@
 ---
 name: tdd
-description: Implement approved behavior directly from a governing request, issue, contract, decision, or other sufficient input through a fail-first executable check. Use for clear testable behavior; do not use to invent requirements from current implementation or maximize test count.
+description: Implement approved new or changed behavior directly from a governing request, issue, contract, decision, or other sufficient input through a fail-first executable check. Use for clear testable behavior; do not invoke for a reported existing defect because bugfix owns its regression test and repair. Do not use to invent requirements from current implementation or maximize test count.
 ---
 
 # TDD

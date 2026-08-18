@@ -1,6 +1,6 @@
 ---
 name: session-bridge
-description: Create a truthful handoff that lets another software-engineering session resume from governing inputs, current artifacts, and real results. Use only when the user explicitly requests a handoff, pause, or session bridge; do not claim to measure context-window health or replace project documentation.
+description: Create a truthful compact continuation that lets another software-engineering session resume from governing inputs, current artifacts, and real results. Use whenever the user explicitly asks to pause ongoing work or hand it to another session, even without naming this skill; do not claim to measure context-window health or replace project documentation.
 ---
 
 # Session Bridge

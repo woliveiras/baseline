@@ -57,4 +57,4 @@ flowchart TD
 | `technical-research` | Current technical evidence | Explicit uncertain technical question | Answer, sources, limitations, derived rule | The decision question is answered or uncertainty bounded |
 | `security-review` | Security and authority risk | Security-relevant design, code, CI, or data flow | Prioritized findings, mitigations, residual risk | Material threats are addressed or awaiting explicit authority |
 
-`brainstorming`, `git-commit`, `improve-architecture`, `premortem`, `session-bridge`, `setup-baseline`, and `technical-research` are explicit-only. All other skills may be selected implicitly when their descriptions match.
+`brainstorming`, `git-commit`, `improve-architecture`, `premortem`, `session-bridge`, `setup-baseline`, and `technical-research` are explicit-only: the user must request the activity, but does not need to name the skill. All other skills may be selected implicitly when their descriptions match.

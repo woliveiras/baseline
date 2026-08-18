@@ -1,11 +1,13 @@
 ---
 name: bugfix
-description: Diagnose and repair an existing software defect through bug report, reproduction, fail-first regression test, causal fix, and focused review. Use for incorrect or intermittent existing behavior; do not use for new features disguised as bugs.
+description: Diagnose and repair an existing software defect through bug report, reproduction, fail-first regression test, causal fix, and focused review. Use for reported incorrect, regressed, or intermittent existing behavior; this workflow owns its regression check, so do not also invoke tdd unless separately approved new behavior is required. Do not use for new features disguised as bugs.
 ---
 
 # Bugfix
 
 Follow `bug report -> reproduction -> fail-first regression test -> causal fix -> focused review`.
+
+This workflow includes the fail-first regression cycle. Do not compose `tdd` for the same reported defect; route separately approved new behavior to `tdd` only when it is a distinct slice.
 
 1. Read the bug report, governing input, domain invariants, recent changes, and current tests. Identify the expected behavior without treating current code as authority.
 2. Reproduce the symptom before production edits at the fastest deterministic seam that still observes the defect. Respect task-specific execution constraints; do not work around them by installing tools or accessing outside the authorized workspace.

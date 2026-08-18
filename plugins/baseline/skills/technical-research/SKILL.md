@@ -1,6 +1,6 @@
 ---
 name: technical-research
-description: Investigate a technical engineering question with primary sources, repository evidence, reproducible searches, and explicit limitations. Use when a decision depends on current standards, APIs, tools, empirical studies, or uncertain technical claims; do not use for simple facts already established locally.
+description: Investigate a technical engineering question with primary sources, repository evidence, reproducible searches, and explicit limitations. Use whenever the request explicitly depends on current standards, APIs, tools, official implementation guidance, empirical studies, or another unstable technical claim, even without naming this skill; do not use for simple facts already established locally.
 ---
 
 # Technical Research
