@@ -27,7 +27,7 @@ def _task(task_id: str) -> dict[str, Any]:
 
 def _routing_contract() -> dict[str, str]:
     value = json.loads((TEST_ROOT / "routing-contract.json").read_text(encoding="utf-8"))
-    required = {"expected_skill_suffix", "avoided_skill_suffix"}
+    required = {"expected_skill_suffix"}
     if not isinstance(value, dict) or set(value) != required or not all(isinstance(item, str) for item in value.values()):
         raise ValueError("routing request contract must contain exactly the two string suffix templates")
     return value
@@ -57,11 +57,6 @@ def _routing_case(item: dict[str, Any]) -> dict[str, Any]:
         if item.get("directed", True) and skill_path not in request:
             vars["request"] = f"{request} {contract['expected_skill_suffix'].format(skill=expected_skill)}"
     avoid_skill = vars.get("avoid_skill")
-    if avoid_skill and item.get("directed", True):
-        avoid_path = f".agents/skills/{avoid_skill}/SKILL.md"
-        request = str(vars["request"])
-        if avoid_path not in request:
-            vars["request"] = f"{request} {contract['avoided_skill_suffix'].format(skill=avoid_skill)}"
     vars = {key: value for key, value in vars.items() if value is not None}
     assertions: list[dict[str, Any]] = [
         {

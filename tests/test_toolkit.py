@@ -2801,8 +2801,8 @@ class EvaluationVerifierTests(unittest.TestCase):
         contract = json.loads(
             (ROOT / "evals" / "promptfoo" / "tests" / "routing-contract.json").read_text(encoding="utf-8")
         )
+        self.assertEqual({"expected_skill_suffix"}, set(contract))
         self.assertIn(".agents/skills/{skill}/SKILL.md", contract["expected_skill_suffix"])
-        self.assertIn("Do not open or read .agents/skills/{skill}/SKILL.md", contract["avoided_skill_suffix"])
         cases = PROMPTFOO_TESTS.generate_tests({"suite": "routing"})
         source_cases = {
             item["id"]: item
@@ -2853,12 +2853,11 @@ class EvaluationVerifierTests(unittest.TestCase):
             avoid_skill = case["vars"].get("avoid_skill")
             if avoid_skill:
                 self.assertIn(("not-skill-used", avoid_skill), assertions, case["description"])
-                if source_cases[case["description"]].get("directed", True):
-                    self.assertIn(
-                        f"Do not open or read .agents/skills/{avoid_skill}/SKILL.md",
-                        case["vars"]["request"],
-                        case["description"],
-                    )
+                self.assertNotIn(
+                    f".agents/skills/{avoid_skill}/",
+                    case["vars"]["request"],
+                    case["description"],
+                )
             if case["description"] == "negative-refine":
                 self.assertNotIn(".agents/skills/brainstorming/", case["vars"]["request"])
 
