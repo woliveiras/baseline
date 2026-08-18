@@ -63,14 +63,13 @@ class SuiteOutcome(NamedTuple):
     failed_ids: tuple[str, ...]
 
 
-SUITE_SHARDS = {
-    "routing": (Shard("1-of-2", "0:22"), Shard("2-of-2", "22:43")),
-    "behavior": (
-        Shard("1-of-4", "0:2"),
-        Shard("2-of-4", "2:4"),
-        Shard("3-of-4", "4:6"),
-        Shard("4-of-4", "6:8"),
-    ),
+SHARD_COUNTS = {
+    "routing": 2,
+    "behavior": 4,
+}
+SHARD_CATALOGS = {
+    "routing": PROMPTFOO_ROOT / "tests" / "routing.yaml",
+    "behavior": PROMPTFOO_ROOT / "tests" / "behavior.yaml",
 }
 
 
@@ -84,6 +83,25 @@ def _load_module(name: str, path: Path):
 
 
 PREPARE = _load_module("baseline_prepare_workspaces", SCRIPT_DIR / "prepare-workspaces.py")
+
+
+def _suite_shards(suite: str) -> tuple[Shard, ...]:
+    requested = SHARD_COUNTS.get(suite)
+    catalog_path = SHARD_CATALOGS.get(suite)
+    if requested is None or catalog_path is None:
+        return ()
+    catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+    if not isinstance(catalog, list) or not catalog:
+        raise RuntimeError(f"{suite} evaluation catalog must be a non-empty list")
+    count = min(requested, len(catalog))
+    width, remainder = divmod(len(catalog), count)
+    shards = []
+    start = 0
+    for index in range(count):
+        end = start + width + (1 if index < remainder else 0)
+        shards.append(Shard(f"{index + 1}-of-{count}", f"{start}:{end}"))
+        start = end
+    return tuple(shards)
 
 
 def _redact(value: str) -> str:
@@ -709,7 +727,7 @@ def run_promptfoo_suite(
     repeat: int = 1,
 ) -> SuiteOutcome:
     codex_home = codex_home or PREPARE.preflight_codex_home()
-    shards = SUITE_SHARDS.get(suite)
+    shards = _suite_shards(suite)
     if not shards:
         return run_promptfoo(
             suite, config, codex_home=codex_home, current_root=current_root,

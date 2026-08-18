@@ -333,5 +333,59 @@
       "scripts/deploy.sh": "#!/bin/sh\necho deploy\n"
     },
     "workspace_key": "routing-composition-ci-security"
+  },
+  {
+    "id": "natural-bugfix",
+    "kind": "positive",
+    "skills": ["measurer", "bugfix"],
+    "avoid_skill": "tdd",
+    "directed": false,
+    "request": "An invoice total that was correct yesterday now drops fractional cents. Reproduce the regression, identify its cause, repair it with the smallest coherent change, and protect the behavior with a fail-first regression check.",
+    "workspace_key": "routing-natural-bugfix"
+  },
+  {
+    "id": "natural-discovery",
+    "kind": "positive",
+    "skill": "brainstorming",
+    "avoid_skill": "refine",
+    "directed": false,
+    "request": "Before choosing a design, explore materially different ways to let small teams approve time-sensitive access. Separate what we know from assumptions and identify the cheapest evidence that would narrow the options; do not select one yet.",
+    "workspace_key": "routing-natural-discovery"
+  },
+  {
+    "id": "natural-review",
+    "kind": "positive",
+    "skill": "verify",
+    "avoid_skill": "security-review",
+    "directed": false,
+    "request": "Review this completed pagination change against the approved behavior, its tests, the complete diff, fresh results, and relevant engineering risks. The change has no sensitive data, trust-boundary, or authorization impact.",
+    "workspace_key": "routing-natural-review"
+  },
+  {
+    "id": "natural-domain-language",
+    "kind": "positive",
+    "skill": "shape-domain",
+    "avoid_skill": "design-deep-modules",
+    "directed": false,
+    "request": "The API, database, tests, and product copy use customer, member, and account holder for overlapping concepts. Reconcile the meanings, invariants, ownership, and observable scenarios without redesigning module interfaces.",
+    "workspace_key": "routing-natural-domain-language"
+  },
+  {
+    "id": "natural-session-pause",
+    "kind": "positive",
+    "skill": "session-bridge",
+    "avoid_skill": "docs",
+    "directed": false,
+    "request": "Pause the work here and give the next coding session a compact continuation with the objective, real Git and test state, open hypotheses, authority boundaries, blocking dependencies, and next discriminating check. Do not create a file.",
+    "workspace_key": "routing-natural-session-pause"
+  },
+  {
+    "id": "natural-current-research",
+    "kind": "positive",
+    "skill": "technical-research",
+    "avoid_skill": "docs",
+    "directed": false,
+    "request": "Determine whether the current stable browser API guarantees persistence after storage pressure. Use primary specifications and official implementation guidance, distinguish guarantees from heuristics, and report the operational rule without editing project documentation.",
+    "workspace_key": "routing-natural-current-research"
   }
 ]

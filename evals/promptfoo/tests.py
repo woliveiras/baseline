@@ -45,7 +45,7 @@ def _routing_case(item: dict[str, Any]) -> dict[str, Any]:
         vars.pop("skill", None)
     else:
         vars["expected_skill"] = item.get("skill") if item.get("kind") == "positive" else item.get("expected_skill")
-    vars["avoid_skill"] = None if item.get("kind") == "positive" else item.get("avoid_skill")
+    vars["avoid_skill"] = item.get("avoid_skill")
     routed_skills = (
         str(vars["expected_skills"]).split(",")
         if vars.get("expected_skills")
@@ -57,7 +57,7 @@ def _routing_case(item: dict[str, Any]) -> dict[str, Any]:
         if item.get("directed", True) and skill_path not in request:
             vars["request"] = f"{request} {contract['expected_skill_suffix'].format(skill=expected_skill)}"
     avoid_skill = vars.get("avoid_skill")
-    if avoid_skill:
+    if avoid_skill and item.get("directed", True):
         avoid_path = f".agents/skills/{avoid_skill}/SKILL.md"
         request = str(vars["request"])
         if avoid_path not in request:
@@ -70,13 +70,10 @@ def _routing_case(item: dict[str, Any]) -> dict[str, Any]:
             "config": {"evidence": "metadata.skillCalls is a Codex SDK heuristic"},
         }
     ]
-    if item.get("kind") == "positive":
-        for expected_skill in routed_skills:
-            assertions.append({"type": "skill-used", "value": expected_skill})
-    else:
-        assertions.append({"type": "not-skill-used", "value": item["avoid_skill"]})
-        if item.get("expected_skill"):
-            assertions.append({"type": "skill-used", "value": item["expected_skill"]})
+    for expected_skill in routed_skills:
+        assertions.append({"type": "skill-used", "value": expected_skill})
+    if avoid_skill:
+        assertions.append({"type": "not-skill-used", "value": avoid_skill})
     return {"description": item["id"], "vars": vars, "assert": assertions}
 
 

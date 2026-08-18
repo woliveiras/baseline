@@ -60,12 +60,13 @@ change the full-suite inventory.
 pnpm run eval:full
 ```
 
-`eval:full` runs the official validators, deterministic suites, 43 routing
-cases, 40 behavior trials, and 12 security probes, then checks that the Git
-status is unchanged. Five semantic behavior tasks across five conditions add
-25 secondary rubric calls, so the upper bound is 95 target-agent calls plus 25
-judgments: 120 model calls. It is not a pre-push hook, is not invoked by
-installation, and a passing result does not itself authorize a push.
+`eval:full` runs the official validators, deterministic suites, every configured
+routing case and behavior condition, and the frozen security probes, then checks
+that the Git status is unchanged. Semantic behavior tasks add secondary rubric
+calls. The model-call inventory therefore changes with the checked-in catalogs;
+review the generated cases before an authorized run. It is not a pre-push hook,
+is not invoked by installation, and a passing result does not itself authorize a
+push.
 
 The official validators use PyYAML from the locked development group.
 Prepare that environment without changing the resolution:

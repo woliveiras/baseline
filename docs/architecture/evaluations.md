@@ -105,9 +105,9 @@ The full empirical evaluation is an explicit user action:
 pnpm run eval:full
 ```
 
-This runs the official validators, Python and shell checks, all six Promptfoo
-config validations, fixture checks, 43 routing cases, 40 behavior-provider
-trials, and 12 security probes, then checks that Git status is unchanged. It
+This runs the official validators, Python and shell checks, all Promptfoo
+config validations, fixture checks, every configured routing case and behavior
+condition, and the frozen security probes, then checks that Git status is unchanged. It
 requires an authenticated dedicated evaluation home and consumes model quota.
 Routing is split into two disjoint shards and behavior into four disjoint
 shards. At most two shards execute concurrently; each Promptfoo process still
@@ -119,11 +119,10 @@ three suite outcomes exist, `eval:full` writes a full aggregate with total wall
 duration before checking final assertion verdicts or concurrent checkout drift.
 It then returns one aggregate failure if any outcome failed or needs review.
 
-The 95 target-agent calls are the expected upper bound for one non-repeated
-run. The five semantic tasks across five behavior conditions add up to 25
-secondary Codex rubric calls, for an upper bound of 120 model calls. Sharding
-changes scheduling, not coverage. Current wall duration and per-row outcomes
-are recorded in ignored JSON reports under `evals/promptfoo/results/`.
+The target-agent and secondary-judge call inventory is derived from the checked-in
+routing, behavior, provider-condition, and security catalogs. Sharding changes
+scheduling, not coverage. Current wall duration and per-row outcomes are recorded
+in ignored JSON reports under `evals/promptfoo/results/`.
 `eval:full` is
 not invoked by installation or Git push, and a passing result does not
 itself authorize a push.

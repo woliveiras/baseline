@@ -2678,8 +2678,15 @@ class EvaluationVerifierTests(unittest.TestCase):
         self.assertIn(".agents/skills/{skill}/SKILL.md", contract["expected_skill_suffix"])
         self.assertIn("Do not open or read .agents/skills/{skill}/SKILL.md", contract["avoided_skill_suffix"])
         cases = PROMPTFOO_TESTS.generate_tests({"suite": "routing"})
+        source_cases = {
+            item["id"]: item
+            for item in json.loads(
+                (ROOT / "evals" / "promptfoo" / "tests" / "routing.yaml").read_text(encoding="utf-8")
+            )
+        }
         positive = next(case for case in cases if case["description"] == "positive-refine")
         negative = next(case for case in cases if case["description"] == "negative-refine")
+        natural = next(case for case in cases if case["description"] == "natural-bugfix")
 
         self.assertEqual("refine", positive["vars"]["expected_skill"])
         self.assertNotIn("avoid_skill", positive["vars"])
@@ -2693,6 +2700,13 @@ class EvaluationVerifierTests(unittest.TestCase):
         negative_types = {(item["type"], item.get("value")) for item in negative["assert"]}
         self.assertIn(("not-skill-used", "refine"), negative_types)
 
+        self.assertEqual("measurer,bugfix", natural["vars"]["expected_skills"])
+        self.assertEqual("tdd", natural["vars"]["avoid_skill"])
+        natural_types = {(item["type"], item.get("value")) for item in natural["assert"]}
+        self.assertIn(("skill-used", "measurer"), natural_types)
+        self.assertIn(("skill-used", "bugfix"), natural_types)
+        self.assertIn(("not-skill-used", "tdd"), natural_types)
+
         descriptions = {case["description"] for case in cases}
         for skill in EXPECTED_SKILLS:
             self.assertIn(f"positive-{skill}", descriptions)
@@ -2703,20 +2717,22 @@ class EvaluationVerifierTests(unittest.TestCase):
             assertions = {(item["type"], item.get("value")) for item in case["assert"]}
             expected_skill = case["vars"].get("expected_skill")
             if expected_skill:
-                self.assertIn(
-                    f".agents/skills/{expected_skill}/SKILL.md",
-                    case["vars"]["request"],
-                    case["description"],
-                )
+                if source_cases[case["description"]].get("directed", True):
+                    self.assertIn(
+                        f".agents/skills/{expected_skill}/SKILL.md",
+                        case["vars"]["request"],
+                        case["description"],
+                    )
                 self.assertIn(("skill-used", expected_skill), assertions, case["description"])
             avoid_skill = case["vars"].get("avoid_skill")
             if avoid_skill:
                 self.assertIn(("not-skill-used", avoid_skill), assertions, case["description"])
-                self.assertIn(
-                    f"Do not open or read .agents/skills/{avoid_skill}/SKILL.md",
-                    case["vars"]["request"],
-                    case["description"],
-                )
+                if source_cases[case["description"]].get("directed", True):
+                    self.assertIn(
+                        f"Do not open or read .agents/skills/{avoid_skill}/SKILL.md",
+                        case["vars"]["request"],
+                        case["description"],
+                    )
             if case["description"] == "negative-refine":
                 self.assertNotIn(".agents/skills/brainstorming/", case["vars"]["request"])
 
@@ -2772,7 +2788,31 @@ class EvaluationVerifierTests(unittest.TestCase):
         self.assertIn("src/payments.py", architecture_item["fixture"])
         self.assertNotIn("design-deep-modules", architecture_item["request"])
 
-        self.assertEqual(43, len(cases))
+        self.assertEqual(49, len(cases))
+
+    def test_promptfoo_routing_includes_natural_requests_without_skill_names(self):
+        cases = {
+            case["description"]: case
+            for case in PROMPTFOO_TESTS.generate_tests({"suite": "routing"})
+        }
+        expected = {
+            "natural-bugfix": ({"measurer", "bugfix"}, "tdd"),
+            "natural-discovery": ({"brainstorming"}, "refine"),
+            "natural-review": ({"verify"}, "security-review"),
+            "natural-domain-language": ({"shape-domain"}, "design-deep-modules"),
+            "natural-session-pause": ({"session-bridge"}, "docs"),
+            "natural-current-research": ({"technical-research"}, "docs"),
+        }
+        for case_id, (required, avoided) in expected.items():
+            case = cases[case_id]
+            request = case["vars"]["request"]
+            self.assertNotIn(".agents/skills", request, case_id)
+            for skill_name in EXPECTED_SKILLS:
+                self.assertNotIn(skill_name, request, case_id)
+            assertions = {(item["type"], item.get("value")) for item in case["assert"]}
+            for skill_name in required:
+                self.assertIn(("skill-used", skill_name), assertions, case_id)
+            self.assertIn(("not-skill-used", avoided), assertions, case_id)
 
     def test_promptfoo_routing_materializes_case_specific_fixture(self):
         cases = PROMPTFOO_PREPARE._cases("routing")
@@ -3514,14 +3554,18 @@ class EvaluationVerifierTests(unittest.TestCase):
     def test_promptfoo_full_shards_cover_all_cases_and_aggregate_failures(self):
         """EV-SHD-01/EV-AGG-01: full coverage runs before one aggregate verdict."""
         self.assertEqual(2, PROMPTFOO_RUNNER.FULL_MAX_WORKERS)
-        self.assertEqual(
-            [(0, 22), (22, 43)],
-            [PROMPTFOO_RUNNER._parse_filter_range(shard.filter_range) for shard in PROMPTFOO_RUNNER.SUITE_SHARDS["routing"]],
-        )
-        self.assertEqual(
-            [(0, 2), (2, 4), (4, 6), (6, 8)],
-            [PROMPTFOO_RUNNER._parse_filter_range(shard.filter_range) for shard in PROMPTFOO_RUNNER.SUITE_SHARDS["behavior"]],
-        )
+        catalog_paths = {
+            "routing": ROOT / "evals" / "promptfoo" / "tests" / "routing.yaml",
+            "behavior": ROOT / "evals" / "promptfoo" / "tests" / "behavior.yaml",
+        }
+        for suite, path in catalog_paths.items():
+            total = len(json.loads(path.read_text(encoding="utf-8")))
+            ranges = [
+                PROMPTFOO_RUNNER._parse_filter_range(shard.filter_range)
+                for shard in PROMPTFOO_RUNNER._suite_shards(suite)
+            ]
+            covered = [index for start, end in ranges for index in range(start, end)]
+            self.assertEqual(list(range(total)), covered, suite)
         outcomes = [
             PROMPTFOO_RUNNER.SuiteOutcome("routing", Path("routing.json"), "fail", 40, 35, 5, 0, ("r-1",)),
             PROMPTFOO_RUNNER.SuiteOutcome("behavior", Path("behavior.json"), "fail", 40, 11, 29, 0, ("b-1",)),
