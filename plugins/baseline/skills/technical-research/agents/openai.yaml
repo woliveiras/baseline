@@ -3,4 +3,4 @@ interface:
   short_description: "Answer technical questions from primary evidence"
   default_prompt: "Use $technical-research to investigate this question with primary sources."
 policy:
-  allow_implicit_invocation: false
+  allow_implicit_invocation: true

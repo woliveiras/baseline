@@ -3,4 +3,4 @@ interface:
   short_description: "Create truthful resumable session handoffs"
   default_prompt: "Use $session-bridge to capture a truthful handoff for the next session."
 policy:
-  allow_implicit_invocation: false
+  allow_implicit_invocation: true

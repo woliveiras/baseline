@@ -3,4 +3,4 @@ interface:
   short_description: "Explore a problem space deeply"
   default_prompt: "Use $brainstorming to explore this problem before choosing a direction."
 policy:
-  allow_implicit_invocation: false
+  allow_implicit_invocation: true
