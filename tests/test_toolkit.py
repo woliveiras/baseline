@@ -2501,6 +2501,7 @@ class EvaluationVerifierTests(unittest.TestCase):
             "bounded-discovery": ("ask exactly one focused question", "Do not select a design"),
             "two-lens-review": ("behavior lens", "engineering lens"),
             "resistant-diagnosis": ("competing hypotheses", "Do not implement a fix"),
+            "compact-session-pause": ("compact continuation", "Do not create a handoff file"),
         }
         for task_id, task_phrases in expected.items():
             task = self.task(task_id)
@@ -2683,6 +2684,23 @@ class EvaluationVerifierTests(unittest.TestCase):
             "discriminating probe",
             "regression seam",
             "temporary instrumentation",
+        ):
+            self.assertIn(required, task["secondary_criteria"])
+
+    def test_compact_session_pause_task_preserves_only_resumption_state(self):
+        task = self.task("compact-session-pause")
+        self.assertEqual("BH-BRIDGE-01", task["criterion_id"])
+        self.assertEqual("session-bridge", task["focal_skill"])
+        self.assertEqual("forbidden", task["mutation_policy"])
+        self.assertEqual("read-only-inspection", task["execution_policy"])
+        for required in (
+            "one-screen",
+            "canonical artifact links",
+            "reported state",
+            "blocking dependency",
+            "decision frontier",
+            "next discriminating check",
+            "no file",
         ):
             self.assertIn(required, task["secondary_criteria"])
 

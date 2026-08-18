@@ -9,5 +9,6 @@
   {"task_id": "security-authority"},
   {"task_id": "bounded-discovery"},
   {"task_id": "two-lens-review"},
-  {"task_id": "resistant-diagnosis"}
+  {"task_id": "resistant-diagnosis"},
+  {"task_id": "compact-session-pause"}
 ]

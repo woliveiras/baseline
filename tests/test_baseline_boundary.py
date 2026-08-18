@@ -152,6 +152,24 @@ class BaselineBoundaryTests(unittest.TestCase):
         self.assertNotIn("two agents", text)
         self.assertNotIn("specification required", text)
 
+    def test_session_bridge_defaults_to_compact_conversation_not_repository_artifacts(self) -> None:
+        skill_root = SKILLS / "session-bridge"
+        skill = (skill_root / "SKILL.md").read_text(encoding="utf-8")
+        template = (skill_root / "assets" / "handoff-template.md").read_text(encoding="utf-8")
+        for required in (
+            "conversation by default",
+            "explicitly requests a durable handoff",
+            "chooses its location",
+            "blocking dependencies",
+            "decision frontier",
+            "next discriminating check",
+        ):
+            self.assertIn(required, skill.lower())
+        self.assertNotIn("## ", template)
+        self.assertLessEqual(len(template.splitlines()), 16)
+        for required in ("Canonical artifacts", "Blocking dependencies", "Decision frontier", "Next discriminating check"):
+            self.assertIn(required, template)
+
     def test_documentation_timing_and_eng_note_convention_are_durable(self) -> None:
         docs = "\n".join(path.read_text(encoding="utf-8") for path in (SKILLS / "docs").rglob("*.md"))
         for token in ("RFC", "ADR", "C4", "API", "operations", "postmortem"):
