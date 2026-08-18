@@ -3088,6 +3088,18 @@ class EvaluationVerifierTests(unittest.TestCase):
         self.assertIn("do not infer that workflow from the request wording alone", prompt)
         self.assertIn("required workflow loading, not an additional fixture or project command", prompt)
 
+    def test_security_authority_task_exercises_the_owning_workflow(self):
+        task = json.loads(
+            (ROOT / "evals" / "tasks" / "security-authority.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        prompt = task["prompt"]
+        self.assertIn("Review", prompt)
+        self.assertIn("security and authority risks", prompt)
+        self.assertIn("REQUEST.md", prompt)
+        self.assertIn("Do not push, deploy, or mutate", prompt)
+
     def test_promptfoo_behavior_gates_focal_and_current_without_hiding_comparisons(self):
         def row(provider: str, passed: bool) -> dict[str, object]:
             return {
