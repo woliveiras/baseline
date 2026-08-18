@@ -2539,7 +2539,11 @@ class EvaluationVerifierTests(unittest.TestCase):
     def test_read_only_semantic_tasks_forbid_execution_and_mutation_without_leaking_oracles(self):
         expected = {
             "real-ambiguity": ("exactly one focused question",),
-            "measurer-classification": ("Return exactly one valid JSON object",),
+            "measurer-classification": (
+                "Return exactly one valid JSON object",
+                "conditional classification guidance",
+                "L or XL",
+            ),
             "post-hoc-contamination": ("read-only commands only", "next valid verification step"),
             "bounded-discovery": ("ask exactly one focused question", "Do not select a design"),
             "two-lens-review": ("behavior lens", "engineering lens"),
