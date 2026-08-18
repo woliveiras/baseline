@@ -3073,9 +3073,8 @@ class EvaluationVerifierTests(unittest.TestCase):
 
     def test_promptfoo_behavior_conditionally_loads_the_focal_skill(self):
         prompt = PROMPTFOO_PROMPTS.create_prompt({"vars": {"task_id": "measurer-classification"}})
-        self.assertIn("Use $measurer", prompt)
+        self.assertIn("Use $measurer.", prompt)
         self.assertIn(".agents/skills/measurer/SKILL.md", prompt)
-        self.assertIn("when it is available", prompt)
         self.assertIn("If the file is absent, proceed", prompt)
         self.assertIn("do not infer that workflow from the request wording alone", prompt)
         self.assertIn("required workflow loading, not an additional fixture or project command", prompt)

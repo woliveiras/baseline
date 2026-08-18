@@ -28,8 +28,8 @@ def create_prompt(context: dict[str, object]) -> str:
         skill_path = f".agents/skills/{focal_skill}/SKILL.md"
         return (
             f"Work on the controlled fixture for canonical task {task_id}.\n\n"
-            f"Use ${focal_skill} when it is available in the assigned workspace. Before answering, "
-            f"read and follow {skill_path}; do not infer that workflow from the request wording alone. If the file is "
+            f"Use ${focal_skill}. Before answering, read and follow {skill_path}; do not infer that "
+            "workflow from the request wording alone. If the file is "
             "absent, proceed with the instructions that are available and do not search outside the "
             "workspace for skill content.\n\n"
             f"{task['prompt']}\n\n"
