@@ -2938,6 +2938,9 @@ class EvaluationVerifierTests(unittest.TestCase):
         self.assertIn("semantic reconciliation over refine", shape_domain)
         measurer = (ROOT / "skills" / "measurer" / "SKILL.md").read_text(encoding="utf-8")
         self.assertIn("Preserve an explicitly requested activity phase", measurer)
+        contract = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        self.assertIn("Route an explicitly requested activity by its intent", contract)
+        self.assertIn("without requiring the user to name a skill", " ".join(contract.split()))
         catalog = (ROOT / "skills" / "catalog.md").read_text(encoding="utf-8")
         self.assertIn("must request the activity, but does not need to name the skill", catalog)
 

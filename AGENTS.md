@@ -26,6 +26,12 @@ Use the [repository glossary](GLOSSARY.md) and route work through:
   decision, or explicitly approved behavior can be sufficient input.
 - `measurer` classifies the highest applicable risk and boundary, never line
   count. Use `refine` only when material ambiguity remains.
+- Route an explicitly requested activity by its intent, without requiring the
+  user to name a skill: divergent exploration before selection uses
+  `brainstorming`; current external technical evidence uses
+  `technical-research`; semantic reconciliation uses `shape-domain`; and a
+  pause or handoff uses `session-bridge`. Topic overlap does not replace the
+  requested activity owner.
 - Define expected behavior from the governing input, run the smallest suitable
   check fail-first for the correct behavioral reason, then implement the
   smallest coherent change. Do not change an assertion merely to accept current
