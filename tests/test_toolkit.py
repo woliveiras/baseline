@@ -1623,10 +1623,13 @@ class ToolkitStructureTests(unittest.TestCase):
 
         ci_description = (ROOT / "skills" / "ci-workflow" / "SKILL.md").read_text(encoding="utf-8").split("---", 2)[1]
         security_description = (ROOT / "skills" / "security-review" / "SKILL.md").read_text(encoding="utf-8").split("---", 2)[1]
+        verify_description = (ROOT / "skills" / "verify" / "SKILL.md").read_text(encoding="utf-8").split("---", 2)[1]
         self.assertIn("GitHub Actions", ci_description)
         self.assertIn("compose with security-review", ci_description)
         self.assertIn("fork-controlled", security_description)
         self.assertIn("compose with the owning workflow", security_description)
+        self.assertIn("owns requests limited to security risks", security_description)
+        self.assertIn("do not also invoke for a request limited to security risks", verify_description)
 
     def test_security_review_requires_an_actionable_authority_handoff(self):
         security = (ROOT / "skills" / "security-review" / "SKILL.md").read_text(

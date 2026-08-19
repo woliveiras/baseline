@@ -1,6 +1,6 @@
 ---
 name: verify
-description: Review a software change proportionally against its governing input, expected behavior, tests, complete diff, relevant risks, fresh results, unrelated changes, and limitations. Use at review or completion boundaries; do not treat passing tests or coverage as proof of correctness.
+description: Review a software change proportionally against its governing input, expected behavior, tests, complete diff, relevant risks, fresh results, unrelated changes, and limitations. Use at review or completion boundaries; do not also invoke for a request limited to security risks, which security-review owns.
 ---
 
 # Verify
