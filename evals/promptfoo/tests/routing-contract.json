@@ -1,3 +1,4 @@
 {
-  "expected_skill_suffix": "Before answering, read and follow .agents/skills/{skill}/SKILL.md from the assigned workspace; do not infer that workflow from the request wording alone."
+  "expected_skill_suffix": "Before answering, read and follow .agents/skills/{skill}/SKILL.md from the assigned workspace; do not infer that workflow from the request wording alone.",
+  "selection_suffix": "Select workflows only from the request's intent. Before answering, load and follow each selected workflow. Do not enumerate, inspect, or load unrelated workflows."
 }

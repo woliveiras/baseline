@@ -2806,8 +2806,10 @@ class EvaluationVerifierTests(unittest.TestCase):
         contract = json.loads(
             (ROOT / "evals" / "promptfoo" / "tests" / "routing-contract.json").read_text(encoding="utf-8")
         )
-        self.assertEqual({"expected_skill_suffix"}, set(contract))
+        self.assertEqual({"expected_skill_suffix", "selection_suffix"}, set(contract))
         self.assertIn(".agents/skills/{skill}/SKILL.md", contract["expected_skill_suffix"])
+        self.assertIn("request's intent", contract["selection_suffix"])
+        self.assertIn("Do not enumerate, inspect, or load unrelated workflows", contract["selection_suffix"])
         cases = PROMPTFOO_TESTS.generate_tests({"suite": "routing"})
         source_cases = {
             item["id"]: item
@@ -2845,6 +2847,7 @@ class EvaluationVerifierTests(unittest.TestCase):
 
         for case in cases:
             self.assertEqual(case["description"], case["vars"]["criterion_id"])
+            self.assertIn(contract["selection_suffix"], case["vars"]["request"])
             assertions = {(item["type"], item.get("value")) for item in case["assert"]}
             expected_skill = case["vars"].get("expected_skill")
             if expected_skill:
