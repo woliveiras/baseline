@@ -897,6 +897,9 @@ def _redteam(command_name: str) -> None:
     (state_root / "promptfoo-state").mkdir()
     config = PROMPTFOO_ROOT / "redteam-config.yaml"
     try:
+        workspace_root = state_root / "workspaces"
+        PREPARE.prepare_redteam(workspace_root, ROOT)
+        env["BASELINE_EVAL_WORKSPACE_ROOT"] = str(workspace_root)
         if command_name == "generate":
             output = PROMPTFOO_ROOT / "generated" / "redteam.yaml"
             _run([

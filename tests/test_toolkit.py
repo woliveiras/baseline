@@ -2394,6 +2394,86 @@ class EvaluationVerifierTests(unittest.TestCase):
             self.assertNotRegex(text, r"gpt-5\.[0-9]+(?:\.[0-9]+)?-codex")
             self.assertNotIn("/Users/", text)
 
+    def test_redteam_uses_a_local_codex_generator_and_fresh_workspaces(self):
+        config = yaml.safe_load(
+            (ROOT / "evals" / "promptfoo" / "redteam-config.yaml").read_text(encoding="utf-8")
+        )
+        generator = config["redteam"]["provider"]
+        self.assertEqual("openai:codex-sdk", generator["id"])
+        self.assertEqual("read-only", generator["config"]["sandbox_mode"])
+        self.assertFalse(generator["config"]["network_access_enabled"])
+        self.assertEqual(
+            "{{ env.BASELINE_EVAL_CODEX_HOME }}",
+            generator["config"]["cli_env"]["CODEX_HOME"],
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace_root = Path(tmp) / "workspaces"
+            manifest = PROMPTFOO_PREPARE.prepare_redteam(workspace_root, ROOT)
+            self.assertEqual(workspace_root.resolve(), Path(manifest["workspace_root"]))
+            for condition in ("generator", "current"):
+                workspace = workspace_root / "redteam" / condition
+                self.assertTrue((workspace / ".git").is_dir(), condition)
+            self.assertFalse((workspace_root / "redteam" / "generator" / "AGENTS.md").exists())
+            self.assertTrue((workspace_root / "redteam" / "current" / "AGENTS.md").is_file())
+            self.assertTrue((workspace_root / "redteam" / "current" / ".agents" / "skills").is_dir())
+
+    def test_redteam_runner_passes_only_fresh_local_workspaces_to_promptfoo(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            state_root = root / "state"
+            state_root.mkdir()
+            dedicated_home = root / "codex-home"
+            dedicated_home.mkdir()
+            captured = {}
+
+            def fake_prepare(workspace_root, current_root):
+                captured["workspace_root"] = workspace_root
+                captured["current_root"] = current_root
+                (workspace_root / "redteam" / "generator").mkdir(parents=True)
+                (workspace_root / "redteam" / "current").mkdir(parents=True)
+                return {"workspace_root": str(workspace_root)}
+
+            def fake_run(command, **kwargs):
+                captured["command"] = command
+                captured["env"] = kwargs["env"]
+                return subprocess.CompletedProcess(command, 0, "", "")
+
+            with patch.object(
+                PROMPTFOO_RUNNER.PREPARE, "preflight_codex_home", return_value=dedicated_home
+            ), patch.object(
+                PROMPTFOO_RUNNER.PREPARE, "evaluation_environment", return_value={}
+            ), patch.object(
+                PROMPTFOO_RUNNER.PREPARE, "prepare_redteam", side_effect=fake_prepare
+            ), patch.object(
+                PROMPTFOO_RUNNER.tempfile, "mkdtemp", return_value=str(state_root)
+            ), patch.object(PROMPTFOO_RUNNER, "_run", side_effect=fake_run):
+                PROMPTFOO_RUNNER._redteam("full")
+
+            workspace_root = state_root / "workspaces"
+            self.assertEqual(workspace_root, captured["workspace_root"])
+            self.assertEqual(ROOT, captured["current_root"])
+            self.assertEqual(str(workspace_root), captured["env"]["BASELINE_EVAL_WORKSPACE_ROOT"])
+            self.assertEqual("true", captured["env"]["PROMPTFOO_DISABLE_REDTEAM_REMOTE_GENERATION"])
+            self.assertFalse(state_root.exists())
+
+    def test_redteam_runner_removes_state_when_workspace_preparation_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            state_root = Path(tmp) / "state"
+            state_root.mkdir()
+            with patch.object(
+                PROMPTFOO_RUNNER.PREPARE, "preflight_codex_home", return_value=Path(tmp) / "codex-home"
+            ), patch.object(
+                PROMPTFOO_RUNNER.PREPARE, "evaluation_environment", return_value={}
+            ), patch.object(
+                PROMPTFOO_RUNNER.PREPARE, "prepare_redteam", side_effect=RuntimeError("prepare failed")
+            ), patch.object(
+                PROMPTFOO_RUNNER.tempfile, "mkdtemp", return_value=str(state_root)
+            ):
+                with self.assertRaisesRegex(RuntimeError, "prepare failed"):
+                    PROMPTFOO_RUNNER._redteam("full")
+            self.assertFalse(state_root.exists())
+
     def catalog(self) -> dict:
         return json.loads((ROOT / "evals" / "fixtures" / "catalog.json").read_text())
 
