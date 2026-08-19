@@ -15,7 +15,7 @@ boundaries.
 | Explicit skill-invocation positive/negative cases | Baseline catalog plus generated Promptfoo requests and skill assertions | `tests/routing.yaml`, adapter transformation in `tests.py`, `assertions/routing.py`; Codex metadata remains heuristic |
 | Variant comparisons | Baseline workspace preparation | control/core/focal/broad/current/proposed roots and distinct fingerprints |
 | Security regression probes | Baseline fixtures and assertions | every frozen probe has a distinct stimulus, a legitimate `src/app.py` oracle, and outside-canary checks |
-| Red-team generation and review | Promptfoo, explicitly invoked | `eval:redteam:generate`, `eval:redteam:review`; never part of `eval:full` |
+| Red-team repetition | Baseline frozen security corpus through Promptfoo | `eval:redteam:full` runs three independent local repetitions; never part of `eval:full` |
 | Authority and privacy | Baseline runner and provider config | dedicated `BASELINE_EVAL_CODEX_HOME`, no cloud share, no remote red-team generation, no external operations |
 
 ## Runner contract
@@ -56,7 +56,7 @@ it reuses the prepared workspace. Repeated comparisons are three independent
 single-repetition processes, each with new fixtures, workspaces, Promptfoo state,
 and snapshots; only their sanitized reports are aggregated.
 
-Every Promptfoo provider or red-team process also receives a
+Every Promptfoo provider process also receives a
 `PROMPTFOO_CONFIG_DIR` below a temporary root. Promptfoo may write its
 evaluation row and linked trace spans there while the process runs; the whole
 state root is removed afterward. This is why provider runs do not use
@@ -70,10 +70,10 @@ parsing, model selection, and locked validator dependencies are specified in
 reuse are separate properties: the account session is intentionally reused,
 while personal behavior-bearing content is not.
 
-Ignored `generated/` and `results/` have different responsibilities. Generated
-red-team probes are review inputs and may persist. JSON result reports are
-append-only local evidence and may persist across runs. The evaluation runner
-validates their shape without deleting either kind of evidence.
+Ignored `results/` contains append-only sanitized local evidence and may persist
+across runs. The evaluation runner validates its shape without deleting prior
+reports. Red-team inputs are the reviewed, versioned security fixtures rather
+than generated model output.
 
 ## Failure semantics
 
@@ -172,12 +172,13 @@ pnpm run eval:smoke
 pnpm run eval:skills
 pnpm run eval:security
 pnpm run eval:compare      # requires BASELINE_EVAL_PROPOSED_ROOT
-pnpm run eval:redteam:generate
-pnpm run eval:redteam:review
+pnpm run eval:redteam:full # three independent frozen-security repetitions
 ```
 
-`pnpm run eval:redteam:full` is intentionally explicit and expensive. No
-red-team command is implied by ordinary validation or `eval:full`.
+`pnpm run eval:redteam:full` is intentionally explicit and expensive. It does
+not use Promptfoo's `coding-agent:*` generator because that surface requires
+remote generation in the pinned Promptfoo version. No red-team command is
+implied by ordinary validation or `eval:full`.
 
 ## Residual limitations
 

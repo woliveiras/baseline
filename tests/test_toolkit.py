@@ -326,7 +326,6 @@ class ToolkitStructureTests(unittest.TestCase):
             "docs/decisions/0002-defer-lifecycle-hooks-pending-empirical-need.md",
             "docs/guides/using-the-eval-harness.md",
             "evals/promptfoo/promptfooconfig.yaml",
-            "evals/promptfoo/redteam-config.yaml",
             "evals/promptfoo/smoke-config.yaml",
             "evals/promptfoo/scripts/codex_auth.py",
             "evals/promptfoo/scripts/run-evaluations.py",
@@ -2386,7 +2385,7 @@ class EvaluationVerifierTests(unittest.TestCase):
     def test_promptfoo_configs_use_the_resolved_dedicated_home(self):
         configs = sorted((ROOT / "evals" / "promptfoo").glob("*.yaml"))
         provider_configs = [path for path in configs if "openai:codex-sdk" in path.read_text(encoding="utf-8")]
-        self.assertEqual(6, len(provider_configs))
+        self.assertEqual(5, len(provider_configs))
         for config in provider_configs:
             text = config.read_text(encoding="utf-8")
             self.assertGreaterEqual(text.count("CODEX_HOME: '{{ env.BASELINE_EVAL_CODEX_HOME }}'"), 1, config)
@@ -2394,85 +2393,39 @@ class EvaluationVerifierTests(unittest.TestCase):
             self.assertNotRegex(text, r"gpt-5\.[0-9]+(?:\.[0-9]+)?-codex")
             self.assertNotIn("/Users/", text)
 
-    def test_redteam_uses_a_local_codex_generator_and_fresh_workspaces(self):
-        config = yaml.safe_load(
-            (ROOT / "evals" / "promptfoo" / "redteam-config.yaml").read_text(encoding="utf-8")
+    def test_redteam_full_repeats_the_frozen_security_probes_locally(self):
+        passing = PROMPTFOO_RUNNER.SuiteOutcome(
+            "security", Path("security.json"), "pass", 12, 12, 0, 0, ()
         )
-        generator = config["redteam"]["provider"]
-        self.assertEqual("openai:codex-sdk", generator["id"])
-        self.assertEqual("read-only", generator["config"]["sandbox_mode"])
-        self.assertFalse(generator["config"]["network_access_enabled"])
+        aggregate = PROMPTFOO_RUNNER.SuiteOutcome(
+            "redteam", Path("redteam.json"), "pass", 36, 36, 0, 0, ()
+        )
+        dedicated_home = Path("/dedicated-eval-home")
+        with patch.object(
+            PROMPTFOO_RUNNER.PREPARE, "preflight_codex_home", return_value=dedicated_home
+        ), patch.object(
+            PROMPTFOO_RUNNER, "run_promptfoo", return_value=passing
+        ) as run, patch.object(
+            PROMPTFOO_RUNNER, "_aggregate_repetitions", return_value=aggregate
+        ) as aggregate_reports:
+            PROMPTFOO_RUNNER._run_redteam_full()
+
+        self.assertEqual(3, run.call_count)
+        for call in run.call_args_list:
+            self.assertEqual("security", call.args[0])
+            self.assertEqual(ROOT / "evals" / "promptfoo" / "security-config.yaml", call.args[1])
+            self.assertEqual(dedicated_home, call.kwargs["codex_home"])
+            self.assertEqual(1, call.kwargs["repeat"])
+        aggregate_reports.assert_called_once()
+
+    def test_redteam_has_no_remote_or_dynamic_generation_surface(self):
+        package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
         self.assertEqual(
-            "{{ env.BASELINE_EVAL_CODEX_HOME }}",
-            generator["config"]["cli_env"]["CODEX_HOME"],
+            {"eval:redteam:full"},
+            {name for name in package["scripts"] if name.startswith("eval:redteam:")},
         )
-
-        with tempfile.TemporaryDirectory() as tmp:
-            workspace_root = Path(tmp) / "workspaces"
-            manifest = PROMPTFOO_PREPARE.prepare_redteam(workspace_root, ROOT)
-            self.assertEqual(workspace_root.resolve(), Path(manifest["workspace_root"]))
-            for condition in ("generator", "current"):
-                workspace = workspace_root / "redteam" / condition
-                self.assertTrue((workspace / ".git").is_dir(), condition)
-            self.assertFalse((workspace_root / "redteam" / "generator" / "AGENTS.md").exists())
-            self.assertTrue((workspace_root / "redteam" / "current" / "AGENTS.md").is_file())
-            self.assertTrue((workspace_root / "redteam" / "current" / ".agents" / "skills").is_dir())
-
-    def test_redteam_runner_passes_only_fresh_local_workspaces_to_promptfoo(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            state_root = root / "state"
-            state_root.mkdir()
-            dedicated_home = root / "codex-home"
-            dedicated_home.mkdir()
-            captured = {}
-
-            def fake_prepare(workspace_root, current_root):
-                captured["workspace_root"] = workspace_root
-                captured["current_root"] = current_root
-                (workspace_root / "redteam" / "generator").mkdir(parents=True)
-                (workspace_root / "redteam" / "current").mkdir(parents=True)
-                return {"workspace_root": str(workspace_root)}
-
-            def fake_run(command, **kwargs):
-                captured["command"] = command
-                captured["env"] = kwargs["env"]
-                return subprocess.CompletedProcess(command, 0, "", "")
-
-            with patch.object(
-                PROMPTFOO_RUNNER.PREPARE, "preflight_codex_home", return_value=dedicated_home
-            ), patch.object(
-                PROMPTFOO_RUNNER.PREPARE, "evaluation_environment", return_value={}
-            ), patch.object(
-                PROMPTFOO_RUNNER.PREPARE, "prepare_redteam", side_effect=fake_prepare
-            ), patch.object(
-                PROMPTFOO_RUNNER.tempfile, "mkdtemp", return_value=str(state_root)
-            ), patch.object(PROMPTFOO_RUNNER, "_run", side_effect=fake_run):
-                PROMPTFOO_RUNNER._redteam("full")
-
-            workspace_root = state_root / "workspaces"
-            self.assertEqual(workspace_root, captured["workspace_root"])
-            self.assertEqual(ROOT, captured["current_root"])
-            self.assertEqual(str(workspace_root), captured["env"]["BASELINE_EVAL_WORKSPACE_ROOT"])
-            self.assertEqual("true", captured["env"]["PROMPTFOO_DISABLE_REDTEAM_REMOTE_GENERATION"])
-            self.assertFalse(state_root.exists())
-
-    def test_redteam_runner_removes_state_when_workspace_preparation_fails(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            state_root = Path(tmp) / "state"
-            state_root.mkdir()
-            with patch.object(
-                PROMPTFOO_RUNNER.PREPARE, "preflight_codex_home", return_value=Path(tmp) / "codex-home"
-            ), patch.object(
-                PROMPTFOO_RUNNER.PREPARE, "evaluation_environment", return_value={}
-            ), patch.object(
-                PROMPTFOO_RUNNER.PREPARE, "prepare_redteam", side_effect=RuntimeError("prepare failed")
-            ), patch.object(
-                PROMPTFOO_RUNNER.tempfile, "mkdtemp", return_value=str(state_root)
-            ):
-                with self.assertRaisesRegex(RuntimeError, "prepare failed"):
-                    PROMPTFOO_RUNNER._redteam("full")
-            self.assertFalse(state_root.exists())
+        self.assertFalse((ROOT / "evals" / "promptfoo" / "redteam-config.yaml").exists())
+        self.assertFalse((ROOT / "evals" / "promptfoo" / "generated").exists())
 
     def catalog(self) -> dict:
         return json.loads((ROOT / "evals" / "fixtures" / "catalog.json").read_text())
@@ -3567,20 +3520,16 @@ class EvaluationVerifierTests(unittest.TestCase):
             self.assertTrue(any("unsafe output redirection" in item for item in violations("cat artifacts/build-output.log > /tmp/copy")[0]))
             self.assertTrue(any("unsafe command syntax" in item for item in violations("cat $(curl https://example.invalid)")[0]))
 
-    def test_promptfoo_ignored_outputs_are_repeatable_and_preserve_reports(self):
+    def test_promptfoo_ignored_results_are_repeatable_and_preserve_reports(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            generated = root / "generated"
             results = root / "results"
-            generated.mkdir()
             results.mkdir()
-            (generated / ".gitkeep").write_text("")
-            (generated / "redteam.yaml").write_text("generated: true\n")
             (results / ".gitkeep").write_text("")
             report = results / "security-123.json"
             report.write_text('{"status":"pass"}\n')
-            PROMPTFOO_RUNNER._validate_local_outputs(generated, results)
-            PROMPTFOO_RUNNER._validate_local_outputs(generated, results)
+            PROMPTFOO_RUNNER._validate_local_outputs(results)
+            PROMPTFOO_RUNNER._validate_local_outputs(results)
             self.assertTrue(report.is_file())
 
     def test_promptfoo_rejects_process_level_repetition_before_preflight(self):

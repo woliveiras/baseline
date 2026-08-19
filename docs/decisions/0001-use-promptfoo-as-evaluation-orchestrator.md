@@ -12,7 +12,7 @@ decision-makers:
 Baseline needs controlled empirical evaluation of skill routing, behavior, and
 security without maintaining generic provider orchestration or weakening
 repository-specific checks. Promptfoo supplies provider execution, matrices,
-aggregation, and red-team integration; it does not know Baseline's invariants.
+and aggregation; it does not know Baseline's invariants.
 
 The evaluation stack is development-only. It must not enter the distributed
 plugin, run in the development checkout, inherit personal agent configuration,
@@ -30,13 +30,14 @@ Promptfoo owns:
 
 - provider execution and condition matrices;
 - local aggregation, latency, and token collection;
-- generic assertions and explicitly invoked red-team tooling.
+- generic assertions used by the configured local suites.
 
 Baseline owns:
 
 - canonical tasks and controlled fixtures;
 - isolated control, core, focal, broad, current, and proposed workspaces;
 - protected paths, snapshots, and deterministic behavior/security checks;
+- frozen red-team probes and independent repetition policy;
 - `pass`, `fail`, and `needs-review` precedence;
 - sanitized report extraction and checkout-drift detection;
 - privacy, cost, login, and external-operation authority.
@@ -74,7 +75,7 @@ audit plus deterministic harness checks. Exact graph tests must accompany any
 zero-advisory claim. Native lifecycle scripts remain disabled and unverified;
 the overrides do not establish unused-provider or native-build compatibility.
 
-Provider/model execution, login, red-team generation, and `eval:full` require
+Provider/model execution, login, red-team execution, and `eval:full` require
 explicit human authority. Installation, ordinary validation, commit, and push
 must never invoke them implicitly. A passing evaluation does not authorize Git
 or release operations.

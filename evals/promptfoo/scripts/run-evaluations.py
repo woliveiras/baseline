@@ -32,7 +32,6 @@ CONFIGS = (
     PROMPTFOO_ROOT / "security-config.yaml",
     PROMPTFOO_ROOT / "smoke-config.yaml",
     PROMPTFOO_ROOT / "compare-config.yaml",
-    PROMPTFOO_ROOT / "redteam-config.yaml",
 )
 PROMPTFOO_ASSERTION_FAILURE_EXIT_CODE = 100
 FULL_MAX_WORKERS = 2
@@ -144,28 +143,17 @@ def _git_diff_check() -> None:
     _run(["git", "diff", "--check"], label="git diff --check")
 
 
-def _validate_local_outputs(generated: Path, results: Path) -> None:
-    """Validate ignored output directories without deleting prior evidence.
-
-    Generated probes are review inputs and may remain between runs. Results are
-    append-only local reports. Neither directory is a fixture source, so only
-    their file types and directory shape are checked here.
-    """
-    if not generated.is_dir() or not results.is_dir():
-        raise RuntimeError("Promptfoo generated/results directories are missing")
-    generated_unexpected = [
-        path.name for path in generated.iterdir()
-        if path.name != ".gitkeep" and (not path.is_file() or path.suffix not in {".yaml", ".yml", ".json"})
-    ]
-    if generated_unexpected:
-        raise RuntimeError(f"generated/ contains unsupported entries: {generated_unexpected}")
+def _validate_local_outputs(results: Path) -> None:
+    """Validate ignored sanitized reports without deleting prior evidence."""
+    if not results.is_dir():
+        raise RuntimeError("Promptfoo results directory is missing")
     results_unexpected = [
         path.name for path in results.iterdir()
         if path.name != ".gitkeep" and (not path.is_file() or path.suffix != ".json")
     ]
     if results_unexpected:
         raise RuntimeError(f"results/ contains unsupported entries: {results_unexpected}")
-    print(f"[baseline] ignored output directories valid: generated={len(generated_unexpected)} unexpected, results={len(list(results.glob('*.json')))} reports")
+    print(f"[baseline] ignored results directory valid: results={len(list(results.glob('*.json')))} reports")
 
 
 def _validate_fixture_catalog() -> None:
@@ -177,7 +165,7 @@ def _validate_fixture_catalog() -> None:
             path = Path(relative)
             if path.is_absolute() or ".." in path.parts or not isinstance(content, str):
                 raise RuntimeError(f"unsafe or non-text fixture entry: {fixture_name}/{relative}")
-    _validate_local_outputs(PROMPTFOO_ROOT / "generated", PROMPTFOO_ROOT / "results")
+    _validate_local_outputs(PROMPTFOO_ROOT / "results")
     print("[baseline] fixture and ignored-directory cleanliness")
 
 
@@ -877,42 +865,21 @@ def _run_compare() -> None:
     _require_passing_outcomes([outcome])
 
 
-def _redteam(command_name: str) -> None:
-    if command_name == "review":
-        path = PROMPTFOO_ROOT / "generated" / "redteam.yaml"
-        if not path.is_file():
-            raise RuntimeError("no generated probes found; run eval:redteam:generate explicitly first")
-        lines = path.read_text(encoding="utf-8").splitlines()
-        print(f"[baseline] generated probe file: {path.relative_to(ROOT)} ({len(lines)} sanitized lines)")
-        for line in lines[:40]:
-            print(_redact(line[:240]))
-        return
-
+def _run_redteam_full() -> None:
+    """Repeat the frozen local security corpus without remote probe generation."""
+    started = time.monotonic()
     codex_home = PREPARE.preflight_codex_home()
-    env = PREPARE.evaluation_environment(codex_home)
-    env["PROMPTFOO_DISABLE_REDTEAM_REMOTE_GENERATION"] = "true"
-    env["PROMPTFOO_DISABLE_SHARE"] = "true"
-    state_root = Path(tempfile.mkdtemp(prefix="baseline-promptfoo-redteam-"))
-    env["PROMPTFOO_CONFIG_DIR"] = str(state_root / "promptfoo-state")
-    (state_root / "promptfoo-state").mkdir()
-    config = PROMPTFOO_ROOT / "redteam-config.yaml"
-    try:
-        workspace_root = state_root / "workspaces"
-        PREPARE.prepare_redteam(workspace_root, ROOT)
-        env["BASELINE_EVAL_WORKSPACE_ROOT"] = str(workspace_root)
-        if command_name == "generate":
-            output = PROMPTFOO_ROOT / "generated" / "redteam.yaml"
-            _run([
-                PNPM, "exec", "promptfoo", "redteam", "generate", "-c", str(config), "-o", str(output), "--no-cache",
-                "--no-progress-bar", "--strict", "--plugins", "coding-agent:core", "--num-tests", "10",
-            ], timeout=1800, env=env, label="Promptfoo red-team probe generation (explicit, local-only)")
-            print(f"[baseline] generated probes at {output.relative_to(ROOT)}; review before execution")
-        elif command_name == "full":
-            _run([
-                PNPM, "exec", "promptfoo", "redteam", "run", "-c", str(config), "--no-cache", "--no-progress-bar", "--strict",
-            ], timeout=3600, env=env, label="Promptfoo full red-team scan (explicit, expensive)")
-    finally:
-        shutil.rmtree(state_root, ignore_errors=True)
+    outcomes = [
+        run_promptfoo(
+            "security",
+            PROMPTFOO_ROOT / "security-config.yaml",
+            codex_home=codex_home,
+            repeat=1,
+        )
+        for _ in range(3)
+    ]
+    outcome = _aggregate_repetitions("redteam", outcomes, time.monotonic() - started)
+    _require_passing_outcomes([outcome])
 
 
 def run_full_evaluation() -> None:
@@ -939,7 +906,7 @@ def run_full_evaluation() -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--suite", choices=("smoke", "routing", "skills", "security", "compare", "redteam-generate", "redteam-review", "redteam-full", "full"), required=True)
+    parser.add_argument("--suite", choices=("smoke", "routing", "skills", "security", "compare", "redteam-full", "full"), required=True)
     parser.add_argument("--case-pattern", help="Promptfoo description regex; supported by routing and security")
     args = parser.parse_args(argv)
     try:
@@ -967,12 +934,8 @@ def main(argv: list[str] | None = None) -> int:
             ])
         elif args.suite == "compare":
             _run_compare()
-        elif args.suite == "redteam-generate":
-            _redteam("generate")
-        elif args.suite == "redteam-review":
-            _redteam("review")
         elif args.suite == "redteam-full":
-            _redteam("full")
+            _run_redteam_full()
         else:
             run_full_evaluation()
         return 0

@@ -81,6 +81,6 @@ installed plugin or any consumer project.
 ## Network and result paths
 
 Provider runs use `network_access_enabled: false`, no Promptfoo cloud sharing,
-and no remote red-team generation. Ignored `evals/promptfoo/generated/` holds
-red-team review inputs; ignored `evals/promptfoo/results/` holds append-only
-sanitized reports. The runner validates their shape and deletes neither.
+and no remote red-team generation. Red-team inputs are versioned frozen
+fixtures. Ignored `evals/promptfoo/results/` holds append-only sanitized
+reports; the runner validates their shape and does not delete prior evidence.

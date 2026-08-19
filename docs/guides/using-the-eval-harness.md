@@ -79,9 +79,7 @@ pnpm run eval:full
 ## 5. Red-team (explicit user actions)
 
 ```bash
-pnpm run eval:redteam:generate
-pnpm run eval:redteam:review
-pnpm run eval:redteam:full   # expensive; never implied by eval:full
+pnpm run eval:redteam:full   # 3 frozen local repetitions; never implied by eval:full
 ```
 
 ## Reading results

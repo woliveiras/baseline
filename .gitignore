@@ -4,8 +4,6 @@ node_modules/
 .venv/
 evals/promptfoo/results/*
 !evals/promptfoo/results/.gitkeep
-evals/promptfoo/generated/*
-!evals/promptfoo/generated/.gitkeep
 evals/promptfoo/workspaces/
 evals/promptfoo/cache/
 evals/promptfoo/caches/
