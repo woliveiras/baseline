@@ -1492,6 +1492,41 @@ class ToolkitStructureTests(unittest.TestCase):
         self.assertFalse((skill_root / "scripts").exists())
         self.assertFalse((skill_root / "assets").exists())
 
+    def test_activity_routing_is_shared_with_setup_contract(self):
+        skill_root = ROOT / "skills" / "setup-baseline"
+        contracts = {
+            "repository": (ROOT / "AGENTS.md").read_text(encoding="utf-8"),
+            "setup-baseline": (
+                skill_root / "references" / "agents-contract.md"
+            ).read_text(encoding="utf-8"),
+        }
+        routing_requirements = (
+            "Classification intent invokes `measurer`",
+            "materially incompatible interpretations invoke `refine`",
+            "without requiring skill names",
+            "Preserve their order when the request asks for both activities",
+            "divergent exploration before selection uses `brainstorming`",
+            "current external technical evidence uses `technical-research`",
+            "semantic reconciliation uses `shape-domain`",
+            "a pause or handoff uses `session-bridge`",
+            "Topic overlap does not replace the requested activity owner",
+            "Missing evidence access does not change ownership",
+            "reports the unavailable check and limitation",
+        )
+
+        for name, contract in contracts.items():
+            normalized = " ".join(contract.split())
+            for requirement in routing_requirements:
+                self.assertIn(requirement, normalized, f"{name}: {requirement}")
+
+        skill = " ".join((skill_root / "SKILL.md").read_text(encoding="utf-8").split())
+        for requirement in (
+            "Preserve the contract's activity-routing semantics",
+            "without requiring the user to name a skill",
+            "Do not omit or generalize an applicable owner mapping",
+        ):
+            self.assertIn(requirement, skill)
+
     def test_execution_isolation_selection_is_shared_with_setup_contract(self):
         contracts = {
             "repository": (ROOT / "AGENTS.md").read_text(encoding="utf-8"),

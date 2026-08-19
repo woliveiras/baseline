@@ -40,6 +40,8 @@ paths, architecture, tools, or guarantees.
 1. Express the applicable semantic requirements from the contract with concise,
    specific, verifiable project language. Omit sections for which no durable
    project fact exists instead of leaving placeholders.
+   Preserve the contract's activity-routing semantics without requiring the
+   user to name a skill. Do not omit or generalize an applicable owner mapping.
 2. Create the optional Claude adapter only under the contract's explicit
    condition. Never duplicate the `AGENTS.md` body into another client file.
 3. Re-read every changed instruction as one contract. Check conflicts, local

@@ -54,6 +54,16 @@ Preserve this order semantically:
   governing input when it defines the work.
 - Classify by the highest applicable risk and boundary, never line count. Use
   `refine` only for material ambiguity.
+- Classification intent invokes `measurer`; materially incompatible
+  interpretations invoke `refine`, without requiring skill names. Preserve
+  their order when the request asks for both activities.
+- Route an explicitly requested activity by its intent, without requiring the
+  user to name a skill: divergent exploration before selection uses
+  `brainstorming`; current external technical evidence uses
+  `technical-research`; semantic reconciliation uses `shape-domain`; and a
+  pause or handoff uses `session-bridge`. Topic overlap does not replace the
+  requested activity owner. Missing evidence access does not change ownership;
+  the selected workflow reports the unavailable check and limitation.
 - Derive expected behavior before changing production behavior. Run the
   smallest suitable check fail-first for the correct reason and implement the
   smallest coherent change without weakening the oracle.
